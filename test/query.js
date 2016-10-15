@@ -205,4 +205,41 @@ describe('Query', function() {
       expect(result.p).to.have.property('id');
     });
   });
+  
+  it('can create data with empty objects', function() {
+    let query = `{
+      createPost(testobject:{}) {
+        id
+      }
+    }`;
+    return storage.query(query).then((result) => {
+      expect(result.createPost).to.have.property('id');
+      temporary = {id: result.createPost.id};
+    });
+  });
+  
+  it('can get data with empty objects', function() {
+    let query = `{
+      readPost(id:?) {
+        testobject
+      }
+    }`;
+    let id = temporary.id;
+    return storage.query(query, [id]).then((result) => {
+      expect(result.readPost).to.have.property('testobject');
+      expect(result.readPost.testobject).to.deep.equal({});
+    });
+  });
+  
+  it.skip('can unset value by updating with undefined', function() {
+    let query = `{
+      updatePost(id:?,testobject:undefined) {
+        testobject
+      }
+    }`;
+    let id = temporary.id;
+    return storage.query(query, [id]).then((result) => {
+      expect(result.readPost).to.not.have.property('testobject');
+    });
+  });
 });

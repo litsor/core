@@ -70,7 +70,7 @@ class Query {
               if (operation === 'list' || operation === 'create') {
                 data = _.cloneDeep(method.params);
               }
-              return this.context.access(model, operation, data, null);
+              return this.context.access(this.models, model, operation, data, null);
             }
             else {
               // Context-free queries do not involve access checks.

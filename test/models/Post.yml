@@ -1,5 +1,5 @@
 access: 'true'
-mutation: 'i.id === u.id || u.admin'
+mutation: 'i.owner === u.id || u.admin'
 required:
 - name
 - mail
@@ -21,3 +21,14 @@ properties:
     type: number
   testboolean:
     type: boolean
+  owner:
+    type: string
+  unaccessible:
+    type: string
+    access: 'false'
+  adminonly:
+    type: string
+    access: 'u.admin'
+  owneronly:
+    type: string
+    access: 'i.owner === u.id'
