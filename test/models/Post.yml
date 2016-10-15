@@ -1,0 +1,23 @@
+access: 'true'
+mutation: 'i.id === u.id || u.admin'
+required:
+- name
+- mail
+properties:
+  title:
+    type: string
+    maxLength: 255
+  testobject:
+    type: object
+  teststring:
+    type: string
+  testint:
+    type: integer
+  testlist:
+    type: array
+    items:
+      type: object
+  testfloat:
+    type: number
+  testboolean:
+    type: boolean
