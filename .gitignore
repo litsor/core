@@ -1,0 +1,7 @@
+node_modules
+.buildpath
+.project
+.settings
+.vagrant
+coverage/
+lcov.txt
