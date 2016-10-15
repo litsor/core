@@ -54,13 +54,11 @@ class Query {
           method.params.id = user.id;
         }
       }
-      
       return this.models.has(parts[2]).then((exists) => {
         if (exists) {
           var model;
           return this.models.get(parts[2]).then((_model) => {
             model = _model;
-            
             if (this.context) {
               // Check entity-level access. Read, update and delete operations
               // are checked on id. Other parameters are not passed.
@@ -169,7 +167,7 @@ class Query {
     }
     var errors = [];
     return Promise.reduce(fieldNames, (access, field) => {
-      return Promise.resolve(this.context.access(model, operation, {id: id}, field)).then((fieldAccess) => {
+      return Promise.resolve(this.context.access(this.models, model, operation, {id: id}, field)).then((fieldAccess) => {
         if (!fieldAccess) {
           errors.push([{field: field, message: 'permission denied'}]);
         }
@@ -179,7 +177,7 @@ class Query {
       if (!access) {
         throw new QueryError(errors);
       }
-    });
+    }).done();
   }
   
   executeMethod(method) {

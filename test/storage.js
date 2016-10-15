@@ -150,6 +150,16 @@ describe('Storage', function() {
     });
   });
   
+  it('can count Users with filter', function() {
+    let query = `{
+      countUser (name:"John",mail:"john@example.com")
+    }`;
+    let id = temporary.id;
+    return storage.query(query, [id]).then((result) => {
+      expect(result.countUser).to.equal(1);
+    });
+  });
+  
   it('can update User', function() {
     let query = `{
       updateUser(id: ?, name: "Alice") {

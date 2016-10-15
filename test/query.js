@@ -25,12 +25,23 @@ describe('Query', function() {
   it('fails on misformatted queries', function() {
     return new Promise(function() {
       let query = `{...}`;
-      storage.query(query)
+      return storage.query(query)
     }).then(() => {
       throw Error('should be rejected');
     }).catch((error) => {
       expect(error.message).to.match(/^Query error: /);
-    });
+    }).done();
+  });
+
+  it('fails on unknown operations', function() {
+    return new Promise(function() {
+      let query = `{writePost}`;
+      return storage.query(query)
+    }).then(() => {
+      throw Error('should be rejected');
+    }).catch((error) => {
+      expect(error.message).to.match(/^Query error: /);
+    }).done();
   });
   
   it('can create data with strings', function() {

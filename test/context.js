@@ -51,6 +51,21 @@ describe('Context', function() {
     ]);
   });
 
+  it('can get current user profile', function() {
+    let context = new Context();
+    context.setUser({id: regularUser1});
+    let query = `{
+      User {
+        id
+        name
+      }
+    }`;
+    return storage.query(query, context).then((result) => {
+      expect(result.User).to.have.property('id', regularUser1);
+      expect(result.User).to.have.property('name', 'Alice');
+    });
+  });
+
   it('can create post as owner', function() {
     let context = new Context();
     context.setUser({id: regularUser1});
@@ -139,5 +154,19 @@ describe('Context', function() {
     }).catch((error) => {
       expect(error.message).to.match(/^Query error: /);
     }).done();
+  });
+
+  it.skip('accepts update post as admin', function() {
+    let context = new Context();
+    context.setUser({id: adminUser});
+    let query = `{
+      updatePost(id:?,title:"Admin edit") {
+        id
+      }
+    }`;
+    let args = [temporary.id];
+    return storage.query(query, context, args).then((result) => {
+      expect(result.updatePost).to.have.property('id');
+    });
   });
 });
