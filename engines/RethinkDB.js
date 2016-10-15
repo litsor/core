@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const r = require('rethinkdb');
 const Model = require(__dirname + '/../classes/Model');
+const Promise = require('bluebird');
 
 var conn;
 var ready = new Promise(function(resolve, reject) {
@@ -33,14 +34,18 @@ class RethinkDB extends Model {
     }).then(() => {
       let promises = [];
       Object.keys(this.jsonSchema.properties).forEach((key) => {
-        this.indexedFields.push(key);
         let field = this.jsonSchema.properties[key];
         if (typeof field.reverse !== 'undefined' || field.indexed === true) {
+          this.indexedFields.push(key);
           let promise = r.db('thesellapp').table(this.name).indexCreate(key).run(conn);
           promises.push(promise);
         }
       });
       return Promise.all(promises);
+    }).then(() => {
+      // The indexes need some time before they can be used.
+      // @todo: Check if indexing was finished.
+      return Promise.delay(1000);
     });
   }
   
