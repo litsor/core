@@ -27,6 +27,9 @@ var extractValue = function(value) {
   else if (value.kind === 'FloatValue') {
     output = parseFloat(value.value);
   }
+  else if (value.kind === 'BooleanValue') {
+    output = Boolean(value.value);
+  }
   return output;
 };
 
