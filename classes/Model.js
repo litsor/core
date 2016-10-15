@@ -76,13 +76,13 @@ class Model {
     });
   }
   
-  executeRemove(id) {
+  executeRemove(data) {
     var validation = this.validateKey(data);
     if (!validation.valid) {
       throw new QueryError(validation.errors);
     }
     return Promise.resolve(this.ready()).then(() => {
-      return this.remove(id);
+      return this.remove(data);
     });
   }
 }

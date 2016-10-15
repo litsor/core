@@ -164,13 +164,13 @@ describe('Storage', function() {
     });
   });
   
-  it.skip('can delete User', function() {
+  it('can delete User', function() {
     let query = `{
       deleteUser(id: ?)
     }`;
     let id = temporary.id;
     return storage.query(query, [id]).then((result) => {
-      expect(result.deleteUser.id).to.equal(temporary.id);
+      expect(result.deleteUser.id).to.equal(undefined);
     });
   });
 });
