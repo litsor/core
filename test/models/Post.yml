@@ -23,6 +23,8 @@ properties:
     type: boolean
   owner:
     type: string
+    references: User
+    reverse: posts
   unaccessible:
     type: string
     access: 'false'

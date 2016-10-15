@@ -253,4 +253,17 @@ describe('Query', function() {
       expect(result.readPost).to.not.have.property('testobject');
     });
   });
+  
+  it('will fill nulls in fields without a value', function() {
+    let query = `{
+      readPost(id:?) {
+        title
+      }
+    }`;
+    let id = temporary.id;
+    return storage.query(query, [id]).then((result) => {
+      expect(result.readPost).to.have.property('title');
+      expect(result.readPost.title).to.equal(null);
+    });
+  });
 });
