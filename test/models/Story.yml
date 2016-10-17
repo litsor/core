@@ -1,0 +1,9 @@
+required:
+  - title
+  - body
+properties:
+  title:
+    type: string
+    maxLength: 255
+  body:
+    type: string

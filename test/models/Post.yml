@@ -1,8 +1,5 @@
 access: 'true'
 mutation: 'i.owner === u.id || u.admin'
-required:
-- name
-- mail
 properties:
   title:
     type: string

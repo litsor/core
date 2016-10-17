@@ -67,7 +67,18 @@ class Model {
   }
   
   executeUpdate(data) {
-    var validation = this.validatePatch(data);
+    // Validate data, but without the undefined values.
+    // Only ensure that these fields are not required fields.
+    var validateData = _.clone(data);
+    Object.keys(data).forEach(key => {
+      if (data[key] === null) {
+        if (this.jsonSchema.required.indexOf(key) >= 0) {
+          throw new QueryError([{message: 'is a required field', field: key}]);
+        }
+        delete validateData[key];
+      }
+    });
+    var validation = this.validatePatch(validateData);
     if (!validation.valid) {
       throw new QueryError(validation.errors);
     }

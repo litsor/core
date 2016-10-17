@@ -242,7 +242,7 @@ describe('Query', function() {
     });
   });
   
-  it.skip('can unset value by updating with undefined', function() {
+  it('can unset value by updating with undefined', function() {
     let query = `{
       updatePost(id:?,testobject:undefined) {
         testobject
@@ -250,8 +250,30 @@ describe('Query', function() {
     }`;
     let id = temporary.id;
     return storage.query(query, [id]).then((result) => {
-      expect(result.readPost).to.not.have.property('testobject');
+      expect(result.updatePost).to.have.property('testobject', null);
+      // Also check read aftwerwards.
+      query = '{Post(id:?){testobject}}';
+      return storage.query(query, [id]);
+    }).then((result) => {
+      expect(result.Post).to.have.property('testobject', null);
     });
+  });
+  
+  it('will reject deleting required fields in update', function() {
+    let query = '{story:createStory(title:"testtile",body:"testbody"){id}}';
+    return storage.query(query).then(result => {
+      let query = `{
+        updateStory(id:?,title:undefined) {
+          id title body
+        }
+      }`;
+      let id = result.story.id;
+      return storage.query(query, [id])
+    }).then(() => {
+      throw Error('should be rejected');
+    }).catch((error) => {
+      expect(error.message).to.match(/^Query error: /);
+    }).done();
   });
   
   it('will fill nulls in fields without a value', function() {
