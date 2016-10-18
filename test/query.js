@@ -338,4 +338,84 @@ describe('Query', function() {
       expect(error.message).to.match(/^Query error: /);
     }).done();
   });
+  
+  it('can handle UTF-8 data in query', function() {
+    // \u00A7 is the paragraph sign, from the Latin-1 supplement.
+    let query = '{story:createStory(title:"Test",body:"\u00A7"){id body}}';
+    return storage.query(query).then(result => {
+      expect(result.story.body).to.equal('\xa7');
+      let query = `{
+        story:Story(id:?) { body }
+      }`;
+      let id = result.story.id;
+      return storage.query(query, [id])
+    }).then(result => {
+      expect(result.story.body).to.equal('\xa7');
+    }).done();
+  });
+          
+  it('can handle unicode sequences in query', function() {
+    // \u00A7 is the paragraph sign, from the Latin-1 supplement.
+    let query = '{story:createStory(title:"Test",body:"\\u00A7"){id body}}';
+    return storage.query(query).then(result => {
+      expect(result.story.body).to.equal('\xa7');
+      let query = `{
+        story:Story(id:?) { body }
+      }`;
+      let id = result.story.id;
+      return storage.query(query, [id])
+    }).then(result => {
+      expect(result.story.body).to.equal('\xa7');
+    }).done();
+  });
+      
+  it('can handle UTF-8 data in parameters', function() {
+    // \u00A7 is the paragraph sign, from the Latin-1 supplement.
+    let query = '{story:createStory(title:"Test",body:?){id body}}';
+    let args = ['\u00A7'];
+    return storage.query(query, args).then(result => {
+      expect(result.story.body).to.equal('\xa7');
+      let query = `{
+        story:Story(id:?) { body }
+      }`;
+      let id = result.story.id;
+      return storage.query(query, [id])
+    }).then(result => {
+      expect(result.story.body).to.equal('\xa7');
+    }).done();
+  });
+
+  it.skip('can handle question marks in parameters', function() {
+    let query = '{story:createStory(title:?,body:?){id title body}}';
+    let args = ['???', 'Hello world?'];
+    return storage.query(query, args).then(result => {
+      expect(result.story.title).to.equal('???');
+      expect(result.story.body).to.equal('Hello world?');
+      let query = `{
+        story:Story(id:?) { title body }
+      }`;
+      let id = result.story.id;
+      return storage.query(query, [id])
+    }).then(result => {
+      expect(result.story.title).to.equal('???');
+      expect(result.story.body).to.equal('Hello world?');
+    }).done();
+  });
+
+  it.skip('can handle question marks in query', function() {
+    let query = '{story:createStory(title:"???",body:"Hello world?"){id body}}';
+    return storage.query(query).then(result => {
+      expect(result.story.title).to.equal('???');
+      expect(result.story.body).to.equal('Hello world?');
+      let query = `{
+        story:Story(id:?) { title body }
+      }`;
+      let id = result.story.id;
+      return storage.query(query, [id])
+    }).then(result => {
+      expect(result.story.title).to.equal('???');
+      expect(result.story.body).to.equal('Hello world?');
+    }).done();
+  });
+
 });
