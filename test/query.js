@@ -268,7 +268,7 @@ describe('Query', function() {
         }
       }`;
       let id = result.story.id;
-      return storage.query(query, [id])
+      return storage.query(query, [id]);
     }).then(() => {
       throw Error('should be rejected');
     }).catch((error) => {
@@ -287,5 +287,55 @@ describe('Query', function() {
       expect(result.readPost).to.have.property('title');
       expect(result.readPost.title).to.equal(null);
     });
+  });
+  
+  it('will reject invalid data in create', function() {
+    return Promise.resolve().then(() => {
+      let query = '{story:createStory(title:234){id}}';
+      return storage.query(query);
+    }).then(() => {
+      throw Error('should be rejected');
+    }).catch((error) => {
+      expect(error.message).to.match(/^Query error: /);
+    }).done();
+  });
+  
+  it('will reject invalid data in read', function() {
+    return Promise.resolve().then(() => {
+      let query = '{story:readStory(id:{}){id}}';
+      return storage.query(query);
+    }).then(() => {
+      throw Error('should be rejected');
+    }).catch((error) => {
+      expect(error.message).to.match(/^Query error: /);
+    }).done();
+  });
+
+  it('will reject invalid data in update', function() {
+    let query = '{story:createStory(title:"Test",body:"Lorem ipsum"){id}}';
+    return storage.query(query).then(result => {
+      let query = `{
+        updateStory(id:?,title:123) {
+          id title body
+        }
+      }`;
+      let id = result.story.id;
+      return storage.query(query, [id])
+    }).then(() => {
+      throw Error('should be rejected');
+    }).catch((error) => {
+      expect(error.message).to.match(/^Query error: /);
+    }).done();
+  });
+
+  it('will reject invalid data in delete', function() {
+    return Promise.resolve().then(() => {
+      let query = '{story:deleteStory(id:{}){id}}';
+      return storage.query(query);
+    }).then(() => {
+      throw Error('should be rejected');
+    }).catch((error) => {
+      expect(error.message).to.match(/^Query error: /);
+    }).done();
   });
 });
