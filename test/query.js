@@ -385,7 +385,7 @@ describe('Query', function() {
     }).done();
   });
 
-  it.skip('can handle question marks in parameters', function() {
+  it('can handle question marks in parameters', function() {
     let query = '{story:createStory(title:?,body:?){id title body}}';
     let args = ['???', 'Hello world?'];
     return storage.query(query, args).then(result => {
@@ -399,6 +399,17 @@ describe('Query', function() {
     }).then(result => {
       expect(result.story.title).to.equal('???');
       expect(result.story.body).to.equal('Hello world?');
+    }).done();
+  });
+      
+  it('will query when providing too few arguments', function() {
+    let query = '{story:createStory(title:?,body:?){id}}';
+    return Promise.resolve().then(result => {
+      return storage.query(query, ['test']);
+    }).then(() => {
+      throw Error('should be rejected');
+    }).catch((error) => {
+      expect(error.message).to.match(/^Query error: /);
     }).done();
   });
 

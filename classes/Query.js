@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const Promise = require('bluebird');
+const Crypto = require('crypto');
 
 const Parser = require(__dirname + '/Parser');
 const QueryError = require(__dirname + '/QueryError');
@@ -33,10 +34,14 @@ class Query {
     if (!(args instanceof Array)) {
       return query;
     }
-    // @todo: This will mess up the query when injected string contains question marks.
+    var token = Crypto.randomBytes(16).toString('base64');
+    query = query.split('?').join(token);
     args.forEach((value) => {
-      query = query.replace('?', JSON.stringify(value));
+      query = query.replace(token, JSON.stringify(value));
     });
+    if (query.indexOf(token) >= 0) {
+      throw new QueryError([{mssage: 'Too few arguments provided'}]);
+    }
     return query;
   }
   
