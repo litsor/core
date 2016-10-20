@@ -413,20 +413,4 @@ describe('Query', () => {
       expect(error.message).to.match(/^Query error: /);
     }).done();
   });
-
-  it.skip('can handle question marks in query', () => {
-    let query = '{story:createStory(title:"???",body:"Hello world?"){id body}}';
-    return storage.query(query).then(result => {
-      expect(result.story.title).to.equal('???');
-      expect(result.story.body).to.equal('Hello world?');
-      let query = `{
-        story:Story(id:?) { title body }
-      }`;
-      let id = result.story.id;
-      return storage.query(query, [id]);
-    }).then(result => {
-      expect(result.story.title).to.equal('???');
-      expect(result.story.body).to.equal('Hello world?');
-    }).done();
-  });
 });
