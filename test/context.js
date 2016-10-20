@@ -141,6 +141,23 @@ describe('Context', function() {
     }).done();
   });
 
+  it('denies update post as anonymous user', function() {
+    let context = new Context();
+    let query = `{
+      updatePost(id:?,title:"Test") {
+        id
+      }
+    }`;
+    let args = [temporary.id];
+    return new Promise(function() {
+      return storage.query(query, context, args);
+    }).then(() => {
+      throw Error('should be rejected');
+    }).catch((error) => {
+      expect(error.message).to.match(/^Query error: /);
+    }).done();
+  });
+
   it('accepts update post as admin', function() {
     let context = new Context();
     context.setUser({id: adminUser, admin: true});
