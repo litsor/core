@@ -59,7 +59,7 @@ class Query {
           method.params.id = user.id;
         }
       }
-      return this.models.has(parts[2]).then((exists) => {
+      return this.models.has(parts[2]).then(exists => {
         if (exists) {
           var model;
           return this.models.get(parts[2]).then((_model) => {
@@ -81,7 +81,7 @@ class Query {
             }
           }).then((access) => {
             if (!access) {
-              throw new QueryError([{message: 'permission denied'}]);
+              throw new QueryError([{message: 'Permission denied'}]);
             }
             
             let functionName = 'execute' + _.capitalize(operation);

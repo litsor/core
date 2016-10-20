@@ -156,9 +156,9 @@ describe('Context', function() {
     }).done();
   });
 
-  it.skip('accepts update post as admin', function() {
+  it('accepts update post as admin', function() {
     let context = new Context();
-    context.setUser({id: adminUser});
+    context.setUser({id: adminUser, admin: true});
     let query = `{
       updatePost(id:?,title:"Admin edit") {
         id
