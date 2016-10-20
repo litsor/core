@@ -14,7 +14,7 @@ class Models {
     this.pluginFields = {};
     
     this.ready = new Promise((resolve, reject) => {
-      globby([__dirname + '/../engines/*.js']).then((files) => {
+      globby([__dirname + '/../engines/*.js']).then(files => {
         files.forEach((file) => {
           let name = file.match(/\/([^\/]+)\.js$/)[1];
           this.engines[name] = require(file);
@@ -37,9 +37,16 @@ class Models {
           let name = file.match(/\/([^\/]+)\.js$/)[1];
           this.plugins[name] = new (require(file))(this);
         });
-        Object.keys(this.plugins).forEach((name) => {
+        Object.keys(this.plugins).forEach(name => {
           let plugin = this.plugins[name];
-          this.pluginFields = _.merge(this.pluginFields, plugin.getFields());
+          let fields = {};
+          let names = plugin.getFields(models);
+          names.forEach(name => {
+            fields[name] = {
+              plugin: plugin
+            };
+          });
+          this.pluginFields = _.merge(this.pluginFields, fields);
         });
         resolve();
       }).catch((error) => {
@@ -67,7 +74,7 @@ class Models {
   
   getPluginFieldValue(model, field, id, context) {
     var name = model.name + '.' + field.name;
-    return this.pluginFields[name](model, field, id, context);
+    return this.pluginFields[name].plugin.getValue(this, model, field, id, context);
   };
 }
 

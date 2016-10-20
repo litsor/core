@@ -74,10 +74,10 @@ describe('References', function() {
     });
   });
 
-  it.skip('can get Post via User (reverse link)', function() {
+  it('can get Post via User (reverse link)', function() {
     let query = `{
       User(id:?) {
-        posts {
+        id, posts {
           id
         }
       }
