@@ -6,7 +6,8 @@
   "scripts": {
     "test": "sh shutdown.sh && sh startup.sh && mocha -b -t 5s test/*.js && sh shutdown.sh",
     "watch": "node watch.js",
-    "coverage": "sh shutdown.sh && sh startup.sh && istanbul cover node_modules/.bin/_mocha -- -u exports -R spec -t 5s test/* && sh shutdown.sh"
+    "coverage": "sh shutdown.sh && sh startup.sh && istanbul cover node_modules/.bin/_mocha -- -u exports -R spec -t 5s test/* && sh shutdown.sh",
+    "lint": "xo"
   },
   "repository": {
     "type": "git",
@@ -15,18 +16,13 @@
   "engines": {
     "node": ">= 6.0.0"
   },
-  "config": {
-    "blanket": {
-      "data-cover-flags": {
-        "debug": true
-      },
-      "pattern": [
-        ""
-      ],
-      "data-cover-ecmaVersion": 6,
-      "data-cover-never": [
-        "node_modules",
-        "test"
+  "xo": {
+    "esnext": true,
+    "space": 2,
+    "rules": {
+      "space-before-function-paren": [
+        "error",
+        "never"
       ]
     }
   },
@@ -43,6 +39,7 @@
     "globby": "^6.0.0",
     "graphql": "^0.7.2",
     "is-my-json-valid": "^2.15.0",
+    "js-yaml": "^3.6.1",
     "lodash": "^4.13.1",
     "redis": "^2.6.2",
     "rethinkdb": "^2.3.3"
@@ -50,11 +47,11 @@
   "devDependencies": {
     "chai": "^2.3.0",
     "chai-as-promised": "^5.0.0",
-    "eslint": "^0.21.0",
     "mocha": "^2.2.4",
     "mocha-lcov-reporter": "0.0.2",
     "mocha-multi": "^0.7.1",
     "needle": "^0.9.2",
-    "watch": "^1.0.1"
+    "watch": "^1.0.1",
+    "xo": "^0.17.0"
   }
 }
