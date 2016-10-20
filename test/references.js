@@ -89,4 +89,18 @@ describe('References', function() {
       expect(result.User.posts[0]).to.have.property('id', postId);
     });
   });
+
+  it('can omit fieldnames in references', function() {
+    let query = `{
+      User(id:?) {
+        id, posts
+      }
+    }`;
+    let args = [userId];
+    return storage.query(query, args).then((result) => {
+      expect(result.User).to.have.property('posts');
+      expect(result.User.posts).to.have.length(1);
+      expect(result.User.posts[0]).to.have.property('id', postId);
+    });
+  });
 });
