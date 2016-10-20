@@ -35,9 +35,9 @@ describe('Query', () => {
   });
 
   it('fails on unknown operations', () => {
-    return new Promise(() => {
+    return Promise.resolve().then(() => {
       const query = `{writePost}`;
-      return storage.query(query)
+      return storage.query(query);
     }).then(() => {
       throw new Error('should be rejected');
     }).catch((error) => {

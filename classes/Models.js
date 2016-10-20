@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const globby = require('globby');
 
+const Promise = require('bluebird');
 const Model = require(__dirname + '/Model.js');
 
 class Models {

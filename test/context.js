@@ -132,7 +132,7 @@ describe('Context', function() {
       }
     }`;
     let args = [temporary.id];
-    return new Promise(function() {
+    return Promise.resolve().then(() => {
       return storage.query(query, context, args);
     }).then(() => {
       throw Error('should be rejected');
@@ -149,7 +149,7 @@ describe('Context', function() {
       }
     }`;
     let args = [temporary.id];
-    return new Promise(function() {
+    return Promise.resolve().then(() => {
       return storage.query(query, context, args);
     }).then(() => {
       throw Error('should be rejected');

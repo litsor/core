@@ -92,7 +92,7 @@ class Query {
               return model[functionName](method.params, method.fieldNames);
             }
             else {
-              throw Error('Operation ' + operation + ' is not supported by model');
+              throw new QueryError([{message: 'Operation ' + operation + ' is not supported by model'}]);
             }
           }).then((data) => {
             return {
@@ -228,7 +228,7 @@ class Query {
     return Promise.resolve(Object.keys(this.parsed)).each((alias) => {
       return Promise.resolve(this.executeMethod(this.parsed[alias])).then((result) => {
         output[alias] = result;
-      })
+      });
     }).then(() => {
       return output;
     });
