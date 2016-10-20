@@ -66,22 +66,7 @@ describe('Context', function() {
     });
   });
 
-  it('can create post as owner', function() {
-    let context = new Context();
-    context.setUser({id: regularUser1});
-    let query = `{
-      createPost(owner:?) {
-        id
-      }
-    }`;
-    let args = [regularUser1];
-    return storage.query(query, context, args).then((result) => {
-      expect(result.createPost).to.have.property('id');
-      temporary = {id: result.createPost.id};
-    });
-  });
-
-  it('can create post as owner', function() {
+  it('can create post as user', function() {
     let context = new Context();
     context.setUser({id: regularUser1});
     let query = `{
