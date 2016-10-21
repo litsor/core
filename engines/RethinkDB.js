@@ -26,27 +26,34 @@ class RethinkDB extends Model {
     
     this.indexedFields = [];
     this._ready = ready.then(() => {
-      // Create table if and ignore already exists error.
-      return r.dbCreate(database.name).run(this.conn);
-    }).catch((error) => {}).then(() => {
-      return r.db(database.name).tableCreate(this.name).run(this.conn);
-    }).catch((error) => {
-      // Ignore "already exists" errors.
+      return r.dbList().run(this.conn);
+    }).then(databases => {
+      if (databases.indexOf(database.name) < 0) {
+        return r.dbCreate(database.name).run(this.conn);
+      }
     }).then(() => {
+      return r.db(database.name).tableList().run(this.conn);
+    }).then(tables => {
+      if (tables.indexOf(this.name) < 0) {
+        return r.db(database.name).tableCreate(this.name).run(this.conn);
+      }
+    }).then(() => {
+      return r.db(database.name).table(this.name).indexList().run(this.conn);
+    }).then(indexes => {
       let promises = [];
       Object.keys(this.jsonSchema.properties).forEach((key) => {
         let field = this.jsonSchema.properties[key];
         if (typeof field.reverse !== 'undefined' || field.indexed === true) {
           this.indexedFields.push(key);
-          let promise = r.db(database.name).table(this.name).indexCreate(key).run(this.conn).catch(() => {});
-          promises.push(promise);
+          if (indexes.indexOf(key) < 0) {
+            let promise = r.db(database.name).table(this.name).indexCreate(key).run(this.conn).then(() => {
+              return r.db(database.name).table(this.name).indexWait();
+            });
+            promises.push(promise);
+          }
         }
       });
       return Promise.all(promises);
-    }).then(() => {
-      // The indexes need some time before they can be used.
-      // @todo: Check if indexing was finished.
-      return Promise.delay(1000);
     });
   }
   
