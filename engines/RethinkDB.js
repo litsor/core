@@ -5,30 +5,31 @@ const r = require('rethinkdb');
 const Model = require(__dirname + '/../classes/Model');
 const Promise = require('bluebird');
 
-var conn;
-var ready = new Promise(function(resolve, reject) {
-  r.connect({host: 'localhost', port: 28015}, function(err, _conn) {
-    conn = _conn;
-    resolve(conn);
-    if (err) {
-      reject();
-      console.error('No connection to database');
-      process.exit(1);
-    }
-  });
-});
-
 class RethinkDB extends Model {
-  constructor(data) {
-    super(data);
+  constructor(modelData, database, internalDatabase) {
+    super(modelData, database, internalDatabase);
+    
+    this.dbName = database.name;
+    
+    let self = this;
+    let ready = new Promise(function(resolve, reject) {
+      r.connect({host: 'localhost', port: 28015}, function(err, _conn) {
+        self.conn = _conn;
+        resolve(self.conn);
+        if (err) {
+          reject();
+          console.error('No connection to database');
+          process.exit(1);
+        }
+      });
+    });
     
     this.indexedFields = [];
     this._ready = ready.then(() => {
       // Create table if and ignore already exists error.
-      return r.dbCreate('thesellapp').run(conn);
+      return r.dbCreate(database.name).run(this.conn);
     }).catch((error) => {}).then(() => {
-      // @todo: Database name from config.
-      return r.db('thesellapp').tableCreate(this.name).run(conn);
+      return r.db(database.name).tableCreate(this.name).run(this.conn);
     }).catch((error) => {
       // Ignore "already exists" errors.
     }).then(() => {
@@ -37,7 +38,7 @@ class RethinkDB extends Model {
         let field = this.jsonSchema.properties[key];
         if (typeof field.reverse !== 'undefined' || field.indexed === true) {
           this.indexedFields.push(key);
-          let promise = r.db('thesellapp').table(this.name).indexCreate(key).run(conn);
+          let promise = r.db(database.name).table(this.name).indexCreate(key).run(this.conn).catch(() => {});
           promises.push(promise);
         }
       });
@@ -54,7 +55,7 @@ class RethinkDB extends Model {
   }
   
   read(data, fieldNames) {
-    return r.db('thesellapp').table(this.name).get(data.id).pluck(fieldNames).run(conn).then((row) => {
+    return r.db(this.dbName).table(this.name).get(data.id).pluck(fieldNames).run(this.conn).then((row) => {
       return this.fillNulls(row, fieldNames);
     });
   }
@@ -69,7 +70,7 @@ class RethinkDB extends Model {
   }
   
   count(filters) {
-    var query = r.db('thesellapp').table(this.name);
+    var query = r.db(this.dbName).table(this.name);
     var indexedFilters = _.pick(filters, this.indexedFields);
     if (Object.keys(indexedFilters).length) {
       // @todo: Pick filter with highest cardinality.
@@ -81,13 +82,13 @@ class RethinkDB extends Model {
       query = query.filter(filters);
     }
     query = query.count();
-    return query.run(conn).then((data) => {
+    return query.run(this.conn).then((data) => {
       return data;
     });
   }
   
   list(filters, limit, offset, fieldNames, sort, ascending) {
-    var query = r.db('thesellapp').table(this.name);
+    var query = r.db(this.dbName).table(this.name);
     var indexedFilters = _.pick(filters, this.indexedFields);
     if (Object.keys(indexedFilters).length) {
       // @todo: Pick filter with highest cardinality.
@@ -100,7 +101,7 @@ class RethinkDB extends Model {
     }
     query = query.orderBy(ascending ? sort : r.desc(sort));
     query = query.pluck(fieldNames).slice(offset, offset + limit);
-    return query.run(conn).then((cursor) => {
+    return query.run(this.conn).then((cursor) => {
       return cursor.toArray();
     }).then((rows) => {
       rows.forEach((row) => {
@@ -111,7 +112,7 @@ class RethinkDB extends Model {
   }
   
   create(data) {
-    return r.db('thesellapp').table(this.name).insert(data).run(conn).then(() => {
+    return r.db(this.dbName).table(this.name).insert(data).run(this.conn).then(() => {
       return data;
     });
   }
@@ -119,13 +120,13 @@ class RethinkDB extends Model {
   update(data) {
     var id = data.id;
     data = _.omit(data, ['id']);
-    return r.db('thesellapp').table(this.name).get(id).update(data).run(conn).then(() => {
+    return r.db(this.dbName).table(this.name).get(id).update(data).run(this.conn).then(() => {
       return {id: id};
     });
   }
   
   remove(data) {
-    return r.db('thesellapp').table(this.name).get(data.id).delete().run(conn).then(() => {
+    return r.db(this.dbName).table(this.name).get(data.id).delete().run(this.conn).then(() => {
       return {id: data.id};
     });
   }

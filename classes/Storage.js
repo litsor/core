@@ -11,7 +11,6 @@ const Query = require(__dirname + '/Query');
 
 class Storage {
   constructor(options) {
-    // Fill in default options.
     options = _.defaults(options, {
       databases: {},
       cacheDir: '/tmp/cache',
@@ -19,12 +18,15 @@ class Storage {
       pluginsDir: 'plugins'
     });
     options.databases = _.defaults(options.databases, {
-      internal: {
-        engine: 'redis',
-        host: 'redis',
-        port: 6379
-      }
+      internal: {}
     });
+    options.databases.internal = _.defaults(options.databases.internal, {
+      engine: 'redis',
+      host: 'redis',
+      port: 6379,
+      prefix: ''
+    });
+    
     this.options = options;
     
     this.generateModels();
@@ -37,6 +39,9 @@ class Storage {
     let compiler = new ModelsCompiler();
     let items = {};
     Fs.readdirSync(dir).forEach((file) => {
+      if (!file.match(/^.+\.yml$/)) {
+        return;
+      }
       let inputFile = `${dir}/${file}`;
       let contents = Fs.readFileSync(inputFile);
       let hash = Crypto.createHash('sha1').update(contents).digest('hex');

@@ -35,18 +35,22 @@
   "dependencies": {
     "blanket": "^1.2.3",
     "bluebird": "^3.4.1",
+    "bluegate": "^1.1.12",
+    "bluegate-session": "^1.0.1",
     "fs-extra": "^0.30.0",
     "globby": "^6.0.0",
     "graphql": "^0.7.2",
     "is-my-json-valid": "^2.15.0",
     "js-yaml": "^3.6.1",
     "lodash": "^4.13.1",
+    "rc": "^1.1.6",
     "redis": "^2.6.2",
     "rethinkdb": "^2.3.3"
   },
   "devDependencies": {
     "chai": "^2.3.0",
     "chai-as-promised": "^5.0.0",
+    "eslint": "^3.8.1",
     "mocha": "^2.2.4",
     "mocha-lcov-reporter": "0.0.2",
     "mocha-multi": "^0.7.1",
