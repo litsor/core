@@ -21,7 +21,21 @@ describe('Storage', function() {
 
   it('can create new instance', function() {
     storage = new Storage({
-      modelsDir: 'test/models'
+      modelsDir: 'test/models',
+      databases: {
+        internal: {
+          engine: 'redis',
+          host: 'localhost',
+          port: 6379,
+          prefix: '',
+        },
+        rethink: {
+          engine: 'RethinkDB',
+          host: 'rethink',
+          port: 20015,
+          name: 'test'
+        }
+      }
     });
   });
   

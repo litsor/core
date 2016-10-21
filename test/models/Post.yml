@@ -1,3 +1,4 @@
+database: rethink
 access: 'true'
 mutation: 'i.owner === u.id || u.admin'
 properties:

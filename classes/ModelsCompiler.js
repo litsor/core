@@ -19,8 +19,8 @@ class ModelsCompiler {
     if (!(schema.required instanceof Array)) {
       schema.required = [];
     }
-    if (!schema.engine) {
-      schema.engine = 'RethinkDB';
+    if (!schema.database) {
+      schema.database = 'internal';
     }
     schema.required = _.union(['id'], schema.required);
     
@@ -41,7 +41,7 @@ class ModelsCompiler {
     var output = '"use strict";';
     
     output += "\n\nexports.name = " + JSON.stringify(name) + ";";
-    output += "\n\nexports.engine = " + JSON.stringify(schema.engine) + ";";
+    output += "\n\nexports.database = " + JSON.stringify(schema.database) + ";";
     output += "\n\n" + this.getJsonSchema(schema);
     output += "\n\n" + this.getDefaults(schema);
     output += "\n\n" + this.getAccessMapping(schema);

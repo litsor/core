@@ -16,7 +16,21 @@ describe('Query', () => {
 
   before(() => {
     storage = new Storage({
-      modelsDir: 'test/models'
+      modelsDir: 'test/models',
+      databases: {
+        internal: {
+          engine: 'redis',
+          host: 'localhost',
+          port: 6379,
+          prefix: '',
+        },
+        rethink: {
+          engine: 'RethinkDB',
+          host: 'rethink',
+          port: 20015,
+          name: 'test'
+        }
+      }
     });
   });
 

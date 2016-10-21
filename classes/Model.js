@@ -7,17 +7,17 @@ const Sequence = require(__dirname + '/Sequence.js');
 const QueryError = require(__dirname + '/QueryError');
 
 class Model {
-  constructor(data) {
-    this.name = data.name;
-    this.jsonSchema = data.jsonSchema;
-    this.validateFull = data.validateFull;
-    this.validateKey = data.validateKey;
-    this.validateInput = data.validateInput;
-    this.validatePatch = data.validatePatch;
-    this.accessMapping = data.accessMapping;
-    this.fillDefaults = data.fillDefaults;
+  constructor(modelData, database, internalDatabase) {
+    this.name = modelData.name;
+    this.jsonSchema = modelData.jsonSchema;
+    this.validateFull = modelData.validateFull;
+    this.validateKey = modelData.validateKey;
+    this.validateInput = modelData.validateInput;
+    this.validatePatch = modelData.validatePatch;
+    this.accessMapping = modelData.accessMapping;
+    this.fillDefaults = modelData.fillDefaults;
     
-    this.sequence = new Sequence(this.name);
+    this.sequence = new Sequence(this.name, internalDatabase);
   }
   
   ready() {

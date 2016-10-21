@@ -7,8 +7,9 @@ const Promise = require('bluebird');
 const Model = require(__dirname + '/Model.js');
 
 class Models {
-  constructor(models) {
+  constructor(models, databases) {
     this.models = models;
+    this.databases = databases;
     this.engines = {};
     this.instances = {};
     this.plugins = {};
@@ -21,12 +22,17 @@ class Models {
           this.engines[name] = require(file);
         });
         Object.keys(models).forEach((name) => {
-          let engine = this.models[name].engine;
+          let databaseName = this.models[name].database;
+          if (typeof this.databases[databaseName] === 'undefined') {
+            throw Error('Unknown database ' + databaseName + ' in model ' + name);
+          }
+          let database = this.databases[databaseName];
+          let engine = database.engine;
           if (typeof this.engines[engine] === 'undefined') {
-            throw Error('Unknown engine ' + engine + ' in model ' + name);
+            throw Error('Unknown engine ' + engine + ' in database ' + databaseName);
           }
           try {
-            this.instances[name] = new this.engines[engine](this.models[name]);
+            this.instances[name] = new this.engines[engine](this.models[name], database, this.databases.internal);
           }
           catch (error) {
             console.log(error.stack);
