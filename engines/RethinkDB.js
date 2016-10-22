@@ -47,7 +47,7 @@ class RethinkDB extends Model {
           this.indexedFields.push(key);
           if (indexes.indexOf(key) < 0) {
             let promise = r.db(database.name).table(this.name).indexCreate(key).run(this.conn).then(() => {
-              return r.db(database.name).table(this.name).indexWait();
+              return r.db(database.name).table(this.name).indexWait().run(this.conn);
             });
             promises.push(promise);
           }

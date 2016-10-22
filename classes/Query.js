@@ -14,12 +14,12 @@ class Query {
       args = context;
       context = undefined;
     }
-    
+
     this.models = models;
-    
+
     // Process query arguments.
     query = this.injectArguments(query, args);
-    
+
     this.query = query;
     this.context = context;
     try {
@@ -29,7 +29,7 @@ class Query {
       throw new QueryError([{message: error.message}]);
     }
   }
-  
+
   injectArguments(query, args) {
     if (!(args instanceof Array)) {
       return query;
@@ -44,13 +44,32 @@ class Query {
     }
     return query;
   }
-  
-  callMethod(method) {
-    var parts = method.name.match(/^([a-z]+)?([A-Z][\w]*)$/);
+
+  getOperation(method) {
+    let parts = method.name.match(/^([a-z]+)?([A-Z][\w]*)$/);
+    if (!parts) {
+      return 'read';
+    }
+    let operation = parts[1] ? parts[1] : 'read';
+    operation = operation === 'delete' ? 'remove' : operation;
+    return operation;
+  }
+
+  getModel(method) {
+    let parts = method.name.match(/^([a-z]+)?([A-Z][\w]*)$/);
     if (parts) {
-      var operation = parts[1] ? parts[1] : 'read';
-      operation = operation === 'delete' ? 'remove' : operation;
-      
+      return this.models.get(parts[2]);
+    }
+    else {
+      throw new Error('Model does not exists');
+    }
+  }
+
+  callMethod(method) {
+    let parts = method.name.match(/^([a-z]+)?([A-Z][\w]*)$/);
+    if (parts) {
+      let operation = this.getOperation(method);
+
       // Allow us to get the logged in user by requesting readUser without params.
       // @todo: Move to some query preprocessing function.
       if (operation === 'read' && parts[2] === 'User' && !Object.keys(method.params).length && typeof this.context !== 'undefined') {
@@ -59,6 +78,8 @@ class Query {
           method.params.id = user.id;
         }
       }
+
+      // @todo: The model is already loaded in executeMethod(). Re-use that one.
       return this.models.has(parts[2]).then(exists => {
         if (exists) {
           var model;
@@ -104,7 +125,7 @@ class Query {
       });
     }
   }
-  
+
   extractFields(model, item, fields, fieldNames, reread) {
     var output = {__type: model.name};
     var promises = [];
@@ -165,7 +186,7 @@ class Query {
       return output;
     });
   }
-  
+
   checkFieldPermissions(model, id, fieldNames, operation) {
     if (!this.context) {
       return true;
@@ -184,9 +205,13 @@ class Query {
       }
     }).done();
   }
-  
+
   executeMethod(method) {
-    return this.preprocess(method).then((_method) => {
+    let model;
+    return this.getModel(method).then(_model => {
+      model = _model;
+      return this.preprocess(method, model);
+    }).then((_method) => {
       method = _method;
       return this.callMethod(method);
     }).then((result) => {
@@ -211,18 +236,36 @@ class Query {
         return isArray ? items : items[0];
       });
     }).then((data) => {
-      return this.postprocess(method, data);
+      return this.postprocess(method, model, data);
     });
   }
-  
-  preprocess(method) {
-    return Promise.resolve(method);
+
+  preprocess(method, model) {
+    let preprocessors = this.models.getPreprocessors(model);
+    let operation = this.getOperation(method);
+    return Promise.resolve(preprocessors).each(plugin => {
+      var result = plugin.preprocess(this.models, model, operation, method.params, this.context);
+      return Promise.resolve(result).then(result => {
+        method.params = result;
+      });
+    }).then(() => {
+      return method;
+    });
   }
-  
-  postprocess(method, data) {
-    return Promise.resolve(data);
+
+  postprocess(method, model, data) {
+    let postprocessors = this.models.getPostprocessors(model);
+    let operation = this.getOperation(method);
+    return Promise.resolve(postprocessors).each(plugin => {
+      var result = plugin.postprocess(this.models, model, operation, data, this.context);
+      return Promise.resolve(result).then(result => {
+        data = result;
+      });
+    }).then(() => {
+      return data;
+    });
   }
-  
+
   execute() {
     var output = {};
     return Promise.resolve(Object.keys(this.parsed)).each((alias) => {

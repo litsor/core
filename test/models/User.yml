@@ -20,6 +20,7 @@ properties:
     maxLength: 255
     access: 'false'
     mutation: 'i.id === u.id || u.admin'
+    hashPassword: true
   iban:
     type: string
     maxLength: 18

@@ -5,7 +5,8 @@ const Plugin = require('../classes/Plugin');
 const Query = require('../classes/Query');
 
 class References extends Plugin {
-  getFields(models) {
+  getFields() {
+    let models = this.models;
     this.fieldData = {};
     const fields = [];
     Object.keys(models).forEach(modelName => {
@@ -21,7 +22,6 @@ class References extends Plugin {
         }
       });
     });
-
     return fields;
   }
 

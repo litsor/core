@@ -1,0 +1,14 @@
+database: rethink
+access: 'false'
+mutation: 'i.user === u.id || u.admin'
+properties:
+  token:
+    type: string
+    indexed: true
+  user:
+    type: string
+    references: user
+    reverse: authnTokens
+  created:
+    type: integer
+    default: '~~(new Date() / 1000)'

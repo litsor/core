@@ -86,10 +86,17 @@ describe('Storage', function() {
     }`;
     let id = temporary.id;
     return storage.query(query, [id]).then((result) => {
-      expect(result.listUser).to.have.length(1);
-      expect(result.listUser[0].id).to.equal(temporary.id);
-      expect(result.listUser[0].name).to.equal(temporary.name);
-      expect(result.listUser[0].mail).to.equal(temporary.mail);
+      // Other testcases may have added users as well, so check >= 1.
+      expect(result.listUser.length >= 1).to.equal(true);
+      let found = false;
+      result.listUser.forEach(user => {
+        if (user.id === temporary.id) {
+          found = true;
+          expect(user.name).to.equal(temporary.name);
+          expect(user.mail).to.equal(temporary.mail);
+        }
+      });
+      expect(found).to.equal(true);
     });
   });
   
@@ -113,7 +120,8 @@ describe('Storage', function() {
     }`;
     let id = temporary.id;
     return storage.query(query, [id]).then((result) => {
-      expect(result.listUser).to.have.length(2);
+      // Other testcases may have added users as well, so check >= 2.
+      expect(result.listUser.length >= 2).to.equal(true);
     });
   });
   
@@ -160,7 +168,8 @@ describe('Storage', function() {
     }`;
     let id = temporary.id;
     return storage.query(query, [id]).then((result) => {
-      expect(result.countUser).to.equal(2);
+   // Other testcases may have added users as well, so check >= 2.
+      expect(result.countUser >= 2).to.equal(true);
     });
   });
   
