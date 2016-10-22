@@ -9,7 +9,7 @@ const Authentication = require('./Authentication.js');
 
 class Application {
   constructor(config) {
-    _.defaults(config, {
+    config = _.defaults(config, {
       port: 80,
       storage: {},
       authentication: {},
@@ -35,7 +35,7 @@ class Application {
   }
 
   ready() {
-    return this.ready;
+    return this._ready;
   }
 
   close() {

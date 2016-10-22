@@ -6,6 +6,7 @@ const Application = require('./classes/Application');
 const config = Rc('restapir', {});
 
 let app = new Application(config);
-app.ready.then(() => {
+
+app.ready().then(() => {
   console.log('Listening on port :' + config.port);
 });
