@@ -1,0 +1,12 @@
+.git
+.gitignore
+.dockerignore
+.eslintrc
+README.md
+LICENSE
+test
+node_modules
+coverage
+watch.js
+Dockerfile
+*.sh
