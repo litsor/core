@@ -26,8 +26,8 @@ describe('Query', () => {
         },
         rethink: {
           engine: 'RethinkDB',
-          host: 'rethink',
-          port: 20015,
+          host: 'localhost',
+          port: 28015,
           name: 'test'
         }
       }

@@ -8,12 +8,18 @@ const Promise = require('bluebird');
 class RethinkDB extends Model {
   constructor(modelData, database, internalDatabase) {
     super(modelData, database, internalDatabase);
-    
+
+    database = _.defaults(database, {
+      host: 'localhost',
+      port: 28015,
+      name: 'restapir'
+    });
+
     this.dbName = database.name;
-    
+
     let self = this;
     let ready = new Promise(function(resolve, reject) {
-      r.connect({host: 'localhost', port: 28015}, function(err, _conn) {
+      r.connect({host: database.host, port: database.port}, function(err, _conn) {
         self.conn = _conn;
         resolve(self.conn);
         if (err) {
