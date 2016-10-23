@@ -1,10 +1,10 @@
 FROM alpine:3.4
 
-ADD . /app
-
 RUN apk update \
  && apk add nodejs \
  && rm /var/cache/apk/*
+
+ADD . /app
 
 RUN cd /app \
  && npm install --production \
