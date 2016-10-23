@@ -61,7 +61,7 @@ describe('Authentication', () => {
   it('can create User as admin', () => {
     const options = {
       headers: {
-        Authentication: 'Basic ' + (new Buffer('admin:secret').toString('base64'))
+        Authorization: 'Basic ' + (new Buffer('admin:secret').toString('base64'))
       }
     };
     const query = '{createUser(name:"Alice",mail:"alice@example.com",password:"Welcome!"){id}}';

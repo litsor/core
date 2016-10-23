@@ -42,7 +42,7 @@ class Authentication {
     app.initialize(function() {
       let context = new Context();
       let promise;
-      let authnHeader = typeof this.headers.authentication === 'string' ? this.headers.authentication : '';
+      let authnHeader = typeof this.headers.authorization === 'string' ? this.headers.authorization : '';
       
       // Check Basic auth - used for admin tokens.
       let parts = authnHeader.match(/^Basic (.+)$/);
