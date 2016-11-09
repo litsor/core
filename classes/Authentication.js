@@ -39,11 +39,11 @@ class Authentication {
     this.password = new Password(this.options.password);
 
     const self = this;
-    app.initialize(function() {
+    app.authentication(function() {
       let context = new Context();
       let promise;
       let authnHeader = typeof this.headers.authorization === 'string' ? this.headers.authorization : '';
-      
+
       // Check Basic auth - used for admin tokens.
       let parts = authnHeader.match(/^Basic (.+)$/);
       if (parts) {
@@ -56,16 +56,19 @@ class Authentication {
           context = undefined;
         }
       }
-      
+
       // Check Bearer token.
       parts = authnHeader.match(/^Bearer (.+)$/);
       if (parts) {
-        const fields = this.options.userFields.join(' ');
-        const query = '{token:AuthnToken(token:?){user{' + fields + '}}}';
+        const fields = self.options.userFields.join(' ');
+        const query = '{token:listAuthnToken(token:?){user{' + fields + '}}}';
         const args = [parts[1]];
         promise = storage.query(query, args).then(result => {
-          if (result.token) {
-            context.setUser(result.token.user);
+          if (result.token.length) {
+            context.setUser(result.token[0].user);
+          }
+          else {
+            throw Error('Invalid access token');
           }
         });
       }
@@ -73,7 +76,7 @@ class Authentication {
         this.setParameter('context', context);
       });
     });
-    
+
     app.postvalidation('POST /token', function() {
       if (!tokenValidator(this.body)) {
         throw new Error(tokenValidator.error);

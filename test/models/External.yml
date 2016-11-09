@@ -1,0 +1,30 @@
+database: restapi
+access: 'true'
+mutation: 'false'
+restapi:
+  list:
+    uri: "{location}/customsearch/v1?key={key}&cx={cx}&q={query}&start={offset}"
+    maxPages: 3
+    itemsPerPage: 10
+    offsetBase: 1
+    template:
+      from: $.items
+      map:
+        id:
+          from: $.link
+          md5: {}
+          substring:
+            start: 0
+            length: 16
+        title: $.title
+        link: $.link
+        snippet: $.snippet
+  item: null
+  timeout: 250
+properties:
+  title:
+    type: string
+  link:
+    type: string
+  snippet:
+    type: string

@@ -13,7 +13,7 @@ var Context = require('../classes/Context.js');
 describe('Context', function() {
   var storage;
   var temporary = {};
-  
+
   var regularUser1;
   var regularUser2;
   var adminUser;
@@ -33,6 +33,9 @@ describe('Context', function() {
           host: 'localhost',
           port: 28015,
           name: 'test'
+        },
+        restapi: {
+          engine: 'RestApi'
         }
       }
     });

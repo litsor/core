@@ -61,7 +61,7 @@ class Query {
       return this.models.get(parts[2]);
     }
     else {
-      throw new Error('Model does not exists');
+      throw new Error('Model "' + method.name + '" does not exists');
     }
   }
 
@@ -104,7 +104,7 @@ class Query {
             if (!access) {
               throw new QueryError([{message: 'Permission denied'}]);
             }
-            
+
             let functionName = 'execute' + _.capitalize(operation);
             // We call the "executeOperation" function, but also check for
             // existence of the "operation" function, which indicates if the
@@ -130,24 +130,24 @@ class Query {
     var output = {__type: model.name};
     var promises = [];
     var missing = [];
-    
+
     Object.keys(fields).forEach((alias) => {
       let field = fields[alias];
       let references;
       if (typeof model.jsonSchema.properties[field.name] !== 'undefined') {
         references = model.jsonSchema.properties[field.name].references;
       }
-      
+
       let expand = typeof references !== 'undefined' && Object.keys(field.fields).length;
       if (item[field.name] === null) {
         // Do not expand empty references.
         expand = false;
       }
-      
+
       if (typeof item[field.name] !== 'undefined' && !expand) {
         output[alias] = item[field.name];
       }
-      
+
       if (typeof item[field.name] !== 'undefined' && expand) {
         let submethod = _.clone(field);
         submethod.name = references;
@@ -157,7 +157,7 @@ class Query {
         });
         promises.push(promise);
       }
-      
+
       if (this.models.hasPluginField(model, field)) {
         let promise = this.models.getPluginFieldValue(model, field, item.id, this.context).then((value) => {
           output[alias] = value;

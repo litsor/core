@@ -34,23 +34,26 @@ describe('Storage', function() {
           host: 'localhost',
           port: 28015,
           name: 'test'
+        },
+        restapi: {
+          engine: 'RestApi'
         }
       }
     });
   });
-  
+
   it('knows that is has a User model', function() {
     return storage.models.has('User').then((result) => {
       expect(result).to.equal(true);
     });
   });
-  
+
   it('knows that is does not have a People model', function() {
     return storage.models.has('People').then((result) => {
       expect(result).to.equal(false);
     });
   });
-  
+
   it('can create a User', function() {
     let query = `{
       createUser(name: "John", mail: "john@example.com") {
@@ -63,7 +66,7 @@ describe('Storage', function() {
       temporary = result.createUser;
     });
   });
-  
+
   it('can read User', function() {
     let query = `{
       readUser(id: ?) {
@@ -77,7 +80,7 @@ describe('Storage', function() {
       expect(result.readUser.mail).to.equal(temporary.mail);
     });
   });
-  
+
   it('can list Users', function() {
     let query = `{
       listUser {
@@ -99,7 +102,7 @@ describe('Storage', function() {
       expect(found).to.equal(true);
     });
   });
-  
+
   it('can create a second User', function() {
     let query = `{
       createUser(name: "Bob", mail: "bob@example.com") {
@@ -111,7 +114,7 @@ describe('Storage', function() {
       expect(result.createUser).to.have.property('id');
     });
   });
-  
+
   it('will list both Users', function() {
     let query = `{
       listUser {
@@ -124,7 +127,7 @@ describe('Storage', function() {
       expect(result.listUser.length >= 2).to.equal(true);
     });
   });
-  
+
   it('can filter list on indexed field', function() {
     let query = `{
       listUser(mail:"john@example.com") {
@@ -136,7 +139,7 @@ describe('Storage', function() {
       expect(result.listUser).to.have.length(1);
     });
   });
-  
+
   it('can filter list on non-indexed field', function() {
     let query = `{
       listUser(name:"John") {
@@ -148,7 +151,7 @@ describe('Storage', function() {
       expect(result.listUser).to.have.length(1);
     });
   });
-  
+
   it('can filter list on multiple fields', function() {
     let query = `{
       listUser(name:"John",mail:"bob@example.com") {
@@ -161,7 +164,7 @@ describe('Storage', function() {
       expect(result.listUser).to.have.length(0);
     });
   });
-  
+
   it('can count Users', function() {
     let query = `{
       countUser
@@ -172,7 +175,7 @@ describe('Storage', function() {
       expect(result.countUser >= 2).to.equal(true);
     });
   });
-  
+
   it('can count Users with filter', function() {
     let query = `{
       countUser (name:"John",mail:"john@example.com")
@@ -182,7 +185,7 @@ describe('Storage', function() {
       expect(result.countUser).to.equal(1);
     });
   });
-  
+
   it('can update User', function() {
     let query = `{
       updateUser(id: ?, name: "Alice") {
@@ -196,7 +199,7 @@ describe('Storage', function() {
       expect(result.updateUser.mail).to.equal(temporary.mail);
     });
   });
-  
+
   it('can delete User', function() {
     let query = `{
       deleteUser(id: ?)

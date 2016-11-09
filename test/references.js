@@ -31,6 +31,9 @@ describe('References', function() {
           host: 'localhost',
           port: 28015,
           name: 'test'
+        },
+        restapi: {
+          engine: 'RestApi'
         }
       }
     });

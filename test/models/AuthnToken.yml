@@ -7,7 +7,7 @@ properties:
     indexed: true
   user:
     type: string
-    references: user
+    references: User
     reverse: authnTokens
   created:
     type: integer
