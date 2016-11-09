@@ -136,7 +136,7 @@ describe('Authentication', () => {
     });
   });
 
-  it('cannot get user proflle using wrong access token', () => {
+  it('cannot get user profile using wrong access token', () => {
     const data = {
       query: '{user:User(id:?){id, name}}',
       arguments: [userId]
@@ -151,6 +151,60 @@ describe('Authentication', () => {
     return Needle.postAsync(uri + '/graphql', data, options).then(response => {
       expect(response.statusCode).to.equal(401);
       expect(response.body).to.not.have.property('user');
+    });
+  });
+
+  it('can pass access check with query function', () => {
+    // The access function is 'q("rank").rank >= i.rank'.
+    // The user has rank 10, so this test should pass.
+    const data = {
+      query: '{story: createStory(title:?,body:?,rank:5){id}}',
+      arguments: ['test', 'test']
+    };
+    const options = {
+      json: true,
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    };
+    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+    });
+  });
+
+  it('can pass access check that rely on default values', () => {
+    // The access function is 'q("rank").rank >= i.rank'.
+    // i.rank is not provided, but has a default value of 1.
+    const data = {
+      query: '{story: createStory(title:?,body:?){id}}',
+      arguments: ['test', 'test']
+    };
+    const options = {
+      json: true,
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    };
+    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+    });
+  });
+
+  it('can deny access with query function', () => {
+    // The access function is 'q("rank").rank >= i.rank'.
+    // The user has rank 10, so we may not post a Story with rank 15.
+    const data = {
+      query: '{story: createStory(title:?,body:?,rank:15){id}}',
+      arguments: ['test', 'test']
+    };
+    const options = {
+      json: true,
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    };
+    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
+      expect(response.statusCode).to.equal(403);
     });
   });
 });

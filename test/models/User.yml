@@ -32,3 +32,6 @@ properties:
     type: integer
   admin:
     type: object
+  rank:
+    type: integer
+    default: '10'

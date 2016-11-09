@@ -1,4 +1,6 @@
 database: rethink
+access: 'true'
+mutation: 'q("rank").rank >= i.rank'
 required:
   - title
   - body
@@ -8,3 +10,6 @@ properties:
     maxLength: 255
   body:
     type: string
+  rank:
+    type: integer
+    default: '1'
