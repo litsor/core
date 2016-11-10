@@ -3,23 +3,22 @@ access: 'true'
 mutation: 'false'
 restapi:
   list:
-    uri: "{location}/customsearch/v1?key={key}&cx={cx}&q={query}&start={offset}"
+    uri: "{baseUri}/customsearch/v1?key={key}&cx={cx}&q={query}&start={offset}"
     maxPages: 3
     itemsPerPage: 10
     offsetBase: 1
     template:
-      from: $.items
+      single: $.items
       map:
-        id:
-          from: $.link
-          md5: {}
-          substring:
-            start: 0
-            length: 16
-        title: $.title
-        link: $.link
-        snippet: $.snippet
-  item: null
+        object:
+          id:
+            single: $.link
+            hash: {}
+            substring:
+              length: 16
+          title: $.title
+          link: $.link
+          snippet: $.snippet
   timeout: 250
 properties:
   title:

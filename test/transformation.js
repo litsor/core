@@ -46,7 +46,7 @@ chai.use(chaiAsPromised);
  * for this property is a new transformation chain, or a query string, which is
  * a shorthand for ``{single: "query"}``.
  */
-describe.only('Transformation', () => {
+describe('Transformation', () => {
   it('can execute empty transformation', () => {
     const transformer = new Transformation({});
     expect(transformer.transform({})).to.deep.equal({});
