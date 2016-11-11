@@ -96,7 +96,7 @@ class Model {
     });
   }
 
-  executeRemove(data) {
+  executeRemove(data, fieldNames, dry) {
     var validation = this.validateKey(data);
     if (!validation.valid) {
       throw new QueryError(validation.errors);

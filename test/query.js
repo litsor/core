@@ -11,7 +11,7 @@ const Ids = require('../classes/Ids');
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
-describe.only('Query', () => {
+describe('Query', () => {
   let storage;
   let temporary = {};
 
@@ -490,6 +490,28 @@ describe.only('Query', () => {
       return storage.query('{Post(id:?){title}}', [id]);
     }).then(result => {
       expect(result.Post.title).to.equal('foo');
+    });
+  });
+
+  it('can dry execute delete operation', () => {
+    let id;
+    return storage.query('{createPost(title:"foo"){id}}').then(result => {
+      id = result.createPost.id;
+      return storage.query('dry {deletePost(id:?)}', [id]);
+    }).delay(10).then(() => {
+      return storage.query('{Post(id:?){title}}', [id]);
+    }).then(result => {
+      expect(result.Post.title).to.equal('foo');
+    });
+  });
+
+  it('will return real results when executing dry read', () => {
+    let id;
+    return storage.query('{createPost(title:"Test!"){id}}').then(result => {
+      id = result.createPost.id;
+      return storage.query('{Post(id:?){title}}', [id]);
+    }).then(result => {
+      expect(result.Post.title).to.equal('Test!');
     });
   });
 

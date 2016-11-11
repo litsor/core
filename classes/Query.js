@@ -19,7 +19,7 @@ class Query {
 
     // Check for the dry flag, which may be prepended in front of the query.
     this.dry = false;
-    if (query.match(/^([\w]*dry)/, query)) {
+    if (typeof query === 'string' && query.match(/^([\w]*dry)/, query)) {
       query = query.replace(/^([\w]*dry)/, '');
       this.dry = true;
     }
