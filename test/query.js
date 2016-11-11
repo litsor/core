@@ -6,11 +6,12 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
 const Storage = require('../classes/Storage.js');
+const Ids = require('../classes/Ids');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
-describe('Query', () => {
+describe.only('Query', () => {
   let storage;
   let temporary = {};
 
@@ -429,5 +430,74 @@ describe('Query', () => {
     }).catch((error) => {
       expect(error.message).to.match(/^Query error: /);
     }).done();
+  });
+
+  /**
+   * @doc
+   * ## Dry run
+   * Queries can be prepended by the ``dry`` keyword. This will
+   * validate the query but will not make any database changes.
+   * Get queries are executed as-is. Create, update and delete
+   * actions will return data as if it was executed.
+   * Example query:
+   * ```
+   * dry {
+   *   createPost(title:"test") {
+   *     id title
+   *   }
+   * }
+   * ```
+   * Will return the following result:
+   * ```
+   * {
+   *   "createPost": {
+   *     "__type": "Post",
+   *     "id": "1cvw",
+   *     "title": "test"
+   *   }
+   * }
+   * ```
+   * The returned id is an obfuscation of the id 0.
+   * Nothing was written to the database.
+   */
+  it('can dry execute create operation', () => {
+    let count;
+    const countQuery = `{countPost}`;
+    const query = `dry {
+      createPost(title:"test") {
+        id title
+      }
+    }`;
+    return storage.query(countQuery).then(result => {
+      count = result.countPost;
+      return storage.query(query);
+    }).then(result => {
+      // Id looks like a real id, but is the obfuscation of 0.
+      expect(result.createPost).to.have.property('id', new Ids(0).id);
+    }).delay(10).then(() => {
+      return storage.query(countQuery);
+    }).then(result => {
+      expect(result.countPost).to.equal(count);
+    });
+  });
+
+  it('can dry execute update operation', () => {
+    let id;
+    return storage.query('{createPost(title:"foo"){id}}').then(result => {
+      id = result.createPost.id;
+      return storage.query('dry {updatePost(id:?,title:"bar"){id}}', [id]);
+    }).delay(10).then(() => {
+      return storage.query('{Post(id:?){title}}', [id]);
+    }).then(result => {
+      expect(result.Post.title).to.equal('foo');
+    });
+  });
+
+  it('will return validation errors on dry-run', () => {
+    return Promise.resolve().then(() => {
+      return storage.query('{createPost(teststring:123)}');
+    }).then(() => {
+      throw new Error('Query passed');
+    }).catch(error => {});
   });
 });

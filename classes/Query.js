@@ -17,6 +17,13 @@ class Query {
 
     this.models = models;
 
+    // Check for the dry flag, which may be prepended in front of the query.
+    this.dry = false;
+    if (query.match(/^([\w]*dry)/, query)) {
+      query = query.replace(/^([\w]*dry)/, '');
+      this.dry = true;
+    }
+
     // Process query arguments.
     query = this.injectArguments(query, args);
 
@@ -110,7 +117,7 @@ class Query {
             // existence of the "operation" function, which indicates if the
             // models engine supports this operation.
             if (typeof model[operation] === 'function' && typeof model[functionName] === 'function') {
-              return model[functionName](method.params, method.fieldNames);
+              return model[functionName](method.params, method.fieldNames, this.dry);
             }
             else {
               throw new QueryError([{message: 'Operation ' + operation + ' is not supported by model'}]);

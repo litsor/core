@@ -5,6 +5,7 @@ const Promise = require('bluebird');
 
 const Sequence = require(__dirname + '/Sequence.js');
 const QueryError = require(__dirname + '/QueryError');
+const Ids = require(__dirname + '/Ids');
 
 class Model {
   constructor(modelData, database, internalDatabase) {
@@ -16,21 +17,22 @@ class Model {
     this.validatePatch = modelData.validatePatch;
     this.accessMapping = modelData.accessMapping;
     this.fillDefaults = modelData.fillDefaults;
-    
+
     this.sequence = new Sequence(this.name, internalDatabase);
+    this.dummyId = new Ids(0).id;
   }
-  
+
   ready() {
     return true;
   }
-  
+
   executeCount(data) {
     let filters = data;
     return Promise.resolve(this.ready()).then(() => {
       return this.count(filters);
     });
   }
-  
+
   executeList(data, fieldNames) {
     let limit = typeof data.limit === 'number' ? data.limit : 10;
     let offset = typeof data.offset === 'number' ? data.offset : 0;
@@ -41,7 +43,7 @@ class Model {
       return this.list(filters, limit, offset, fieldNames, sort, ascending);
     });
   }
-  
+
   executeRead(data, fieldNames) {
     var validation = this.validateKey(data);
     if (!validation.valid) {
@@ -51,12 +53,16 @@ class Model {
       return this.read(data, fieldNames);
     });
   }
-  
-  executeCreate(data) {
+
+  executeCreate(data, fieldNames, dry) {
     this.fillDefaults(data);
     var validation = this.validateInput(data);
     if (!validation.valid) {
       throw new QueryError(validation.errors);
+    }
+    if (dry) {
+      data.id = this.dummyId;
+      return data;
     }
     return Promise.resolve(this.ready()).then(() => {
       return this.sequence.get();
@@ -65,8 +71,8 @@ class Model {
       return this.create(data);
     });
   }
-  
-  executeUpdate(data) {
+
+  executeUpdate(data, fieldNames, dry) {
     // Validate data, but without the undefined values.
     // Only ensure that these fields are not required fields.
     var validateData = _.clone(data);
@@ -82,15 +88,21 @@ class Model {
     if (!validation.valid) {
       throw new QueryError(validation.errors);
     }
+    if (dry) {
+      return data;
+    }
     return Promise.resolve(this.ready()).then(() => {
       return this.update(data);
     });
   }
-  
+
   executeRemove(data) {
     var validation = this.validateKey(data);
     if (!validation.valid) {
       throw new QueryError(validation.errors);
+    }
+    if (dry) {
+      return {id: data.id};
     }
     return Promise.resolve(this.ready()).then(() => {
       return this.remove(data);
