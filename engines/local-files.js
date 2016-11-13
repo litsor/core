@@ -1,13 +1,12 @@
-"use strict";
+'use strict';
 
 const Path = require('path');
-const Crypto = require('crypto');
 
 const _ = require('lodash');
-const Promise = require('bluebird');
-const Fs = Promise.promisifyAll(require('fs-extra'));
+const Bluebird = require('bluebird');
+const Fs = Bluebird.promisifyAll(require('fs-extra'));
 
-const Model = require('../classes/Model');
+const Model = require('../classes/model');
 
 /**
  * @doc internals/storage/local-files
@@ -53,12 +52,12 @@ class LocalFiles extends Model {
     return true;
   }
 
-  read(data, fieldNames) {
+  read(data) {
     const dir = this.getDirectory(data.id);
     const filename = Path.join(dir, data.id + '.meta');
     return Fs.readFileAsync(filename).then(contents => {
       return _.omit(JSON.parse(contents), this.privateProperties);
-    }).catch(err => {
+    }).catch(() => {
       throw new Error('File not found');
     });
   }

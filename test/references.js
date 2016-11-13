@@ -1,22 +1,22 @@
 /* eslint-env node, mocha */
-"use strict";
+'use strict';
 
-var Promise = require('bluebird');
-var chai = require("chai");
-var chaiAsPromised = require("chai-as-promised");
+const Promise = require('bluebird');
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+
 chai.use(chaiAsPromised);
-var expect = chai.expect;
+const expect = chai.expect;
 
-var Storage = require('../classes/Storage.js');
+const Storage = require('../classes/storage');
 
-describe('References', function() {
-  var storage;
-  var temporary = {};
+describe('References', () => {
+  let storage;
 
-  var userId;
-  var postId;
+  let userId;
+  let postId;
 
-  before(function() {
+  before(() => {
     storage = new Storage({
       modelsDir: 'test/models',
       databases: {
@@ -24,7 +24,7 @@ describe('References', function() {
           engine: 'redis',
           host: 'localhost',
           port: 6379,
-          prefix: '',
+          prefix: ''
         },
         rethink: {
           engine: 'RethinkDB',
@@ -37,45 +37,43 @@ describe('References', function() {
         }
       }
     });
-    let promises = [];
     let query;
     let args;
-    let promise;
     query = `{user:createUser(name: "Alice", mail: "alice@example.com") { id }}`;
-    return storage.query(query).then((result) => {
+    return storage.query(query).then(result => {
       userId = result.user.id;
       query = '{post:createPost(title:"Test",owner:?){id}}';
       args = [userId];
       return storage.query(query, args);
-    }).then((result) => {
+    }).then(result => {
       postId = result.post.id;
     });
   });
 
-  after(function() {
+  after(() => {
     return Promise.all([
       storage.query('{deleteUser(id:?)}', [userId]),
       storage.query('{deletePost(id:?)}', [postId])
     ]);
   });
 
-  it('can get User via Post', function() {
-    let query = `{
+  it('can get User via Post', () => {
+    const query = `{
       Post(id:?) {
         owner {
           id
         }
       }
     }`;
-    let args = [postId];
-    return storage.query(query, args).then((result) => {
+    const args = [postId];
+    return storage.query(query, args).then(result => {
       expect(result.Post).to.have.property('owner');
       expect(result.Post.owner).to.have.property('id');
     });
   });
 
-  it('will fetch extra fields of references item', function() {
-    let query = `{
+  it('will fetch extra fields of references item', () => {
+    const query = `{
       Post(id:?) {
         owner {
           id
@@ -83,38 +81,38 @@ describe('References', function() {
         }
       }
     }`;
-    let args = [postId];
-    return storage.query(query, args).then((result) => {
+    const args = [postId];
+    return storage.query(query, args).then(result => {
       expect(result.Post).to.have.property('owner');
       expect(result.Post.owner).to.have.property('id');
       expect(result.Post.owner).to.have.property('name', 'Alice');
     });
   });
 
-  it('can get Post via User (reverse link)', function() {
-    let query = `{
+  it('can get Post via User (reverse link)', () => {
+    const query = `{
       User(id:?) {
         id, posts {
           id
         }
       }
     }`;
-    let args = [userId];
-    return storage.query(query, args).then((result) => {
+    const args = [userId];
+    return storage.query(query, args).then(result => {
       expect(result.User).to.have.property('posts');
       expect(result.User.posts).to.have.length(1);
       expect(result.User.posts[0]).to.have.property('id', postId);
     });
   });
 
-  it('can omit fieldnames in references', function() {
-    let query = `{
+  it('can omit fieldnames in references', () => {
+    const query = `{
       User(id:?) {
         id, posts
       }
     }`;
-    let args = [userId];
-    return storage.query(query, args).then((result) => {
+    const args = [userId];
+    return storage.query(query, args).then(result => {
       expect(result.User).to.have.property('posts');
       expect(result.User.posts).to.have.length(1);
       expect(result.User.posts[0]).to.have.property('id', postId);

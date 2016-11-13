@@ -1,18 +1,16 @@
-"use strict";
+'use strict';
 
+const spawn = require('child_process').spawn;
 const Watch = require('watch');
-const Chalk = require('Chalk');
-const Spawn = require('child_process').spawn;
+const Chalk = require('chalk');
 
 // Global booleans to keep track of running processes.
-var taskRunning = false;
-var killed = false;
+let killed = false;
 
 // NodeJS process.
-var api = null;
-var restartCount = 0;
+let api = null;
 
-var watchCallback = function() {
+const watchCallback = function() {
   if (api !== null) {
     if (!killed) {
       console.log(Chalk.blue('Killing application'));
@@ -21,21 +19,19 @@ var watchCallback = function() {
     }
     return;
   }
-  ++restartCount;
   console.log(Chalk.blue('Starting application'));
   try {
-    api = Spawn('npm', ['test'], {stdio: 'inherit'});
-  }
-  catch (e) {
-    console.error(e);
+    api = spawn('npm', ['test'], {stdio: 'inherit'});
+  } catch (err) {
+    console.error(err);
     return;
   }
   killed = false;
-  api.on('close', (code) => {
+  api.on('close', () => {
     api = null;
     if (killed) {
       killed = false;
-      setImmediate(function() {
+      setImmediate(() => {
         watchCallback();
       });
     }

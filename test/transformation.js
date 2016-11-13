@@ -2,11 +2,12 @@
 'use strict';
 
 const Crypto = require('crypto');
+
 const _ = require('lodash');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
-const Transformation = require('../classes/Transformation');
+const Transformation = require('../classes/transformation');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);

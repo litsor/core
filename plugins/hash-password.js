@@ -1,7 +1,7 @@
 'use strict';
 
-const Plugin = require('../classes/Plugin');
-const Password = require('../classes/Password');
+const Plugin = require('../classes/plugin');
+const Password = require('../classes/password');
 
 class HashPassword extends Plugin {
   constructor(models) {

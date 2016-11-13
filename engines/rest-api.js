@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
 const _ = require('lodash');
-const Promise = require('bluebird');
-const Needle = Promise.promisifyAll(require('needle'));
+const Bluebird = require('bluebird');
+const Needle = Bluebird.promisifyAll(require('needle'));
 
-const Transformation = require('../classes/Transformation');
-const Model = require('../classes/Model');
+const Transformation = require('../classes/transformation');
+const Model = require('../classes/model');
 
 class RestApi extends Model {
   constructor(modelData, database, internalDatabase) {
@@ -30,38 +30,25 @@ class RestApi extends Model {
       }
       this.listTransformer = new Transformation(this.rest.list.template);
     }
-
-    let self = this;
-    let ready = true;
   }
 
   ready() {
     return true;
   }
 
-  read(data, fieldNames) {
-    return {
-      title: 'Test'
-    };
-  }
-
-  count(filters) {
-    return 0;
-  }
-
   replaceTokens(input, tokens, urlEncode = true) {
     let output = input;
-    for (let key in tokens) {
+    Object.keys(tokens).forEach(key => {
       let value = tokens[key];
       if (urlEncode) {
         value = encodeURIComponent(value);
       }
       output = output.split(`{${key}}`).join(value);
-    }
+    });
     return output;
   }
 
-  list(filters, limit, offset, fieldNames, sort, ascending) {
+  list(filters, limit, offset) {
     if (typeof this.rest.list === 'undefined') {
       throw new Error('List method is not configured for REST API');
     }
@@ -71,7 +58,7 @@ class RestApi extends Model {
     uriTemplate = this.replaceTokens(uriTemplate, filters);
     let results = [];
     const maxResults = this.rest.list.maxPages * this.rest.list.itemsPerPage;
-    return Promise.resolve(_.range(0, this.rest.list.maxPages)).each(index => {
+    return Bluebird.resolve(_.range(0, this.rest.list.maxPages)).each(index => {
       // The results array should have at least index * itemsPerPage items,
       // if not. the preceding query returned less than itemsPerPage results
       // which means that we already reached the end of the list.
@@ -79,7 +66,7 @@ class RestApi extends Model {
       // can occur when the requests return more than itemsPerPage results.
       if (results.length >= index * this.rest.list.itemsPerPage && results.length < maxResults) {
         const uri = uriTemplate.split('{offset}').join(results.length + offset + this.rest.list.offsetBase);
-        return Needle.getAsync(uri, {json: true}).catch(error => {
+        return Needle.getAsync(uri, {json: true}).catch(() => {
           throw new Error('Unable to connect to REST API');
         }).then(response => {
           if (response.statusCode >= 300) {

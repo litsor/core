@@ -1,8 +1,9 @@
-"use strict";
+'use strict';
 
 const Promise = require('bluebird');
 const _ = require('lodash');
-const Query = require(__dirname + '/Query');
+
+const Query = require('./query');
 
 class Context {
   constructor() {
@@ -19,13 +20,12 @@ class Context {
   }
 
   access(models, model, operation, data, field) {
-    var fnKey;
-    var accessOperations = ['read', 'list', 'count'];
-    var type = (accessOperations.indexOf(operation) >= 0) ? 'access' : 'mutation';
+    let fnKey;
+    const accessOperations = ['read', 'list', 'count'];
+    const type = (accessOperations.indexOf(operation) >= 0) ? 'access' : 'mutation';
     if (typeof field === 'undefined' || field === null) {
       fnKey = model.accessMapping.model[type];
-    }
-    else {
+    } else {
       if (typeof model.accessMapping.model.properties[field] === 'undefined') {
         // Field does not exist in model. Probably a plugin field.
         // @todo: Implement access permissions for plugins.
@@ -33,30 +33,31 @@ class Context {
       }
       fnKey = model.accessMapping.model.properties[field][type];
     }
-    var cacheKey = fnKey + ':' + JSON.stringify(data);
+    const cacheKey = fnKey + ':' + JSON.stringify(data);
     if (typeof this.accessCache[cacheKey] !== 'undefined') {
       return this.accessCache[cacheKey];
     }
-    var fnFields = model.accessMapping.functions[fnKey].fields;
-    var fn = model.accessMapping.functions[fnKey]['function'];
-    var item;
+    const fnFields = model.accessMapping.functions[fnKey].fields;
+    const fn = model.accessMapping.functions[fnKey].function;
+    let item;
 
     if (operation === 'create') {
       // The access function can be dependent on default values.
       model.fillDefaults(data);
     }
 
-    var missingFields = _.difference(fnFields, Object.keys(data));
-    if (missingFields.length && typeof data.id === 'string') {
-      let fields = missingFields.join(' ');
-      let id = data.id.replace(/[^\w]/g, '');
-      let gql = `{item:${model.name}(id:"${id}"){${fields}}}`;
-      item = new Query(models, gql).execute().then(result => { return result.item; });
-    }
-    else {
+    const missingFields = _.difference(fnFields, Object.keys(data));
+    if (missingFields.length > 0 && typeof data.id === 'string') {
+      const fields = missingFields.join(' ');
+      const id = data.id.replace(/[^\w]/g, '');
+      const gql = `{item:${model.name}(id:"${id}"){${fields}}}`;
+      item = new Query(models, gql).execute().then(result => {
+        return result.item;
+      });
+    } else {
       item = Promise.resolve(data);
     }
-    return item.then((_item) => {
+    return item.then(_item => {
       item = _item;
 
       // The access function may contain a query function.
@@ -76,20 +77,16 @@ class Context {
           queryResult = result.User;
         });
       };
-      let access;
       return Promise.resolve().then(() => {
         try {
           return fn(item, this.user, query, operation);
-        }
-        catch (error) {
-          if (error instanceof Promise) {
-            return error.then(() => {
+        } catch (err) {
+          if (err instanceof Promise) {
+            return err.then(() => {
               return fn(item, this.user, query, operation);
             });
           }
-          else {
-            throw error;
-          }
+          throw err;
         }
       }).then(access => {
         this.accessCache[cacheKey] = access;

@@ -4,23 +4,19 @@
 const Crypto = require('crypto');
 
 const _ = require('lodash');
-const Promise = require('bluebird');
-const Faker = require('faker');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
-const GoogleSearchMockup = require('./mockups/googlesearch');
-const Storage = require('../classes/Storage.js');
+const Storage = require('../classes/storage');
+
+const GoogleSearchMockup = require('./mockups/google-search');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('RestApi', () => {
   let storage;
-  let temporary = {};
   let googleSearch;
-  let searchResults = {};
-  let requestCount = 0;
 
   const cx = Crypto.randomBytes(8).toString('base64');
   const key = Crypto.randomBytes(8).toString('base64');
@@ -33,7 +29,7 @@ describe('RestApi', () => {
           engine: 'redis',
           host: 'localhost',
           port: 6379,
-          prefix: '',
+          prefix: ''
         },
         rethink: {
           engine: 'RethinkDB',
@@ -45,8 +41,8 @@ describe('RestApi', () => {
           engine: 'RestApi',
           parameters: {
             baseUri: 'http://localhost:8371',
-            key: key,
-            cx: cx
+            key,
+            cx
           }
         }
       }

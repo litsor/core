@@ -1,9 +1,10 @@
-"use strict";
+'use strict';
 
 const _ = require('lodash');
 const r = require('rethinkdb');
-const Model = require(__dirname + '/../classes/Model');
 const Promise = require('bluebird');
+
+const Model = require('../classes/model');
 
 class RethinkDB extends Model {
   constructor(modelData, database, internalDatabase) {
@@ -17,19 +18,16 @@ class RethinkDB extends Model {
 
     this.dbName = database.name;
 
-    let self = this;
-    let ready = new Promise(function(resolve, reject) {
-      r.connect({host: database.host, port: database.port}, function(err, _conn) {
-        self.conn = _conn;
-        resolve(self.conn);
+    const ready = new Promise((resolve, reject) => {
+      r.connect({host: database.host, port: database.port}, (err, _conn) => {
+        this.conn = _conn;
+        resolve(this.conn);
         if (err) {
-          reject();
-          console.error('No connection to database');
-          process.exit(1);
+          reject('No connection to database');
         }
       });
     });
-    
+
     this.indexedFields = [];
     this._ready = ready.then(() => {
       return r.dbList().run(this.conn);
@@ -46,13 +44,13 @@ class RethinkDB extends Model {
     }).then(() => {
       return r.db(database.name).table(this.name).indexList().run(this.conn);
     }).then(indexes => {
-      let promises = [];
-      Object.keys(this.jsonSchema.properties).forEach((key) => {
-        let field = this.jsonSchema.properties[key];
+      const promises = [];
+      Object.keys(this.jsonSchema.properties).forEach(key => {
+        const field = this.jsonSchema.properties[key];
         if (typeof field.reverse !== 'undefined' || field.indexed === true) {
           this.indexedFields.push(key);
           if (indexes.indexOf(key) < 0) {
-            let promise = r.db(database.name).table(this.name).indexCreate(key).run(this.conn).then(() => {
+            const promise = r.db(database.name).table(this.name).indexCreate(key).run(this.conn).then(() => {
               return r.db(database.name).table(this.name).indexWait().run(this.conn);
             });
             promises.push(promise);
@@ -62,82 +60,82 @@ class RethinkDB extends Model {
       return Promise.all(promises);
     });
   }
-  
+
   ready() {
     return Promise.resolve(this._ready);
   }
-  
+
   read(data, fieldNames) {
-    return r.db(this.dbName).table(this.name).get(data.id).pluck(fieldNames).run(this.conn).then((row) => {
+    return r.db(this.dbName).table(this.name).get(data.id).pluck(fieldNames).run(this.conn).then(row => {
       return this.fillNulls(row, fieldNames);
     });
   }
-  
+
   fillNulls(row, fieldNames) {
-    fieldNames.forEach((key) => {
+    fieldNames.forEach(key => {
       if (typeof row[key] === 'undefined') {
         row[key] = null;
       }
     });
     return row;
   }
-  
+
   count(filters) {
-    var query = r.db(this.dbName).table(this.name);
-    var indexedFilters = _.pick(filters, this.indexedFields);
-    if (Object.keys(indexedFilters).length) {
+    let query = r.db(this.dbName).table(this.name);
+    const indexedFilters = _.pick(filters, this.indexedFields);
+    if (Object.keys(indexedFilters).length > 0) {
       // @todo: Pick filter with highest cardinality.
-      let index = Object.keys(indexedFilters)[0];
-      query = query.getAll(filters[index], {index: index});
+      const index = Object.keys(indexedFilters)[0];
+      query = query.getAll(filters[index], {index});
       filters = _.omit(filters, index);
     }
-    if (Object.keys(filters).length) {
+    if (Object.keys(filters).length > 0) {
       query = query.filter(filters);
     }
     query = query.count();
-    return query.run(this.conn).then((data) => {
+    return query.run(this.conn).then(data => {
       return data;
     });
   }
-  
+
   list(filters, limit, offset, fieldNames, sort, ascending) {
-    var query = r.db(this.dbName).table(this.name);
-    var indexedFilters = _.pick(filters, this.indexedFields);
-    if (Object.keys(indexedFilters).length) {
+    let query = r.db(this.dbName).table(this.name);
+    const indexedFilters = _.pick(filters, this.indexedFields);
+    if (Object.keys(indexedFilters).length > 0) {
       // @todo: Pick filter with highest cardinality.
-      let index = Object.keys(indexedFilters)[0];
-      query = query.getAll(filters[index], {index: index});
+      const index = Object.keys(indexedFilters)[0];
+      query = query.getAll(filters[index], {index});
       filters = _.omit(filters, index);
     }
-    if (Object.keys(filters).length) {
+    if (Object.keys(filters).length > 0) {
       query = query.filter(filters);
     }
     query = query.orderBy(ascending ? sort : r.desc(sort));
     query = query.pluck(fieldNames).slice(offset, offset + limit);
-    return query.run(this.conn).then((cursor) => {
+    return query.run(this.conn).then(cursor => {
       return cursor.toArray();
-    }).then((rows) => {
-      rows.forEach((row) => {
+    }).then(rows => {
+      rows.forEach(row => {
         return this.fillNulls(row, fieldNames);
       });
       return rows;
     });
   }
-  
+
   create(data) {
     return r.db(this.dbName).table(this.name).insert(data).run(this.conn).then(() => {
       return data;
     });
   }
-  
+
   update(data) {
-    var id = data.id;
+    const id = data.id;
     data = _.omit(data, ['id']);
     return r.db(this.dbName).table(this.name).get(id).update(data).run(this.conn).then(() => {
-      return {id: id};
+      return {id};
     });
   }
-  
+
   remove(data) {
     return r.db(this.dbName).table(this.name).get(data.id).delete().run(this.conn).then(() => {
       return {id: data.id};

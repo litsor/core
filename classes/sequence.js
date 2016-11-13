@@ -1,29 +1,22 @@
-"use strict";
+'use strict';
 
 const redis = require('redis');
-const Ids = require('./Ids');
+
+const Ids = require('./ids');
 
 class Sequence {
   constructor(name, database) {
     this.name = name;
     this.lastId = 0;
-    
     this.client = redis.createClient(database.port, database.host);
-    
-    this.ready = new Promise((resolve, reject) => {
-      this.lastId = 0;
-      resolve();
-    });
   }
-  
+
   get() {
-    let self = this;
     return new Promise((resolve, reject) => {
-      self.client.hincrby('ids', this.name, 1, function(error, result) {
-        if (error) {
-          reject(error);
-        }
-        else {
+      this.client.hincrby('ids', this.name, 1, (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
           resolve(new Ids(result).id);
         }
       });

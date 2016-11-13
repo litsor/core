@@ -3,7 +3,7 @@ const _ = require('lodash');
 const Faker = require('faker');
 const BlueGate = require('bluegate');
 
-class GoogleSearchMockup {
+class GoogleSearch {
   constructor(key, cx) {
     this.key = key;
     this.cx = cx;
@@ -19,7 +19,7 @@ class GoogleSearchMockup {
       },
       items: []
     };
-    for (var i = 0; i < totalResults; ++i) {
+    for (let i = 0; i < totalResults; ++i) {
       const domain = Faker.internet.domainName();
       results.items.push({
         title: Faker.lorem.sentence(),
@@ -29,27 +29,28 @@ class GoogleSearchMockup {
       });
     }
     this.searchResults[query] = results;
-  };
+  }
 
   startup() {
-    var self = this;
     this.api = new BlueGate({log: false});
-    this.api.error(function(error) { console.error(this.error); });
-    this.api.authentication(function() {
-      const key = this.getQuery('key', 'string');
-      const cx = this.getQuery('cx', 'string');
-      if (self.key !== key || self.cx !== cx) {
+    this.api.error(request => {
+      console.error(request.error);
+    });
+    this.api.authentication(request => {
+      const key = request.getQuery('key', 'string');
+      const cx = request.getQuery('cx', 'string');
+      if (this.key !== key || this.cx !== cx) {
         throw new Error('Invalid key or cx');
       }
     });
-    this.api.process('GET /customsearch/v1', function() {
-      ++self._requestCount;
-      const query = this.getQuery('q', 'string');
-      const offset = this.getQuery('start', 'int', 1);
-      if (typeof self.searchResults[query] === 'undefined') {
-        self.generateResults(query);
+    this.api.process('GET /customsearch/v1', request => {
+      ++this._requestCount;
+      const query = request.getQuery('q', 'string');
+      const offset = request.getQuery('start', 'int', 1);
+      if (typeof this.searchResults[query] === 'undefined') {
+        this.generateResults(query);
       }
-      const output = _.cloneDeep(self.searchResults[query]);
+      const output = _.cloneDeep(this.searchResults[query]);
       output.items = output.items.slice(offset - 1, offset + 9);
       return output;
     });
@@ -67,4 +68,4 @@ class GoogleSearchMockup {
   }
 }
 
-module.exports = GoogleSearchMockup;
+module.exports = GoogleSearch;

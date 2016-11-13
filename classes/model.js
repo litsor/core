@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
 const _ = require('lodash');
 const Promise = require('bluebird');
 
-const Sequence = require(__dirname + '/Sequence.js');
-const QueryError = require(__dirname + '/QueryError');
-const Ids = require(__dirname + '/Ids');
+const Sequence = require('./sequence');
+const QueryError = require('./query-error');
+const Ids = require('./ids');
 
 class Model {
   constructor(modelData, database, internalDatabase) {
@@ -27,31 +27,31 @@ class Model {
   }
 
   executeCount(data) {
-    let filters = data;
+    const filters = data;
     return Promise.resolve(this.ready()).then(() => {
       return this.count(filters);
     });
   }
   count() {
     throw new Error('Count operation is not supported for ' + this.constructor.name);
-  };
+  }
 
   executeList(data, fieldNames) {
-    let limit = typeof data.limit === 'number' ? data.limit : 10;
-    let offset = typeof data.offset === 'number' ? data.offset : 0;
-    let sort = typeof data.sort === 'string' ? data.sort : 'id';
-    let ascending = sort[0] !== '!';
-    let filters = _.omit(data, ['limit', 'offset', 'sort']);
+    const limit = typeof data.limit === 'number' ? data.limit : 10;
+    const offset = typeof data.offset === 'number' ? data.offset : 0;
+    const sort = typeof data.sort === 'string' ? data.sort : 'id';
+    const ascending = sort[0] !== '!';
+    const filters = _.omit(data, ['limit', 'offset', 'sort']);
     return Promise.resolve(this.ready()).then(() => {
       return this.list(filters, limit, offset, fieldNames, sort, ascending);
     });
   }
-  count() {
+  list() {
     throw new Error('List operation is not supported for ' + this.constructor.name);
-  };
+  }
 
   executeRead(data, fieldNames) {
-    var validation = this.validateKey(data);
+    const validation = this.validateKey(data);
     if (!validation.valid) {
       throw new QueryError(validation.errors);
     }
@@ -59,13 +59,13 @@ class Model {
       return this.read(data, fieldNames);
     });
   }
-  count() {
+  read() {
     throw new Error('Read operation is not supported for ' + this.constructor.name);
-  };
+  }
 
   executeCreate(data, fieldNames, dry) {
     this.fillDefaults(data);
-    var validation = this.validateInput(data);
+    const validation = this.validateInput(data);
     if (!validation.valid) {
       throw new QueryError(validation.errors);
     }
@@ -75,19 +75,19 @@ class Model {
     }
     return Promise.resolve(this.ready()).then(() => {
       return this.sequence.get();
-    }).then((id) => {
+    }).then(id => {
       data.id = id;
       return this.create(data);
     });
   }
-  count() {
+  create() {
     throw new Error('Create operation is not supported for ' + this.constructor.name);
-  };
+  }
 
   executeUpdate(data, fieldNames, dry) {
     // Validate data, but without the undefined values.
     // Only ensure that these fields are not required fields.
-    var validateData = _.clone(data);
+    const validateData = _.clone(data);
     Object.keys(data).forEach(key => {
       if (data[key] === null) {
         if (this.jsonSchema.required.indexOf(key) >= 0) {
@@ -96,7 +96,7 @@ class Model {
         delete validateData[key];
       }
     });
-    var validation = this.validatePatch(validateData);
+    const validation = this.validatePatch(validateData);
     if (!validation.valid) {
       throw new QueryError(validation.errors);
     }
@@ -107,12 +107,12 @@ class Model {
       return this.update(data);
     });
   }
-  count() {
+  update() {
     throw new Error('Update operation is not supported for ' + this.constructor.name);
-  };
+  }
 
   executeRemove(data, fieldNames, dry) {
-    var validation = this.validateKey(data);
+    const validation = this.validateKey(data);
     if (!validation.valid) {
       throw new QueryError(validation.errors);
     }
@@ -123,9 +123,9 @@ class Model {
       return this.remove(data);
     });
   }
-  count() {
+  remove() {
     throw new Error('Delete operation is not supported for ' + this.constructor.name);
-  };
+  }
 }
 
 module.exports = Model;

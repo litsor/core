@@ -1,19 +1,20 @@
 'use strict';
 
-const _ = require('lodash');
-const Validator = require('is-my-json-valid');
 const Crypto = require('crypto');
 
-const Context = require('./Context');
-const Password = require('./Password');
+const _ = require('lodash');
+const validator = require('is-my-json-valid');
 
-const tokenValidator = Validator({
+const Context = require('./context');
+const Password = require('./password');
+
+const tokenValidator = validator({
   type: 'object',
   required: ['grant_type', 'username', 'password'],
   properties: {
     grant_type: {
       type: 'string',
-      'enum': ['password']
+      enum: ['password']
     },
     username: {
       type: 'string'
@@ -38,11 +39,10 @@ class Authentication {
     });
     this.password = new Password(this.options.password);
 
-    const self = this;
-    app.authentication(function() {
+    app.authentication(request => {
       let context = new Context();
       let promise;
-      let authnHeader = typeof this.headers.authorization === 'string' ? this.headers.authorization : '';
+      const authnHeader = typeof request.headers.authorization === 'string' ? request.headers.authorization : '';
 
       // Check Basic auth - used for admin tokens.
       let parts = authnHeader.match(/^Basic (.+)$/);
@@ -50,7 +50,7 @@ class Authentication {
         parts = new Buffer(parts[1], 'base64').toString().split(':');
         const username = parts[0];
         const password = parts[1];
-        if (self.options.admins[username] !== 'undefined' && self.password.isValid(self.options.admins[username], password)) {
+        if (this.options.admins[username] !== 'undefined' && this.password.isValid(this.options.admins[username], password)) {
           // Authenticated as admin user.
           // Allow execution of context-free queries.
           context = undefined;
@@ -60,45 +60,43 @@ class Authentication {
       // Check Bearer token.
       parts = authnHeader.match(/^Bearer (.+)$/);
       if (parts) {
-        const fields = self.options.userFields.join(' ');
+        const fields = this.options.userFields.join(' ');
         const query = '{token:listAuthnToken(token:?){user{' + fields + '}}}';
         const args = [parts[1]];
         promise = storage.query(query, args).then(result => {
-          if (result.token.length) {
-            context.setUser(result.token[0].user);
+          if (result.token.length === 0) {
+            throw new Error('Invalid access token');
           }
-          else {
-            throw Error('Invalid access token');
-          }
+          context.setUser(result.token[0].user);
         });
       }
       return Promise.resolve(promise).then(() => {
-        this.setParameter('context', context);
+        request.setParameter('context', context);
       });
     });
 
-    app.postvalidation('POST /token', function() {
-      if (!tokenValidator(this.body)) {
+    app.postvalidation('POST /token', request => {
+      if (!tokenValidator(request.body)) {
         throw new Error(tokenValidator.error);
       }
     });
-    app.process('POST /token', function() {
+    app.process('POST /token', request => {
       let token;
-      if (this.body.grant_type === 'password') {
+      if (request.body.grant_type === 'password') {
         const query = `{
-          user: list${self.options.userModel} (${self.options.usernameField}: ?) {
+          user: list${this.options.userModel} (${this.options.usernameField}: ?) {
             id
-            password: ${self.options.passwordField}
+            password: ${this.options.passwordField}
           }
         }`;
-        const args = [this.body.username];
-        return self.storage.query(query, args).then(result => {
-          let valid = result.user.length > 0 && self.password.isValid(result.user[0].password, this.body.password);
+        const args = [request.body.username];
+        return this.storage.query(query, args).then(result => {
+          const valid = result.user.length > 0 && this.password.isValid(result.user[0].password, request.body.password);
           if (valid) {
             token = Crypto.randomBytes(32).toString('base64');
             const query = '{createAuthnToken(token:?,user:?){id}}';
             const args = [token, result.user[0].id];
-            return self.storage.query(query, args);
+            return this.storage.query(query, args);
           }
         }).then(() => {
           if (token) {
@@ -108,10 +106,8 @@ class Authentication {
               token_type: 'bearer'
             };
           }
-          else {
-            this.status = 401;
-            return {};
-          }
+          request.status = 401;
+          return {};
         });
       }
     });

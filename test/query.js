@@ -5,8 +5,8 @@ const Promise = require('bluebird');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
-const Storage = require('../classes/Storage.js');
-const Ids = require('../classes/Ids');
+const Storage = require('../classes/storage');
+const Ids = require('../classes/ids');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
@@ -23,7 +23,7 @@ describe('Query', () => {
           engine: 'redis',
           host: 'localhost',
           port: 6379,
-          prefix: '',
+          prefix: ''
         },
         rethink: {
           engine: 'RethinkDB',
@@ -44,11 +44,11 @@ describe('Query', () => {
   it('fails on misformatted queries', () => {
     return new Promise(() => {
       const query = `{...}`;
-      return storage.query(query)
+      return storage.query(query);
     }).then(() => {
       throw new Error('should be rejected');
-    }).catch((error) => {
-      expect(error.message).to.match(/^Query error: /);
+    }).catch(err => {
+      expect(err.message).to.match(/^Query error: /);
     }).done();
   });
 
@@ -58,8 +58,8 @@ describe('Query', () => {
       return storage.query(query);
     }).then(() => {
       throw new Error('should be rejected');
-    }).catch((error) => {
-      expect(error.message).to.match(/^Query error: /);
+    }).catch(err => {
+      expect(err.message).to.match(/^Query error: /);
     }).done();
   });
 
@@ -136,7 +136,7 @@ describe('Query', () => {
   });
 
   it('can create data with objects', () => {
-    let query = `{
+    const query = `{
       createPost(testobject:{foo:"bar"}) {
         id
       }
@@ -148,12 +148,12 @@ describe('Query', () => {
   });
 
   it('can get data with objects', () => {
-    let query = `{
+    const query = `{
       readPost(id:?) {
         testobject
       }
     }`;
-    let id = temporary.id;
+    const id = temporary.id;
     return storage.query(query, [id]).then(result => {
       expect(result.readPost).to.have.property('testobject');
       expect(result.readPost.testobject).to.deep.equal({foo: 'bar'});
@@ -161,7 +161,7 @@ describe('Query', () => {
   });
 
   it('can create data with lists', () => {
-    let query = `{
+    const query = `{
       createPost(testlist:[{},{}]) {
         id
       }
@@ -173,20 +173,20 @@ describe('Query', () => {
   });
 
   it('can get data with lists', () => {
-    let query = `{
+    const query = `{
       readPost(id:?) {
         testlist
       }
     }`;
-    let id = temporary.id;
+    const id = temporary.id;
     return storage.query(query, [id]).then(result => {
       expect(result.readPost).to.have.property('testlist');
-      expect(result.readPost.testlist).to.deep.equal([{},{}]);
+      expect(result.readPost.testlist).to.deep.equal([{}, {}]);
     });
   });
 
   it('can create data with booleans', () => {
-    let query = `{
+    const query = `{
       createPost(testboolean:true) {
         id
       }
@@ -198,12 +198,12 @@ describe('Query', () => {
   });
 
   it('can get data with booleans', () => {
-    let query = `{
+    const query = `{
       readPost(id:?) {
         testboolean
       }
     }`;
-    let id = temporary.id;
+    const id = temporary.id;
     return storage.query(query, [id]).then(result => {
       expect(result.readPost).to.have.property('testboolean');
       expect(result.readPost.testboolean).to.equal(true);
@@ -211,12 +211,12 @@ describe('Query', () => {
   });
 
   it('allows us to omit "read" for read operations', () => {
-    let query = `{
+    const query = `{
       Post(id:?) {
         id
       }
     }`;
-    let id = temporary.id;
+    const id = temporary.id;
     return storage.query(query, [id]).then(result => {
       expect(result).to.have.property('Post');
       expect(result.Post).to.have.property('id');
@@ -224,12 +224,12 @@ describe('Query', () => {
   });
 
   it('allows using aliases', () => {
-    let query = `{
+    const query = `{
       p: Post(id:?) {
         id
       }
     }`;
-    let id = temporary.id;
+    const id = temporary.id;
     return storage.query(query, [id]).then(result => {
       expect(result).to.have.property('p');
       expect(result.p).to.have.property('id');
@@ -237,7 +237,7 @@ describe('Query', () => {
   });
 
   it('can create data with empty objects', () => {
-    let query = `{
+    const query = `{
       createPost(testobject:{}) {
         id
       }
@@ -249,12 +249,12 @@ describe('Query', () => {
   });
 
   it('can get data with empty objects', () => {
-    let query = `{
+    const query = `{
       readPost(id:?) {
         testobject
       }
     }`;
-    let id = temporary.id;
+    const id = temporary.id;
     return storage.query(query, [id]).then(result => {
       expect(result.readPost).to.have.property('testobject');
       expect(result.readPost.testobject).to.deep.equal({});
@@ -262,16 +262,16 @@ describe('Query', () => {
   });
 
   it('can unset value by updating with undefined', () => {
-    let query = `{
+    const query = `{
       updatePost(id:?,testobject:undefined) {
         testobject
       }
     }`;
-    let id = temporary.id;
+    const id = temporary.id;
     return storage.query(query, [id]).then(result => {
       expect(result.updatePost).to.have.property('testobject', null);
       // Also check read aftwerwards.
-      query = '{Post(id:?){testobject}}';
+      const query = '{Post(id:?){testobject}}';
       return storage.query(query, [id]);
     }).then(result => {
       expect(result.Post).to.have.property('testobject', null);
@@ -279,29 +279,29 @@ describe('Query', () => {
   });
 
   it('will reject deleting required fields in update', () => {
-    let query = '{story:createStory(title:"testtile",body:"testbody"){id}}';
+    const query = '{story:createStory(title:"testtile",body:"testbody"){id}}';
     return storage.query(query).then(result => {
-      let query = `{
+      const query = `{
         updateStory(id:?,title:undefined) {
           id title body
         }
       }`;
-      let id = result.story.id;
+      const id = result.story.id;
       return storage.query(query, [id]);
     }).then(() => {
       throw new Error('should be rejected');
-    }).catch((error) => {
-      expect(error.message).to.match(/^Query error: /);
+    }).catch(err => {
+      expect(err.message).to.match(/^Query error: /);
     }).done();
   });
 
   it('will fill nulls in fields without a value', () => {
-    let query = `{
+    const query = `{
       readPost(id:?) {
         title
       }
     }`;
-    let id = temporary.id;
+    const id = temporary.id;
     return storage.query(query, [id]).then(result => {
       expect(result.readPost).to.have.property('title');
       expect(result.readPost.title).to.equal(null);
@@ -310,63 +310,63 @@ describe('Query', () => {
 
   it('will reject invalid data in create', () => {
     return Promise.resolve().then(() => {
-      let query = '{story:createStory(title:234){id}}';
+      const query = '{story:createStory(title:234){id}}';
       return storage.query(query);
     }).then(() => {
       throw new Error('should be rejected');
-    }).catch((error) => {
-      expect(error.message).to.match(/^Query error: /);
+    }).catch(err => {
+      expect(err.message).to.match(/^Query error: /);
     }).done();
   });
 
   it('will reject invalid data in read', () => {
     return Promise.resolve().then(() => {
-      let query = '{story:readStory(id:{}){id}}';
+      const query = '{story:readStory(id:{}){id}}';
       return storage.query(query);
     }).then(() => {
       throw new Error('should be rejected');
-    }).catch((error) => {
-      expect(error.message).to.match(/^Query error: /);
+    }).catch(err => {
+      expect(err.message).to.match(/^Query error: /);
     }).done();
   });
 
   it('will reject invalid data in update', () => {
-    let query = '{story:createStory(title:"Test",body:"Lorem ipsum"){id}}';
+    const query = '{story:createStory(title:"Test",body:"Lorem ipsum"){id}}';
     return storage.query(query).then(result => {
-      let query = `{
+      const query = `{
         updateStory(id:?,title:123) {
           id title body
         }
       }`;
-      let id = result.story.id;
+      const id = result.story.id;
       return storage.query(query, [id]);
     }).then(() => {
       throw new Error('should be rejected');
-    }).catch((error) => {
-      expect(error.message).to.match(/^Query error: /);
+    }).catch(err => {
+      expect(err.message).to.match(/^Query error: /);
     }).done();
   });
 
   it('will reject invalid data in delete', () => {
     return Promise.resolve().then(() => {
-      let query = '{story:deleteStory(id:{}){id}}';
+      const query = '{story:deleteStory(id:{}){id}}';
       return storage.query(query);
     }).then(() => {
       throw new Error('should be rejected');
-    }).catch((error) => {
-      expect(error.message).to.match(/^Query error: /);
+    }).catch(err => {
+      expect(err.message).to.match(/^Query error: /);
     }).done();
   });
 
   it('can handle UTF-8 data in query', () => {
     // \u00A7 is the paragraph sign, from the Latin-1 supplement.
-    let query = '{story:createStory(title:"Test",body:"\u00A7"){id body}}';
+    const query = '{story:createStory(title:"Test",body:"\u00A7"){id body}}';
     return storage.query(query).then(result => {
       expect(result.story.body).to.equal('\xa7');
-      let query = `{
+      const query = `{
         story:Story(id:?) { body }
       }`;
-      let id = result.story.id;
+      const id = result.story.id;
       return storage.query(query, [id]);
     }).then(result => {
       expect(result.story.body).to.equal('\xa7');
@@ -375,13 +375,13 @@ describe('Query', () => {
 
   it('can handle unicode sequences in query', () => {
     // \u00A7 is the paragraph sign, from the Latin-1 supplement.
-    let query = '{story:createStory(title:"Test",body:"\\u00A7"){id body}}';
+    const query = '{story:createStory(title:"Test",body:"\\u00A7"){id body}}';
     return storage.query(query).then(result => {
       expect(result.story.body).to.equal('\xa7');
-      let query = `{
+      const query = `{
         story:Story(id:?) { body }
       }`;
-      let id = result.story.id;
+      const id = result.story.id;
       return storage.query(query, [id]);
     }).then(result => {
       expect(result.story.body).to.equal('\xa7');
@@ -390,14 +390,14 @@ describe('Query', () => {
 
   it('can handle UTF-8 data in parameters', () => {
     // \u00A7 is the paragraph sign, from the Latin-1 supplement.
-    let query = '{story:createStory(title:"Test",body:?){id body}}';
-    let args = ['\u00A7'];
+    const query = '{story:createStory(title:"Test",body:?){id body}}';
+    const args = ['\u00A7'];
     return storage.query(query, args).then(result => {
       expect(result.story.body).to.equal('\xa7');
-      let query = `{
+      const query = `{
         story:Story(id:?) { body }
       }`;
-      let id = result.story.id;
+      const id = result.story.id;
       return storage.query(query, [id]);
     }).then(result => {
       expect(result.story.body).to.equal('\xa7');
@@ -405,15 +405,15 @@ describe('Query', () => {
   });
 
   it('can handle question marks in parameters', () => {
-    let query = '{story:createStory(title:?,body:?){id title body}}';
-    let args = ['???', 'Hello world?'];
+    const query = '{story:createStory(title:?,body:?){id title body}}';
+    const args = ['???', 'Hello world?'];
     return storage.query(query, args).then(result => {
       expect(result.story.title).to.equal('???');
       expect(result.story.body).to.equal('Hello world?');
-      let query = `{
+      const query = `{
         story:Story(id:?) { title body }
       }`;
-      let id = result.story.id;
+      const id = result.story.id;
       return storage.query(query, [id]);
     }).then(result => {
       expect(result.story.title).to.equal('???');
@@ -422,13 +422,13 @@ describe('Query', () => {
   });
 
   it('will query when providing too few arguments', () => {
-    let query = '{story:createStory(title:?,body:?){id}}';
-    return Promise.resolve().then(result => {
+    const query = '{story:createStory(title:?,body:?){id}}';
+    return Promise.resolve().then(() => {
       return storage.query(query, ['test']);
     }).then(() => {
       throw new Error('should be rejected');
-    }).catch((error) => {
-      expect(error.message).to.match(/^Query error: /);
+    }).catch(err => {
+      expect(err.message).to.match(/^Query error: /);
     }).done();
   });
 
@@ -520,6 +520,6 @@ describe('Query', () => {
       return storage.query('{createPost(teststring:123)}');
     }).then(() => {
       throw new Error('Query passed');
-    }).catch(error => {});
+    }).catch(() => {});
   });
 });

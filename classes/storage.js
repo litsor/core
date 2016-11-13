@@ -1,13 +1,14 @@
-"use strict";
+'use strict';
 
-const _ = require('lodash');
-const Promise = require('bluebird');
-const Fs = Promise.promisifyAll(require('fs-extra'));
 const Crypto = require('crypto');
 
-const ModelsCompiler = require(__dirname + '/ModelsCompiler');
-const Models = require(__dirname + '/Models');
-const Query = require(__dirname + '/Query');
+const _ = require('lodash');
+const Bluebird = require('bluebird');
+const Fs = Bluebird.promisifyAll(require('fs-extra'));
+
+const ModelsCompiler = require('./models-compiler');
+const Models = require('./models');
+const Query = require('./query');
 
 class Storage {
   constructor(options) {
@@ -26,35 +27,36 @@ class Storage {
       port: 6379,
       prefix: ''
     });
-    
+
     this.options = options;
-    
+
     this.generateModels();
   }
-  
+
   generateModels() {
     Fs.ensureDirAsync(this.options.cacheDir);
-    let cached = Fs.readdirSync(this.options.cacheDir);
-    let dir = this.options.modelsDir;
-    let compiler = new ModelsCompiler();
-    let items = {};
-    Fs.readdirSync(dir).forEach((file) => {
+    const cached = Fs.readdirSync(this.options.cacheDir);
+    const dir = this.options.modelsDir;
+    const compiler = new ModelsCompiler();
+    const items = {};
+    Fs.readdirSync(dir).forEach(file => {
       if (!file.match(/^.+\.yml$/)) {
         return;
       }
-      let inputFile = `${dir}/${file}`;
-      let contents = Fs.readFileSync(inputFile);
-      let hash = Crypto.createHash('sha1').update(contents).digest('hex');
-      let outputFile = this.options.cacheDir + '/' + hash + '.js';
-      let name = file.match(/^(.+)\.yml$/)[1];
+      const inputFile = `${dir}/${file}`;
+      const contents = Fs.readFileSync(inputFile);
+      const hash = Crypto.createHash('sha1').update(contents).digest('hex');
+      const outputFile = this.options.cacheDir + '/' + hash + '.js';
+      const name = file.match(/^(.+)\.yml$/)[1];
       if (cached.indexOf(`${hash}.js`) < 0) {
         compiler.generate(inputFile, outputFile);
       }
-      items[name] = require(outputFile);
+      const load = require;
+      items[name] = load(outputFile);
     });
     this.models = new Models(items, this.options.databases);
   }
-  
+
   query(query, context, args) {
     return new Query(this.models, query, context, args).execute();
   }

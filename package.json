@@ -20,10 +20,9 @@
     "esnext": true,
     "space": 2,
     "rules": {
-      "space-before-function-paren": [
-        "error",
-        "never"
-      ]
+      "space-before-function-paren": ["error", "never"],
+      "max-params": ["error", 5],
+      "camelcase": ["error", {"properties": "never"}]
     }
   },
   "keywords": [
@@ -34,7 +33,7 @@
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.4.1",
-    "bluegate": "^1.1.16",
+    "bluegate": "^1.1.17",
     "dicer": "^0.2.5",
     "fs-extra": "^0.30.0",
     "globby": "^6.0.0",
@@ -50,6 +49,7 @@
   "devDependencies": {
     "chai": "^2.3.0",
     "chai-as-promised": "^5.0.0",
+    "chalk": "^1.1.3",
     "eslint": "^3.8.1",
     "faker": "^3.1.0",
     "mocha": "^2.2.4",

@@ -1,11 +1,12 @@
 'use strict';
 
 const Crypto = require('crypto');
-const _ = require('lodash');
-const Promise = require('bluebird');
 
-const parser = require('./Parser');
-const QueryError = require('./QueryError');
+const _ = require('lodash');
+const Bluebird = require('bluebird');
+
+const parser = require('./parser');
+const QueryError = require('./query-error');
 
 class Query {
   constructor(models, query, context, args) {
@@ -108,8 +109,8 @@ class Query {
             }
 
             const functionName = 'execute' + _.capitalize(operation);
-            // We call the "executeOperation" function, but also check for
-            // existence of the "operation" function, which indicates if the
+            // We call the 'executeOperation' function, but also check for
+            // existence of the 'operation' function, which indicates if the
             // models engine supports this operation.
             if (typeof model[operation] === 'function' && typeof model[functionName] === 'function') {
               return model[functionName](method.params, method.fieldNames, this.dry);
@@ -189,8 +190,8 @@ class Query {
       return true;
     }
     const errors = [];
-    return Promise.reduce(fieldNames, (access, field) => {
-      return Promise.resolve(this.context.access(this.models, model, operation, {id}, field)).then(fieldAccess => {
+    return Bluebird.reduce(fieldNames, (access, field) => {
+      return Bluebird.resolve(this.context.access(this.models, model, operation, {id}, field)).then(fieldAccess => {
         if (!fieldAccess) {
           errors.push([{field, message: 'permission denied'}]);
         }
@@ -214,7 +215,7 @@ class Query {
     }).then(result => {
       const isArray = result.data instanceof Array;
       const data = isArray ? result.data : [result.data];
-      return Promise.resolve(data).each(item => {
+      return Bluebird.resolve(data).each(item => {
         let operation;
         const parts = method.name.match(/^([a-z]+)?([A-Z][\w]*)$/);
         if (parts) {
@@ -225,7 +226,7 @@ class Query {
         if (typeof item === 'object') {
           return this.extractFields(result.model, item, method.fields, method.fieldNames, true);
         }
-        // Operations MAY return scalar values (i.e. "count").
+        // Operations MAY return scalar values (i.e. 'count').
         return item;
       }).then(items => {
         return isArray ? items : items[0];
@@ -238,9 +239,9 @@ class Query {
   preprocess(method, model) {
     const preprocessors = this.models.getPreprocessors(model);
     const operation = this.getOperation(method);
-    return Promise.resolve(preprocessors).each(plugin => {
+    return Bluebird.resolve(preprocessors).each(plugin => {
       const result = plugin.preprocess(this.models, model, operation, method.params, this.context);
-      return Promise.resolve(result).then(result => {
+      return Bluebird.resolve(result).then(result => {
         method.params = result;
       });
     }).then(() => {
@@ -251,9 +252,9 @@ class Query {
   postprocess(method, model, data) {
     const postprocessors = this.models.getPostprocessors(model);
     const operation = this.getOperation(method);
-    return Promise.resolve(postprocessors).each(plugin => {
+    return Bluebird.resolve(postprocessors).each(plugin => {
       const result = plugin.postprocess(this.models, model, operation, data, this.context);
-      return Promise.resolve(result).then(result => {
+      return Bluebird.resolve(result).then(result => {
         data = result;
       });
     }).then(() => {
@@ -263,8 +264,8 @@ class Query {
 
   execute() {
     const output = {};
-    return Promise.resolve(Object.keys(this.parsed)).each(alias => {
-      return Promise.resolve(this.executeMethod(this.parsed[alias])).then(result => {
+    return Bluebird.resolve(Object.keys(this.parsed)).each(alias => {
+      return Bluebird.resolve(this.executeMethod(this.parsed[alias])).then(result => {
         output[alias] = result;
       });
     }).then(() => {

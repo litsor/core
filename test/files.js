@@ -1,18 +1,16 @@
 /* eslint-env node, mocha */
 'use strict';
 
-const Promise = require('bluebird');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
-const Storage = require('../classes/Storage.js');
+const Storage = require('../classes/storage');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('Files', () => {
   let storage;
-  let temporary = {};
 
   before(() => {
     storage = new Storage({
@@ -22,7 +20,7 @@ describe('Files', () => {
           engine: 'redis',
           host: 'localhost',
           port: 6379,
-          prefix: '',
+          prefix: ''
         },
         files: {
           engine: 'LocalFiles',
@@ -70,7 +68,7 @@ describe('Files', () => {
       expect(result.File.filename).to.equal('test.txt');
       expect(result.File.description).to.equal('Testfile');
       return storage.query('{updateFile(id:?,filename:"test2.txt"){id,filename}}', [id]);
-    }).then(result => {
+    }).then(() => {
       return storage.query('{File(id:?){id,filename,description}}', [id]);
     }).then(result => {
       expect(result.File.filename).to.equal('test2.txt');

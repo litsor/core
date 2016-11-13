@@ -2,12 +2,13 @@
 'use strict';
 
 const Crypto = require('crypto');
-const Promise = require('bluebird');
+
+const Bluebird = require('bluebird');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const Needle = Promise.promisifyAll(require('needle'));
+const Needle = Bluebird.promisifyAll(require('needle'));
 
-const Application = require('../classes/Application.js');
+const Application = require('../classes/application');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);

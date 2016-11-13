@@ -1,12 +1,12 @@
 'use strict';
 
 const _ = require('lodash');
-const Plugin = require('../classes/Plugin');
-const Query = require('../classes/Query');
+const Plugin = require('../classes/plugin');
+const Query = require('../classes/query');
 
 class References extends Plugin {
   getFields() {
-    let models = this.models;
+    const models = this.models;
     this.fieldData = {};
     const fields = [];
     Object.keys(models).forEach(modelName => {

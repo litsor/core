@@ -1,10 +1,10 @@
-"use strict";
+'use strict';
 
 class QueryError extends Error {
   constructor(errors) {
-    var message = errors.map((error) => {
-      let parts = [];
-      ['field', 'message'].forEach((key) => {
+    const message = errors.map(error => {
+      const parts = [];
+      ['field', 'message'].forEach(key => {
         if (typeof error[key] === 'string') {
           parts.push(error[key]);
         }

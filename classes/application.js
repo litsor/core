@@ -3,9 +3,9 @@
 const _ = require('lodash');
 const BlueGate = require('bluegate');
 
-const Storage = require('./Storage');
-const GraphQLEndpoint = require('./GraphQLEndpoint.js');
-const Authentication = require('./Authentication.js');
+const Storage = require('./storage');
+const GraphqlEndpoint = require('./graphql-endpoint.js');
+const Authentication = require('./authentication.js');
 
 class Application {
   constructor(config) {
@@ -24,11 +24,11 @@ class Application {
     this.instances = {};
     this.instances.authentication = new Authentication(this.app, this.storage, config.authentication);
     if (config.graphql.enabled) {
-      this.instances.graphql = new GraphQLEndpoint(this.app, this.storage, config.graphql);
+      this.instances.graphql = new GraphqlEndpoint(this.app, this.storage, config.graphql);
     }
 
-    this.app.error(function() {
-      console.log(this.error);
+    this.app.error(request => {
+      console.log(request.error);
     });
 
     this._ready = this.app.listen(config.port);

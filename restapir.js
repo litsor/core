@@ -1,11 +1,11 @@
 'use strict';
 
-const Rc = require('rc');
-const Application = require('./classes/Application');
+const rc = require('rc');
+const Application = require('./classes/application');
 
-const config = Rc('restapir', {});
+const config = rc('restapir', {});
 
-let app = new Application(config);
+const app = new Application(config);
 
 app.ready().then(() => {
   console.log('Listening on port :' + config.port);

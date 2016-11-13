@@ -1,6 +1,7 @@
 'use strict';
 
 const Crypto = require('crypto');
+
 const _ = require('lodash');
 
 class Password {
@@ -31,16 +32,20 @@ class Password {
     const workFactor = Number.parseInt(parts[2], 36);
     const size = Number.parseInt(parts[3], 36);
     const salt = new Buffer(parts[4], 'base64');
-    return Crypto.pbkdf2Sync(password, salt, workFactor, size, algorithm).toString('base64') === parts[5];
+    let valid = false;
+    if (method === 'pbkdf2') {
+      valid = Crypto.pbkdf2Sync(password, salt, workFactor, size, algorithm).toString('base64') === parts[5];
+    }
+    return valid;
   }
 
-  shouldRehash(hash, password) {
+  shouldRehash(hash) {
     const parts = hash.split('$');
     const method = parts[0];
     const algorithm = parts[1];
     const workFactor = Number.parseInt(parts[2], 36);
     return this.options.method !== method || this.options.algorithm !== algorithm || this.options.workFactor > workFactor;
   }
-};
+}
 
 module.exports = Password;
