@@ -43,7 +43,7 @@ class Model {
     const ascending = sort[0] !== '!';
     const filters = _.omit(data, ['limit', 'offset', 'sort']);
     return Promise.resolve(this.ready()).then(() => {
-      return this.list(filters, limit, offset, fieldNames, sort, ascending);
+      return this.list(filters, fieldNames, {limit, offset, sort, ascending});
     });
   }
   list() {

@@ -98,7 +98,11 @@ class RethinkDB extends Model {
     });
   }
 
-  list(filters, limit, offset, fieldNames, sort, ascending) {
+  list(filters, fieldNames, options) {
+    const limit = options.limit;
+    const offset = options.offset;
+    const sort = options.sort;
+    const ascending = options.ascending;
     let query = r.db(this.dbName).table(this.name);
     const indexedFilters = _.pick(filters, this.indexedFields);
     if (Object.keys(indexedFilters).length > 0) {

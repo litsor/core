@@ -48,7 +48,8 @@ class RestApi extends Model {
     return output;
   }
 
-  list(filters, limit, offset) {
+  list(filters, fieldNames, options) {
+    const offset = options.offset;
     if (typeof this.rest.list === 'undefined') {
       throw new Error('List method is not configured for REST API');
     }
