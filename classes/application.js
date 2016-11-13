@@ -28,7 +28,9 @@ class Application {
     }
 
     this.app.error(request => {
-      console.log(request.error);
+      if (process.env.debug) {
+        console.log(request.error);
+      }
     });
 
     this._ready = this.app.listen(config.port);
