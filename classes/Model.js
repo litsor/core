@@ -32,6 +32,9 @@ class Model {
       return this.count(filters);
     });
   }
+  count() {
+    throw new Error('Count operation is not supported for ' + this.constructor.name);
+  };
 
   executeList(data, fieldNames) {
     let limit = typeof data.limit === 'number' ? data.limit : 10;
@@ -43,6 +46,9 @@ class Model {
       return this.list(filters, limit, offset, fieldNames, sort, ascending);
     });
   }
+  count() {
+    throw new Error('List operation is not supported for ' + this.constructor.name);
+  };
 
   executeRead(data, fieldNames) {
     var validation = this.validateKey(data);
@@ -53,6 +59,9 @@ class Model {
       return this.read(data, fieldNames);
     });
   }
+  count() {
+    throw new Error('Read operation is not supported for ' + this.constructor.name);
+  };
 
   executeCreate(data, fieldNames, dry) {
     this.fillDefaults(data);
@@ -71,6 +80,9 @@ class Model {
       return this.create(data);
     });
   }
+  count() {
+    throw new Error('Create operation is not supported for ' + this.constructor.name);
+  };
 
   executeUpdate(data, fieldNames, dry) {
     // Validate data, but without the undefined values.
@@ -95,6 +107,9 @@ class Model {
       return this.update(data);
     });
   }
+  count() {
+    throw new Error('Update operation is not supported for ' + this.constructor.name);
+  };
 
   executeRemove(data, fieldNames, dry) {
     var validation = this.validateKey(data);
@@ -108,6 +123,9 @@ class Model {
       return this.remove(data);
     });
   }
+  count() {
+    throw new Error('Delete operation is not supported for ' + this.constructor.name);
+  };
 }
 
 module.exports = Model;

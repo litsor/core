@@ -1,0 +1,10 @@
+database: files
+access: 'true'
+mutation: 'true'
+properties:
+  filename:
+    type: string
+  mime:
+    type: string
+  description:
+    type: string
