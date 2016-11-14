@@ -95,7 +95,7 @@ describe.only('Files', () => {
     });
   });
 
-  it('can post a file using multipart request', () => {
+  it('can upload a file using multipart POST request', () => {
     let id;
     const body = Crypto.randomBytes(8).toString('base64');
     const input = {
@@ -115,5 +115,30 @@ describe.only('Files', () => {
         expect(response.body.toString()).to.equal(body);
       });
     });
+  });
+
+  it('can upload a file using PUT request', () => {
+    let id;
+    const body = Crypto.randomBytes(8).toString('base64');
+    const data = new Buffer(body);
+    const options = {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': data.byteLength
+      }
+    };
+    return Needle.putAsync(uri + '/file/File', data, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+      expect(response.body).to.have.property('id');
+      id = response.body.id;
+      return Needle.getAsync(uri + '/file/File/' + id).then(response => {
+        expect(response.statusCode).to.equal(200);
+        expect(response.body.toString()).to.equal(body);
+      });
+    });
+  });
+
+  it.skip('sets Content-Length header on GET requests', () => {
+
   });
 });

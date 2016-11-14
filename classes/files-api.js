@@ -11,6 +11,29 @@ class FilesApi {
     this.app = app;
     this.storage = storage;
 
+    app.process('PUT /file/<model:string>', (model, request, context) => {
+      let id;
+      let directory;
+      let modelInstance;
+      const query = `{file:create${model} {id}}`;
+      return this.storage.query(query, context).then(result => {
+        id = result.file.id;
+        return this.storage.models.get(model);
+      }).then(_model => {
+        modelInstance = _model;
+        directory = modelInstance.getDirectory(id);
+        return this.processUploadStream(id, directory, request.body);
+      }).then(() => {
+        return {id};
+      }).catch(err => {
+        if (err.message === 'Query error: Permission denied') {
+          request.status = 403;
+          return {errors: [{message: 'Permission denied'}]};
+        }
+        throw err;
+      });
+    });
+
     app.prevalidation('POST /file/<model:string>', request => {
       if (!request.multipartBoundary) {
         throw new Error('Request body is not a multipart message');
@@ -73,6 +96,16 @@ class FilesApi {
     data.id = id;
     // @todo: Save data
     return data;
+  }
+
+  processUploadStream(id, directory, stream) {
+    return new Promise((resolve, reject) => {
+      const filename = Path.join(directory, id + '.0');
+      const file = Fs.createWriteStream(filename);
+      stream.on('end', resolve);
+      stream.on('error', reject);
+      stream.pipe(file);
+    });
   }
 
   processMultipart(id, directory, stream, boundary) {
