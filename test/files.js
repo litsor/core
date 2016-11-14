@@ -1,36 +1,55 @@
 /* eslint-env node, mocha */
 'use strict';
 
+const Crypto = require('crypto');
+
+const Bluebird = require('bluebird');
+const Needle = Bluebird.promisifyAll(require('needle'));
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
-const Storage = require('../classes/storage');
+const Application = require('../classes/application');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
-describe('Files', () => {
+describe.only('Files', () => {
+  let app;
   let storage;
 
+  const uri = 'http://localhost:10023';
+
   before(() => {
-    storage = new Storage({
-      modelsDir: 'test/files/models',
-      databases: {
-        internal: {
-          engine: 'redis',
-          host: 'localhost',
-          port: 6379,
-          prefix: ''
-        },
-        files: {
-          engine: 'LocalFiles',
-          directory: '/tmp/files'
+    app = new Application({
+      port: 10023,
+      storage: {
+        modelsDir: 'test/files/models',
+        databases: {
+          internal: {
+            engine: 'redis',
+            host: 'localhost',
+            port: 6379,
+            prefix: ''
+          },
+          rethink: {
+            engine: 'RethinkDB',
+            host: 'localhost',
+            port: 28015,
+            name: 'test'
+          },
+          files: {
+            engine: 'LocalFiles',
+            directory: '/tmp/files'
+          }
         }
       }
     });
+    storage = app.storage;
+    return app.ready();
   });
 
   after(() => {
+    return app.close();
   });
 
   it('can create file', () => {
@@ -73,6 +92,28 @@ describe('Files', () => {
     }).then(result => {
       expect(result.File.filename).to.equal('test2.txt');
       expect(result.File.description).to.equal('Testfile');
+    });
+  });
+
+  it('can post a file using multipart request', () => {
+    let id;
+    const body = Crypto.randomBytes(8).toString('base64');
+    const input = {
+      file: {
+        buffer: new Buffer(body),
+        filename: 'test.txt',
+        content_type: 'text/plain'
+      }
+    };
+    const options = {multipart: true};
+    return Needle.postAsync(uri + '/file/File', input, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+      expect(response.body).to.have.property('id');
+      id = response.body.id;
+      return Needle.getAsync(uri + '/file/File/' + id).then(response => {
+        expect(response.statusCode).to.equal(200);
+        expect(response.body.toString()).to.equal(body);
+      });
     });
   });
 });

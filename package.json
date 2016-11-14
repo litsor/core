@@ -19,9 +19,20 @@
     "esnext": true,
     "space": 2,
     "rules": {
-      "space-before-function-paren": ["error", "never"],
-      "max-params": ["error", 5],
-      "camelcase": ["error", {"properties": "never"}]
+      "space-before-function-paren": [
+        "error",
+        "never"
+      ],
+      "max-params": [
+        "error",
+        5
+      ],
+      "camelcase": [
+        "error",
+        {
+          "properties": "never"
+        }
+      ]
     }
   },
   "keywords": [

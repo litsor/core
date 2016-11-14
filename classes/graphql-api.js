@@ -1,6 +1,6 @@
 'use strict';
 
-class GraphqlEndpoint {
+class GraphqlApi {
   constructor(app, storage) {
     this.app = app;
     this.storage = storage;
@@ -35,4 +35,4 @@ class GraphqlEndpoint {
   }
 }
 
-module.exports = GraphqlEndpoint;
+module.exports = GraphqlApi;

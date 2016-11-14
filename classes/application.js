@@ -4,7 +4,8 @@ const _ = require('lodash');
 const BlueGate = require('bluegate');
 
 const Storage = require('./storage');
-const GraphqlEndpoint = require('./graphql-endpoint.js');
+const GraphqlApi = require('./graphql-api.js');
+const FilesApi = require('./files-api.js');
 const Authentication = require('./authentication.js');
 
 class Application {
@@ -15,6 +16,9 @@ class Application {
       authentication: {},
       graphql: {
         enabled: true
+      },
+      files: {
+        enabled: true
       }
     });
     this.app = new BlueGate({log: false});
@@ -24,7 +28,10 @@ class Application {
     this.instances = {};
     this.instances.authentication = new Authentication(this.app, this.storage, config.authentication);
     if (config.graphql.enabled) {
-      this.instances.graphql = new GraphqlEndpoint(this.app, this.storage, config.graphql);
+      this.instances.graphql = new GraphqlApi(this.app, this.storage, config.graphql);
+    }
+    if (config.files.enabled) {
+      this.instances.files = new FilesApi(this.app, this.storage, config.files);
     }
 
     this.app.error(request => {
