@@ -8,3 +8,5 @@ properties:
     type: string
   description:
     type: string
+  number:
+    type: integer

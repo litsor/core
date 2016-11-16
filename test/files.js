@@ -13,7 +13,7 @@ const Application = require('../classes/application');
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
-describe.only('Files', () => {
+describe('Files', () => {
   let app;
   let storage;
 
@@ -138,7 +138,44 @@ describe.only('Files', () => {
     });
   });
 
+  /**
+   * @doc
+   * Field values can be provided via HTTP headers. Start the header name
+   * with 'X-Meta-' followed by the fieldname. The fieldname is case
+   * insensitive. Field data must be in JSON format. All headers that
+   * do not meet the specifications are silently ignored.
+   */
+  it('can add fields in PUT request headers', () => {
+    let id;
+    const data = Crypto.randomBytes(8);
+    const options = {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': data.byteLength,
+        'X-Meta-Description': JSON.stringify('Lorem ipsum'),
+        'X-Meta-Number': JSON.stringify(34),
+        'X-Meta-Unknown': 'should be ignored'
+      }
+    };
+    return Needle.putAsync(uri + '/file/File', data, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+      id = response.body.id;
+      return storage.query('{File(id:?){description,number}}', [id]);
+    }).then(result => {
+      expect(result.File.description).to.equal('Lorem ipsum');
+      expect(result.File.number).to.equal(34);
+    });
+  });
+
+  it.skip('can upload a file in multiple parts', () => {
+
+  });
+
   it.skip('sets Content-Length header on GET requests', () => {
+
+  });
+
+  it.skip('knows Content-Length of uploads with multiple parts', () => {
 
   });
 });

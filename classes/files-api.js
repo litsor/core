@@ -15,8 +15,14 @@ class FilesApi {
       let id;
       let directory;
       let modelInstance;
-      const query = `{file:create${model} {id}}`;
-      return this.storage.query(query, context).then(result => {
+      return this.storage.models.get(model).then(model => {
+        if (typeof model === 'undefined') {
+          throw new Error('Model not found');
+        }
+        modelInstance = model;
+        const query = this.buildQuery(request.headers, modelInstance);
+        return this.storage.query(query.query, context, query.args);
+      }).then(result => {
         id = result.file.id;
         return this.storage.models.get(model);
       }).then(_model => {
@@ -26,9 +32,14 @@ class FilesApi {
       }).then(() => {
         return {id};
       }).catch(err => {
+        console.log(err);
         if (err.message === 'Query error: Permission denied') {
           request.status = 403;
           return {errors: [{message: 'Permission denied'}]};
+        }
+        if (err.message === 'Model not found') {
+          request.status = 404;
+          return {errors: [{message: 'Not found'}]};
         }
         throw err;
       });
@@ -121,7 +132,7 @@ class FilesApi {
     dicer.on('part', part => {
       let info;
       part.on('header', data => {
-        info = this.parseHeaders(data);
+        info = this.parseMultipartHeaders(data);
         if (info.name === 'file') {
           const file = Fs.createWriteStream(filename);
           part.pipe(file);
@@ -146,10 +157,48 @@ class FilesApi {
     return defer;
   }
 
+  extractFields(data, model) {
+    const fieldNames = {};
+    Object.keys(model.jsonSchema.properties).forEach(key => {
+      const name = key.toLowerCase();
+      fieldNames['x-meta-' + name] = key;
+    });
+    const names = [];
+    const values = [];
+    Object.keys(data).forEach(key => {
+      const name = key.toLowerCase();
+      if (typeof fieldNames[name] !== 'undefined') {
+        try {
+          const value = JSON.parse(data[key]);
+          names.push(fieldNames[name]);
+          values.push(value);
+        } catch (err) {}
+      }
+    });
+    return {names, values};
+  }
+
+  buildQuery(data, model) {
+    let query;
+    let args;
+    const fields = this.extractFields(data, model);
+    if (fields.names.length > 0) {
+      const placeholders = fields.names.map(name => {
+        return `${name}:?`;
+      }).join(',');
+      query = `{file:create${model.name}(${placeholders}){id}}`;
+      args = fields.values;
+    } else {
+      query = `{file:create${model.name}{id}}`;
+      args = [];
+    }
+    return {query, args};
+  }
+
   /**
    * Parse headers of a multipart message part.
    */
-  parseHeaders(headers) {
+  parseMultipartHeaders(headers) {
     let name = null;
     let filename = null;
     let contentType = null;

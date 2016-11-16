@@ -57,6 +57,13 @@ class LocalFiles extends Model {
     const filename = Path.join(dir, data.id + '.meta');
     return Fs.readFileAsync(filename).then(contents => {
       return _.omit(JSON.parse(contents), this.privateProperties);
+    }).then(data => {
+      Object.keys(this.jsonSchema.properties).forEach(key => {
+        if (typeof data[key] === 'undefined') {
+          data[key] = null;
+        }
+      });
+      return data;
     }).catch(() => {
       throw new Error('File not found');
     });
