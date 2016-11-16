@@ -4,6 +4,7 @@ const Crypto = require('crypto');
 
 const _ = require('lodash');
 const validator = require('is-my-json-valid');
+const HttpError = require('http-errors');
 
 const Context = require('./context');
 const Password = require('./password');
@@ -65,7 +66,7 @@ class Authentication {
         const args = [parts[1]];
         promise = storage.query(query, args).then(result => {
           if (result.token.length === 0) {
-            throw new Error('Invalid access token');
+            throw new HttpError(401, 'Invalid access token');
           }
           context.setUser(result.token[0].user);
         });
@@ -77,7 +78,7 @@ class Authentication {
 
     app.postvalidation('POST /token', request => {
       if (!tokenValidator(request.body)) {
-        throw new Error(tokenValidator.error);
+        throw new HttpError(400, tokenValidator.error);
       }
     });
     app.process('POST /token', request => {
@@ -106,8 +107,7 @@ class Authentication {
               token_type: 'bearer'
             };
           }
-          request.status = 401;
-          return {};
+          throw new HttpError(401);
         });
       }
     });

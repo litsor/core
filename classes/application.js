@@ -44,7 +44,10 @@ class Application {
         } else {
           message = 'An error occurred. Please try again later.';
         }
-        return {errors: [{message}]};
+        Object.keys(request.error.headers).forEach(key => {
+          request.setHeader(key, request.error.headers[key]);
+        });
+        return _.merge({message}, request.error.body);
       }
       if (process.env.debug) {
         console.log(request.error);
