@@ -48,6 +48,7 @@
     "fs-extra": "^0.30.0",
     "globby": "^6.0.0",
     "graphql": "^0.7.2",
+    "http-errors": "^1.5.0",
     "is-my-json-valid": "^2.15.0",
     "js-yaml": "^3.6.1",
     "jsonpath": "^0.2.7",

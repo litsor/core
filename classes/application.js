@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const BlueGate = require('bluegate');
+const HttpError = require('http-errors');
 
 const Storage = require('./storage');
 const GraphqlApi = require('./graphql-api.js');
@@ -35,6 +36,16 @@ class Application {
     }
 
     this.app.error(request => {
+      if (request.error instanceof HttpError.HttpError) {
+        request.status = request.error.status;
+        let message;
+        if (request.error.expose) {
+          message = request.error.message;
+        } else {
+          message = 'An error occurred. Please try again later.';
+        }
+        return {errors: [{message}]};
+      }
       if (process.env.debug) {
         console.log(request.error);
       }

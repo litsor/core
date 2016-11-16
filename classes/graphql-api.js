@@ -1,5 +1,9 @@
 'use strict';
 
+const HttpError = require('http-errors');
+
+const QueryError = require('./query-error');
+
 class GraphqlApi {
   constructor(app, storage) {
     this.app = app;
@@ -9,8 +13,7 @@ class GraphqlApi {
       const query = request.getQuery('q', 'string', '{}');
       return this.storage.query(query, context).catch(err => {
         if (err.message === 'Query error: Permission denied') {
-          request.status = 403;
-          return {errors: [{message: 'Permission denied'}]};
+          throw new HttpError(403);
         }
         throw err;
       });
@@ -19,15 +22,17 @@ class GraphqlApi {
       const query = request.body.query;
       let args = request.body.arguments;
       if (typeof query !== 'string') {
-        throw new Error('Query missing or invalid.');
+        throw new HttpError(400, 'Query missing or invalid');
       }
       if (!(args instanceof Array)) {
         args = [];
       }
       return this.storage.query(query, context, args).catch(err => {
         if (err.message === 'Query error: Permission denied') {
-          request.status = 403;
-          return {errors: [{message: 'Permission denied'}]};
+          throw new HttpError(403);
+        }
+        if (err instanceof QueryError) {
+          throw new HttpError(400, err.message);
         }
         throw err;
       });

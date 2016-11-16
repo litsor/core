@@ -5,6 +5,7 @@ const Path = require('path');
 
 const _ = require('lodash');
 const Dicer = require('dicer');
+const HttpError = require('http-errors');
 
 class FilesApi {
   constructor(app, storage) {
@@ -17,7 +18,7 @@ class FilesApi {
       let modelInstance;
       return this.storage.models.get(model).then(model => {
         if (typeof model === 'undefined') {
-          throw new Error('Model not found');
+          throw new HttpError(404, 'Model not found');
         }
         modelInstance = model;
         const query = this.buildQuery(request.headers, modelInstance);
@@ -34,12 +35,10 @@ class FilesApi {
       }).catch(err => {
         console.log(err);
         if (err.message === 'Query error: Permission denied') {
-          request.status = 403;
-          return {errors: [{message: 'Permission denied'}]};
+          throw new HttpError(403);
         }
         if (err.message === 'Model not found') {
-          request.status = 404;
-          return {errors: [{message: 'Not found'}]};
+          throw new HttpError(404, 'Model not found');
         }
         throw err;
       });
@@ -47,7 +46,7 @@ class FilesApi {
 
     app.prevalidation('POST /file/<model:string>', request => {
       if (!request.multipartBoundary) {
-        throw new Error('Request body is not a multipart message');
+        throw new HttpError(400, 'Request body is not a multipart message');
       }
     });
     app.process('POST /file/<model:string>', (model, request, context) => {
@@ -66,20 +65,19 @@ class FilesApi {
         return this.saveFields(id, modelInstance, fields);
       }).catch(err => {
         if (err.message === 'Query error: Permission denied') {
-          request.status = 403;
-          return {errors: [{message: 'Permission denied'}]};
+          throw new HttpError(403);
         }
         throw err;
       });
     });
 
-    app.process('GET /file/<model:string>/<id:string>', (model, id, context, request) => {
+    app.process('GET /file/<model:string>/<id:string>', (model, id, context) => {
       let modelInstance;
       const query = `{file:${model}(id:?){id}}`;
       const args = [id];
       return this.storage.query(query, context, args).then(result => {
         if (result.file === null) {
-          throw new Error('Not found');
+          throw new HttpError(404);
         }
         id = result.file.id;
         return this.storage.models.get(model);
@@ -90,12 +88,10 @@ class FilesApi {
         return Fs.createReadStream(filename);
       }).catch(err => {
         if (err.message === 'Not found') {
-          request.status = 404;
-          return {errors: [{message: 'Not found'}]};
+          throw new HttpError(404);
         }
         if (err.message === 'Query error: Permission denied') {
-          request.status = 403;
-          return {errors: [{message: 'Permission denied'}]};
+          throw new HttpError(403);
         }
         throw err;
       });
