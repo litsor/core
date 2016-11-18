@@ -63,9 +63,9 @@ describe('Context', () => {
 
   after(() => {
     return Promise.all([
-      storage.query('{deleteUser(id:?)}', [regularUser1]),
-      storage.query('{deleteUser(id:?)}', [regularUser2]),
-      storage.query('{deleteUser(id:?)}', [adminUser])
+      storage.query('{deleteUser(id:$id)}', {id: regularUser1}),
+      storage.query('{deleteUser(id:$id)}', {id: regularUser2}),
+      storage.query('{deleteUser(id:$id)}', {id: adminUser})
     ]);
   });
 
@@ -88,11 +88,11 @@ describe('Context', () => {
     const context = new Context();
     context.setUser({id: regularUser1});
     const query = `{
-      createPost(owner:?) {
+      createPost(owner:$userId) {
         id
       }
     }`;
-    const args = [regularUser1];
+    const args = {userId: regularUser1};
     return storage.query(query, context, args).then(result => {
       expect(result.createPost).to.have.property('id');
       temporary = {id: result.createPost.id};
@@ -103,11 +103,11 @@ describe('Context', () => {
     const context = new Context();
     context.setUser({id: regularUser1});
     const query = `{
-      Post(id:?) {
+      Post(id:$id) {
         id
       }
     }`;
-    const args = [temporary.id];
+    const args = {id: temporary.id};
     return storage.query(query, context, args).then(result => {
       expect(result.Post).to.have.property('id');
     });
@@ -117,11 +117,11 @@ describe('Context', () => {
     const context = new Context();
     context.setUser({id: regularUser2});
     const query = `{
-      Post(id:?) {
+      Post(id:$id) {
         id
       }
     }`;
-    const args = [temporary.id];
+    const args = {id: temporary.id};
     return storage.query(query, context, args).then(result => {
       expect(result.Post).to.have.property('id');
     });
@@ -131,11 +131,11 @@ describe('Context', () => {
     const context = new Context();
     context.setUser({id: regularUser1});
     const query = `{
-      updatePost(id:?,title:"Test") {
+      updatePost(id:$id,title:"Test") {
         id
       }
     }`;
-    const args = [temporary.id];
+    const args = {id: temporary.id};
     return storage.query(query, context, args).then(result => {
       expect(result.updatePost).to.have.property('id');
     });
@@ -145,11 +145,11 @@ describe('Context', () => {
     const context = new Context();
     context.setUser({id: regularUser2});
     const query = `{
-      updatePost(id:?,title:"Test") {
+      updatePost(id:$id,title:"Test") {
         id
       }
     }`;
-    const args = [temporary.id];
+    const args = {id: temporary.id};
     return Promise.resolve().then(() => {
       return storage.query(query, context, args);
     }).then(() => {
@@ -162,11 +162,11 @@ describe('Context', () => {
   it('denies update post as anonymous user', () => {
     const context = new Context();
     const query = `{
-      updatePost(id:?,title:"Test") {
+      updatePost(id:$id,title:"Test") {
         id
       }
     }`;
-    const args = [temporary.id];
+    const args = {id: temporary.id};
     return Promise.resolve().then(() => {
       return storage.query(query, context, args);
     }).then(() => {
@@ -180,11 +180,11 @@ describe('Context', () => {
     const context = new Context();
     context.setUser({id: adminUser, admin: true});
     const query = `{
-      updatePost(id:?,title:"Admin edit") {
+      updatePost(id:$id,title:"Admin edit") {
         id
       }
     }`;
-    const args = [temporary.id];
+    const args = {id: temporary.id};
     return storage.query(query, context, args).then(result => {
       expect(result.updatePost).to.have.property('id');
     });

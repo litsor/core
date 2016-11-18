@@ -69,12 +69,12 @@ describe('Storage', () => {
 
   it('can read User', () => {
     const query = `{
-      readUser(id: ?) {
+      readUser(id: $id) {
         id name mail
       }
     }`;
     const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query, {id}).then(result => {
       expect(result.readUser.id).to.equal(temporary.id);
       expect(result.readUser.name).to.equal(temporary.name);
       expect(result.readUser.mail).to.equal(temporary.mail);
@@ -87,8 +87,7 @@ describe('Storage', () => {
         id name mail
       }
     }`;
-    const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query).then(result => {
       // Other testcases may have added users as well, so check >= 1.
       expect(result.listUser.length >= 1).to.equal(true);
       let found = false;
@@ -121,8 +120,7 @@ describe('Storage', () => {
         id name mail
       }
     }`;
-    const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query).then(result => {
       // Other testcases may have added users as well, so check >= 2.
       expect(result.listUser.length >= 2).to.equal(true);
     });
@@ -134,8 +132,7 @@ describe('Storage', () => {
         id name mail
       }
     }`;
-    const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query).then(result => {
       expect(result.listUser).to.have.length(1);
     });
   });
@@ -146,8 +143,7 @@ describe('Storage', () => {
         id name mail
       }
     }`;
-    const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query).then(result => {
       expect(result.listUser).to.have.length(1);
     });
   });
@@ -158,8 +154,7 @@ describe('Storage', () => {
         id name mail
       }
     }`;
-    const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query).then(result => {
       // The combination with name and mail does not exist.
       expect(result.listUser).to.have.length(0);
     });
@@ -169,9 +164,8 @@ describe('Storage', () => {
     const query = `{
       countUser
     }`;
-    const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
-   // Other testcases may have added users as well, so check >= 2.
+    return storage.query(query).then(result => {
+      // Other testcases may have added users as well, so check >= 2.
       expect(result.countUser >= 2).to.equal(true);
     });
   });
@@ -180,20 +174,19 @@ describe('Storage', () => {
     const query = `{
       countUser (name:"John",mail:"john@example.com")
     }`;
-    const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query).then(result => {
       expect(result.countUser).to.equal(1);
     });
   });
 
   it('can update User', () => {
     const query = `{
-      updateUser(id: ?, name: "Alice") {
+      updateUser(id: $id, name: "Alice") {
         id name mail
       }
     }`;
     const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query, {id}).then(result => {
       expect(result.updateUser.id).to.equal(temporary.id);
       expect(result.updateUser.name).to.equal('Alice');
       expect(result.updateUser.mail).to.equal(temporary.mail);
@@ -202,10 +195,10 @@ describe('Storage', () => {
 
   it('can delete User', () => {
     const query = `{
-      deleteUser(id: ?)
+      deleteUser(id: $id)
     }`;
     const id = temporary.id;
-    return storage.query(query, [id]).then(result => {
+    return storage.query(query, {id}).then(result => {
       expect(result.deleteUser.id).to.equal(undefined);
     });
   });

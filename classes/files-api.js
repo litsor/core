@@ -73,9 +73,8 @@ class FilesApi {
 
     app.process('GET /file/<model:string>/<id:string>', (model, id, context) => {
       let modelInstance;
-      const query = `{file:${model}(id:?){id}}`;
-      const args = [id];
-      return this.storage.query(query, context, args).then(result => {
+      const query = `{file:${model}(id:$id){id}}`;
+      return this.storage.query(query, context, {id}).then(result => {
         if (result.file === null) {
           throw new HttpError(404);
         }
@@ -159,35 +158,28 @@ class FilesApi {
       const name = key.toLowerCase();
       fieldNames['x-meta-' + name] = key;
     });
-    const names = [];
-    const values = [];
+    const fields = {};
     Object.keys(data).forEach(key => {
       const name = key.toLowerCase();
       if (typeof fieldNames[name] !== 'undefined') {
         try {
           const value = JSON.parse(data[key]);
-          names.push(fieldNames[name]);
-          values.push(value);
+          fields[fieldNames[name]] = value;
         } catch (err) {}
       }
     });
-    return {names, values};
+    return fields;
   }
 
   buildQuery(data, model) {
-    let query;
-    let args;
-    const fields = this.extractFields(data, model);
-    if (fields.names.length > 0) {
-      const placeholders = fields.names.map(name => {
-        return `${name}:?`;
-      }).join(',');
-      query = `{file:create${model.name}(${placeholders}){id}}`;
-      args = fields.values;
-    } else {
-      query = `{file:create${model.name}{id}}`;
-      args = [];
+    const args = this.extractFields(data, model);
+    let placeholders = '';
+    if (Object.keys(args).length > 0) {
+      placeholders = '(' + Object.keys(args).map(key => {
+        return `${key}:$${key}`;
+      }).join(',') + ')';
     }
+    const query = `{file:create${model.name}${placeholders}{id}}`;
     return {query, args};
   }
 

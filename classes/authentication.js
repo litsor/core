@@ -62,8 +62,8 @@ class Authentication {
       parts = authnHeader.match(/^Bearer (.+)$/);
       if (parts) {
         const fields = this.options.userFields.join(' ');
-        const query = '{token:listAuthnToken(token:?){user{' + fields + '}}}';
-        const args = [parts[1]];
+        const query = '{token:listAuthnToken(token:$token){user{' + fields + '}}}';
+        const args = {token: parts[1]};
         promise = storage.query(query, args).then(result => {
           if (result.token.length === 0) {
             throw new HttpError(401, 'Invalid access token');
@@ -85,18 +85,18 @@ class Authentication {
       let token;
       if (request.body.grant_type === 'password') {
         const query = `{
-          user: list${this.options.userModel} (${this.options.usernameField}: ?) {
+          user: list${this.options.userModel} (${this.options.usernameField}: $username) {
             id
             password: ${this.options.passwordField}
           }
         }`;
-        const args = [request.body.username];
+        const args = {username: request.body.username};
         return this.storage.query(query, args).then(result => {
           const valid = result.user.length > 0 && this.password.isValid(result.user[0].password, request.body.password);
           if (valid) {
             token = Crypto.randomBytes(32).toString('base64');
-            const query = '{createAuthnToken(token:?,user:?){id}}';
-            const args = [token, result.user[0].id];
+            const query = '{createAuthnToken(token:$token,user:$userId){id}}';
+            const args = {token, userId: result.user[0].id};
             return this.storage.query(query, args);
           }
         }).then(() => {

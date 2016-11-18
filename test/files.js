@@ -56,7 +56,7 @@ describe('Files', () => {
     let id;
     return storage.query('{createFile{id}}').then(result => {
       id = result.createFile.id;
-      return storage.query('{File(id:?){id,finished}}', [id]);
+      return storage.query('{File(id:$id){id,finished}}', {id});
     }).then(result => {
       expect(result.File).to.deep.equal({
         __type: 'File',
@@ -70,7 +70,7 @@ describe('Files', () => {
     let id;
     return storage.query('{createFile(filename:"test.txt",description:"Testfile"){id}}').then(result => {
       id = result.createFile.id;
-      return storage.query('{File(id:?){id,filename,description}}', [id]);
+      return storage.query('{File(id:$id){id,filename,description}}', {id});
     }).then(result => {
       expect(result.File.id).to.equal(id);
       expect(result.File.filename).to.equal('test.txt');
@@ -82,13 +82,13 @@ describe('Files', () => {
     let id;
     return storage.query('{createFile(filename:"test.txt",description:"Testfile"){id}}').then(result => {
       id = result.createFile.id;
-      return storage.query('{File(id:?){id,filename,description}}', [id]);
+      return storage.query('{File(id:$id){id,filename,description}}', {id});
     }).then(result => {
       expect(result.File.filename).to.equal('test.txt');
       expect(result.File.description).to.equal('Testfile');
-      return storage.query('{updateFile(id:?,filename:"test2.txt"){id,filename}}', [id]);
+      return storage.query('{updateFile(id:$id,filename:"test2.txt"){id,filename}}', {id});
     }).then(() => {
-      return storage.query('{File(id:?){id,filename,description}}', [id]);
+      return storage.query('{File(id:$id){id,filename,description}}', {id});
     }).then(result => {
       expect(result.File.filename).to.equal('test2.txt');
       expect(result.File.description).to.equal('Testfile');
@@ -160,7 +160,7 @@ describe('Files', () => {
     return Needle.putAsync(uri + '/file/File', data, options).then(response => {
       expect(response.statusCode).to.equal(200);
       id = response.body.id;
-      return storage.query('{File(id:?){description,number}}', [id]);
+      return storage.query('{File(id:$id){description,number}}', {id});
     }).then(result => {
       expect(result.File.description).to.equal('Lorem ipsum');
       expect(result.File.number).to.equal(34);

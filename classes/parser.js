@@ -2,8 +2,15 @@
 
 const _graphqlLanguage = require('graphql/language');
 
-const extractValue = function(value) {
+const extractValue = function(value, variables) {
   let output = null;
+  if (value.kind === 'Variable') {
+    const name = value.name.value;
+    if (typeof variables !== 'object' || typeof variables[name] === 'undefined') {
+      throw new Error(`Missing value for argument ${name}`);
+    }
+    return variables[name];
+  }
   if (value.kind === 'ObjectValue') {
     output = {};
     value.fields.forEach(field => {
@@ -28,7 +35,7 @@ const extractValue = function(value) {
   return output;
 };
 
-const convert = function(definition) {
+const convert = function(definition, variables) {
   const output = {};
   if (!definition.selectionSet) {
     return output;
@@ -39,13 +46,13 @@ const convert = function(definition) {
     const params = {};
     field.arguments.forEach(param => {
       const name = param.name.value;
-      const value = extractValue(param.value);
+      const value = extractValue(param.value, variables);
       params[name] = value;
     });
     output[alias] = {name, params};
     const fieldNames = {};
     if (typeof field.selectionSet !== 'undefined') {
-      output[alias].fields = convert(field);
+      output[alias].fields = convert(field, variables);
       Object.keys(output[alias].fields).forEach(field => {
         fieldNames[output[alias].fields[field].name] = true;
       });
@@ -55,7 +62,7 @@ const convert = function(definition) {
   return output;
 };
 
-module.exports = function(query) {
+module.exports = function(query, variables) {
   const parsed = (0, _graphqlLanguage.parse)(query);
-  return convert(parsed.definitions[0]);
+  return convert(parsed.definitions[0], variables);
 };

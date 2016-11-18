@@ -58,11 +58,11 @@ describe('RestApi', () => {
   it('can list results', () => {
     const keyword = 't';
     const query = `{
-      results: listExternal(query:?) {
+      results: listExternal(query:$keyword) {
         id title link snippet
       }
     }`;
-    return storage.query(query, [keyword]).then(result => {
+    return storage.query(query, {keyword}).then(result => {
       // The number of returned items from the mockup is 7 times
       // the character count of the search query.
       expect(result.results).to.have.length(7);
@@ -77,11 +77,11 @@ describe('RestApi', () => {
   it('can compose result of multiple pages', () => {
     const keyword = 'test';
     const query = `{
-      results: listExternal(query:?) {
+      results: listExternal(query:$keyword) {
         id title link snippet
       }
     }`;
-    return storage.query(query, [keyword]).then(result => {
+    return storage.query(query, {keyword}).then(result => {
       // Number of results should be 4 * 7.
       expect(result.results).to.have.length(28);
       for (let i = 0; i < result.results.length; ++i) {
@@ -94,11 +94,11 @@ describe('RestApi', () => {
   it('will not return more results than maxPages * itemsPerPage', () => {
     const keyword = 'lorem';
     const query = `{
-      results: listExternal(query:?) {
+      results: listExternal(query:$keyword) {
         id title link snippet
       }
     }`;
-    return storage.query(query, [keyword]).then(result => {
+    return storage.query(query, {keyword}).then(result => {
       // Total result count should be 5 * 7 = 35,
       // but maximum number is 3 * 10 = 30.
       expect(result.results).to.have.length(30);

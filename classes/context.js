@@ -2,7 +2,6 @@
 
 const Promise = require('bluebird');
 const _ = require('lodash');
-
 const Query = require('./query');
 
 class Context {
@@ -50,8 +49,8 @@ class Context {
     if (missingFields.length > 0 && typeof data.id === 'string') {
       const fields = missingFields.join(' ');
       const id = data.id.replace(/[^\w]/g, '');
-      const gql = `{item:${model.name}(id:"${id}"){${fields}}}`;
-      item = new Query(models, gql).execute().then(result => {
+      const gql = `{item:${model.name}(id:$id){${fields}}}`;
+      item = new Query(models, gql, {id}).execute().then(result => {
         return result.item;
       });
     } else {
@@ -72,8 +71,8 @@ class Context {
         if (queryResult) {
           return queryResult;
         }
-        gql = `{User(id:?){ ${gql} }}`;
-        throw new Query(models, gql, [this.user.id]).execute().then(result => {
+        gql = `{User(id:$id){ ${gql} }}`;
+        throw new Query(models, gql, undefined, {id: this.user.id}).execute().then(result => {
           queryResult = result.User;
         });
       };

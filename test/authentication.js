@@ -120,8 +120,8 @@ describe('Authentication', () => {
 
   it('can get user proflle using access token', () => {
     const data = {
-      query: '{user:User(id:?){id, name}}',
-      arguments: [userId]
+      query: '{user:User(id:$userId){id, name}}',
+      variables: {userId}
     };
     const options = {
       json: true,
@@ -139,8 +139,8 @@ describe('Authentication', () => {
 
   it('cannot get user profile using wrong access token', () => {
     const data = {
-      query: '{user:User(id:?){id, name}}',
-      arguments: [userId]
+      query: '{user:User(id:$userId){id, name}}',
+      variables: {userId}
     };
     const accessToken = Crypto.randomBytes(32).toString('base64');
     const options = {
@@ -159,8 +159,8 @@ describe('Authentication', () => {
     // The access function is 'q("rank").rank >= i.rank'.
     // The user has rank 10, so this test should pass.
     const data = {
-      query: '{story: createStory(title:?,body:?,rank:5){id}}',
-      arguments: ['test', 'test']
+      query: '{story: createStory(title:$title,body:$body,rank:5){id}}',
+      variables: {title: 'test', body: 'test'}
     };
     const options = {
       json: true,
@@ -177,8 +177,8 @@ describe('Authentication', () => {
     // The access function is 'q("rank").rank >= i.rank'.
     // i.rank is not provided, but has a default value of 1.
     const data = {
-      query: '{story: createStory(title:?,body:?){id}}',
-      arguments: ['test', 'test']
+      query: '{story: createStory(title:$title,body:$body){id}}',
+      variables: {title: 'test', body: 'test'}
     };
     const options = {
       json: true,
@@ -195,8 +195,8 @@ describe('Authentication', () => {
     // The access function is 'q("rank").rank >= i.rank'.
     // The user has rank 10, so we may not post a Story with rank 15.
     const data = {
-      query: '{story: createStory(title:?,body:?,rank:15){id}}',
-      arguments: ['test', 'test']
+      query: '{story: createStory(title:$title,body:$body,rank:15){id}}',
+      variables: {title: 'test', body: 'test'}
     };
     const options = {
       json: true,

@@ -20,12 +20,12 @@ class GraphqlApi {
     });
     app.process('POST /graphql', (request, context) => {
       const query = request.body.query;
-      let args = request.body.arguments;
+      let args = request.body.variables;
       if (typeof query !== 'string') {
         throw new HttpError(400, 'Query missing or invalid');
       }
-      if (!(args instanceof Array)) {
-        args = [];
+      if (typeof args !== 'object') {
+        args = {};
       }
       return this.storage.query(query, context, args).catch(err => {
         if (err.message === 'Query error: Permission denied') {

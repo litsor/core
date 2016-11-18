@@ -42,8 +42,8 @@ describe('References', () => {
     query = `{user:createUser(name: "Alice", mail: "alice@example.com") { id }}`;
     return storage.query(query).then(result => {
       userId = result.user.id;
-      query = '{post:createPost(title:"Test",owner:?){id}}';
-      args = [userId];
+      query = '{post:createPost(title:"Test",owner:$userId){id}}';
+      args = {userId};
       return storage.query(query, args);
     }).then(result => {
       postId = result.post.id;
@@ -52,20 +52,20 @@ describe('References', () => {
 
   after(() => {
     return Promise.all([
-      storage.query('{deleteUser(id:?)}', [userId]),
-      storage.query('{deletePost(id:?)}', [postId])
+      storage.query('{deleteUser(id:$userId)}', {userId}),
+      storage.query('{deletePost(id:$postId)}', {postId})
     ]);
   });
 
   it('can get User via Post', () => {
     const query = `{
-      Post(id:?) {
+      Post(id:$postId) {
         owner {
           id
         }
       }
     }`;
-    const args = [postId];
+    const args = {postId};
     return storage.query(query, args).then(result => {
       expect(result.Post).to.have.property('owner');
       expect(result.Post.owner).to.have.property('id');
@@ -74,14 +74,14 @@ describe('References', () => {
 
   it('will fetch extra fields of references item', () => {
     const query = `{
-      Post(id:?) {
+      Post(id:$postId) {
         owner {
           id
           name
         }
       }
     }`;
-    const args = [postId];
+    const args = {postId};
     return storage.query(query, args).then(result => {
       expect(result.Post).to.have.property('owner');
       expect(result.Post.owner).to.have.property('id');
@@ -91,13 +91,13 @@ describe('References', () => {
 
   it('can get Post via User (reverse link)', () => {
     const query = `{
-      User(id:?) {
+      User(id:$userId) {
         id, posts {
           id
         }
       }
     }`;
-    const args = [userId];
+    const args = {userId};
     return storage.query(query, args).then(result => {
       expect(result.User).to.have.property('posts');
       expect(result.User.posts).to.have.length(1);
@@ -107,11 +107,11 @@ describe('References', () => {
 
   it('can omit fieldnames in references', () => {
     const query = `{
-      User(id:?) {
+      User(id:$userId) {
         id, posts
       }
     }`;
-    const args = [userId];
+    const args = {userId};
     return storage.query(query, args).then(result => {
       expect(result.User).to.have.property('posts');
       expect(result.User.posts).to.have.length(1);

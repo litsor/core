@@ -1,7 +1,5 @@
 'use strict';
 
-const Crypto = require('crypto');
-
 const _ = require('lodash');
 const Bluebird = require('bluebird');
 
@@ -11,7 +9,7 @@ const QueryError = require('./query-error');
 class Query {
   constructor(models, query, context, args) {
     // Allow us to omit the second argument.
-    if (context instanceof Array && typeof args === 'undefined') {
+    if (typeof context !== 'undefined' && typeof args === 'undefined' && context.constructor.name === 'Object') {
       args = context;
       context = undefined;
     }
@@ -25,31 +23,13 @@ class Query {
       this.dry = true;
     }
 
-    // Process query arguments.
-    query = this.injectArguments(query, args);
-
     this.query = query;
     this.context = context;
     try {
-      this.parsed = typeof query === 'string' ? parser(query) : query;
+      this.parsed = typeof query === 'string' ? parser(query, args) : query;
     } catch (err) {
       throw new QueryError([{message: err.message}]);
     }
-  }
-
-  injectArguments(query, args) {
-    if (!(args instanceof Array)) {
-      return query;
-    }
-    const token = Crypto.randomBytes(16).toString('base64');
-    query = query.split('?').join(token);
-    args.forEach(value => {
-      query = query.replace(token, JSON.stringify(value));
-    });
-    if (query.indexOf(token) >= 0) {
-      throw new QueryError([{mssage: 'Too few arguments provided'}]);
-    }
-    return query;
   }
 
   getOperation(method) {
