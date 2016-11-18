@@ -38,16 +38,20 @@ class Application {
     this.app.error(request => {
       if (request.error instanceof HttpError.HttpError) {
         request.status = request.error.status;
-        let message;
+        let errors;
         if (request.error.expose) {
-          message = request.error.message;
+          if (request.error.errors instanceof Array) {
+            errors = request.error.errors;
+          } else {
+            errors = [request.error.message];
+          }
         } else {
-          message = 'An error occurred. Please try again later.';
+          errors = ['An error occurred. Please try again later.'];
         }
-        Object.keys(request.error.headers).forEach(key => {
+        Object.keys(request.error.headers || {}).forEach(key => {
           request.setHeader(key, request.error.headers[key]);
         });
-        return _.merge({message}, request.error.body);
+        return _.merge({errors}, request.error.body);
       }
       if (process.env.debug) {
         console.log(request.error);

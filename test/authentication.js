@@ -74,10 +74,10 @@ describe('Authentication', () => {
     const query = '{createUser(name:"Alice",mail:"alice@example.com",password:"Welcome!"){id}}';
     return Needle.getAsync(uri + '/graphql?q=' + encodeURIComponent(query), options).then(response => {
       expect(response.statusCode).to.equal(200);
-      expect(response.body).to.have.property('createUser');
-      expect(response.body.createUser).to.have.property('id');
-      expect(response.body.createUser.id).to.be.a('string');
-      userId = response.body.createUser.id;
+      expect(response.body.data).to.have.property('createUser');
+      expect(response.body.data.createUser).to.have.property('id');
+      expect(response.body.data.createUser.id).to.be.a('string');
+      userId = response.body.data.createUser.id;
     });
   });
 
@@ -131,9 +131,9 @@ describe('Authentication', () => {
     };
     return Needle.postAsync(uri + '/graphql', data, options).then(response => {
       expect(response.statusCode).to.equal(200);
-      expect(response.body).have.property('user');
-      expect(response.body.user).have.property('id', userId);
-      expect(response.body.user).have.property('name', 'Alice');
+      expect(response.body.data).have.property('user');
+      expect(response.body.data.user).have.property('id', userId);
+      expect(response.body.data.user).have.property('name', 'Alice');
     });
   });
 
@@ -151,7 +151,7 @@ describe('Authentication', () => {
     };
     return Needle.postAsync(uri + '/graphql', data, options).then(response => {
       expect(response.statusCode).to.equal(401);
-      expect(response.body).to.not.have.property('user');
+      expect(response.body).to.not.have.property('data');
     });
   });
 

@@ -1,0 +1,11 @@
+database: rethink
+access: 'true'
+mutation: 'true'
+properties:
+  title:
+    type: string
+    maxLength: 255
+  teststring:
+    type: string
+  testint:
+    type: integer

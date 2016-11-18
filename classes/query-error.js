@@ -2,7 +2,7 @@
 
 class QueryError extends Error {
   constructor(errors) {
-    const message = errors.map(error => {
+    errors = errors.map(error => {
       const parts = [];
       ['field', 'message'].forEach(key => {
         if (typeof error[key] === 'string') {
@@ -10,8 +10,9 @@ class QueryError extends Error {
         }
       });
       return parts.join(' ');
-    }).join(', ');
-    super('Query error: ' + message);
+    });
+    super('Query error: ' + errors.join(', '));
+    this.errors = errors;
   }
 }
 

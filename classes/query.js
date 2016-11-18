@@ -112,6 +112,8 @@ class Query {
     Object.keys(fields).forEach(alias => {
       const field = fields[alias];
 
+      // Add __typename field.
+      // @see http://graphql.org/learn/queries/#meta-fields
       if (field.name === '__typename') {
         output[alias] = model.name;
         return;

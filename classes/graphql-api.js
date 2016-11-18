@@ -11,7 +11,9 @@ class GraphqlApi {
 
     app.process('GET /graphql', (request, context) => {
       const query = request.getQuery('q', 'string', '{}');
-      return this.storage.query(query, context).catch(err => {
+      return this.storage.query(query, context).then(response => {
+        return {data: response};
+      }).catch(err => {
         if (err.message === 'Query error: Permission denied') {
           throw new HttpError(403);
         }
@@ -27,12 +29,15 @@ class GraphqlApi {
       if (typeof args !== 'object') {
         args = {};
       }
-      return this.storage.query(query, context, args).catch(err => {
+      return this.storage.query(query, context, args).then(response => {
+        return {data: response};
+      }).catch(err => {
+        const errors = err.errors;
         if (err.message === 'Query error: Permission denied') {
-          throw new HttpError(403);
+          throw new HttpError(403, undefined, {errors});
         }
         if (err instanceof QueryError) {
-          throw new HttpError(400, err.message);
+          throw new HttpError(400, undefined, {errors});
         }
         throw err;
       });

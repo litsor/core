@@ -5,6 +5,7 @@ const Bluebird = require('bluebird');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const Needle = Bluebird.promisifyAll(require('needle'));
+const Lokka = require('lokka-transport-http').Transport;
 
 const Application = require('../classes/application');
 
@@ -20,7 +21,7 @@ describe('Application', () => {
     app = new Application({
       port: 10023,
       storage: {
-        modelsDir: 'test/models',
+        modelsDir: 'test/application/models',
         databases: {
           internal: {
             engine: 'redis',
@@ -33,9 +34,6 @@ describe('Application', () => {
             host: 'localhost',
             port: 28015,
             name: 'test'
-          },
-          restapi: {
-            engine: 'RestApi'
           }
         }
       }
@@ -51,7 +49,7 @@ describe('Application', () => {
     const query = '{listPost{id}}';
     return Needle.getAsync(uri + '/graphql?q=' + encodeURIComponent(query)).then(response => {
       expect(response.statusCode).to.equal(200);
-      expect(response.body).to.deep.equal({listPost: []});
+      expect(response.body.data).to.deep.equal({listPost: []});
     });
   });
 
@@ -59,12 +57,31 @@ describe('Application', () => {
     const data = {
       query: '{listPost{id}}'
     };
-    const options = {
-      json: true
-    };
-    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
+    return Needle.postAsync(uri + '/graphql', data, {json: true}).then(response => {
       expect(response.statusCode).to.equal(200);
-      expect(response.body).to.deep.equal({listPost: []});
+      expect(response.body.data).to.deep.equal({listPost: []});
+    });
+  });
+
+  it('provides errors in the "errors" property', () => {
+    const data = {
+      query: '{createPost(teststring:123,testint:"string")}'
+    };
+    return Needle.postAsync(uri + '/graphql', data, {json: true}).then(response => {
+      console.log(response.body);
+      expect(response.statusCode).to.equal(400);
+      expect(response.body).to.have.property('errors');
+      expect(response.body.errors).to.have.length(2);
+      expect(response.body.errors[0]).to.contain('wrong type');
+    });
+  });
+
+  it('can send GraphQL query using Lokka', () => {
+    const client = new Lokka(uri + '/graphql');
+    return client.send('{post:createPost(title:$title){id title}}', {title: 'Test'}).then(response => {
+      expect(response).to.have.property('post');
+      expect(response.post).to.have.property('id');
+      expect(response.post).to.have.property('title', 'Test');
     });
   });
 });
