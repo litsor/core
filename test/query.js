@@ -236,6 +236,19 @@ describe('Query', () => {
     });
   });
 
+  it('supports __typename field', () => {
+    const query = `{
+      readPost(id:$id) {
+        __typename
+        id
+      }
+    }`;
+    const id = temporary.id;
+    return storage.query(query, {id}).then(result => {
+      expect(result.readPost).to.have.property('__typename', 'Post');
+    });
+  });
+
   it('can create data with empty objects', () => {
     const query = `{
       createPost(testobject:{}) {
@@ -451,7 +464,6 @@ describe('Query', () => {
    * ```
    * {
    *   "createPost": {
-   *     "__type": "Post",
    *     "id": "1cvw",
    *     "title": "test"
    *   }

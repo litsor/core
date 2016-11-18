@@ -105,12 +105,18 @@ class Query {
   }
 
   extractFields(model, item, fields, fieldNames, reread) {
-    const output = {__type: model.name};
+    const output = {};
     const promises = [];
     const missing = [];
 
     Object.keys(fields).forEach(alias => {
       const field = fields[alias];
+
+      if (field.name === '__typename') {
+        output[alias] = model.name;
+        return;
+      }
+
       let references;
       if (typeof model.jsonSchema.properties[field.name] !== 'undefined') {
         references = model.jsonSchema.properties[field.name].references;

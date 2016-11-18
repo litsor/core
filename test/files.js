@@ -59,7 +59,6 @@ describe('Files', () => {
       return storage.query('{File(id:$id){id,finished}}', {id});
     }).then(result => {
       expect(result.File).to.deep.equal({
-        __type: 'File',
         id,
         finished: false
       });
