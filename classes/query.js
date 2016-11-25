@@ -2,9 +2,9 @@
 
 const _ = require('lodash');
 const Bluebird = require('bluebird');
+const HttpError = require('http-errors');
 
 const parser = require('./parser');
-const QueryError = require('./query-error');
 
 class Query {
   constructor(models, query, context, args) {
@@ -28,7 +28,7 @@ class Query {
     try {
       this.parsed = typeof query === 'string' ? parser(query, args) : query;
     } catch (err) {
-      throw new QueryError([{message: err.message}]);
+      throw new HttpError(400, err.message);
     }
   }
 
@@ -85,7 +85,7 @@ class Query {
             return true;
           }).then(access => {
             if (!access) {
-              throw new QueryError([{message: 'Permission denied'}]);
+              throw new HttpError(403, `Permission denied on "${method.name}"`);
             }
 
             const functionName = 'execute' + _.capitalize(operation);
@@ -95,7 +95,7 @@ class Query {
             if (typeof model[operation] === 'function' && typeof model[functionName] === 'function') {
               return model[functionName](method.params, method.fieldNames, this.dry);
             }
-            throw new QueryError([{message: 'Operation ' + operation + ' is not supported by model'}]);
+            throw new HttpError(400, `Operation "${operation}" is not supported by model`);
           }).then(data => {
             return {model, data};
           });
@@ -164,10 +164,10 @@ class Query {
         });
       }
       if (missing.length > 0) {
-        const error = missing.map(key => {
-          return {field: key, message: 'is unknown'};
+        const errors = missing.map(key => {
+          return `Unknown field "${key}"`;
         });
-        throw new QueryError(error);
+        throw new HttpError(400, 'Unknown fields in query', {errors});
       }
       return output;
     });
@@ -181,15 +181,15 @@ class Query {
     return Bluebird.reduce(fieldNames, (access, field) => {
       return Bluebird.resolve(this.context.access(this.models, model, operation, {id}, field)).then(fieldAccess => {
         if (!fieldAccess) {
-          errors.push([{field, message: 'permission denied'}]);
+          errors.push(`Permission denied on field ${field}`);
         }
         return fieldAccess ? access : false;
       });
     }).then(access => {
       if (!access) {
-        throw new QueryError(errors);
+        throw new HttpError(403, 'Permission denied', {errors});
       }
-    }).done();
+    });
   }
 
   executeMethod(method) {

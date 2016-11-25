@@ -2,9 +2,9 @@
 
 const _ = require('lodash');
 const Promise = require('bluebird');
+const HttpError = require('http-errors');
 
 const Sequence = require('./sequence');
-const QueryError = require('./query-error');
 const Ids = require('./ids');
 
 class Model {
@@ -33,7 +33,7 @@ class Model {
     });
   }
   count() {
-    throw new Error('Count operation is not supported for ' + this.constructor.name);
+    throw new HttpError(400, `Operation "count" is not supported by model`);
   }
 
   executeList(data, fieldNames) {
@@ -47,27 +47,27 @@ class Model {
     });
   }
   list() {
-    throw new Error('List operation is not supported for ' + this.constructor.name);
+    throw new HttpError(400, `Operation "list" is not supported by model`);
   }
 
   executeRead(data, fieldNames) {
     const validation = this.validateKey(data);
     if (!validation.valid) {
-      throw new QueryError(validation.errors);
+      throw new HttpError(400, 'Validation failed', {errors: this.translateErrors(validation.errors)});
     }
     return Promise.resolve(this.ready()).then(() => {
       return this.read(data, fieldNames);
     });
   }
   read() {
-    throw new Error('Read operation is not supported for ' + this.constructor.name);
+    throw new HttpError(400, `Operation "read" is not supported by model`);
   }
 
   executeCreate(data, fieldNames, dry) {
     this.fillDefaults(data);
     const validation = this.validateInput(data);
     if (!validation.valid) {
-      throw new QueryError(validation.errors);
+      throw new HttpError(400, 'Validation failed', {errors: this.translateErrors(validation.errors)});
     }
     if (dry) {
       data.id = this.dummyId;
@@ -81,24 +81,27 @@ class Model {
     });
   }
   create() {
-    throw new Error('Create operation is not supported for ' + this.constructor.name);
+    throw new HttpError(400, `Operation "create" is not supported by model`);
   }
 
   executeUpdate(data, fieldNames, dry) {
     // Validate data, but without the undefined values.
     // Only ensure that these fields are not required fields.
     const validateData = _.clone(data);
+    const errors = [];
     Object.keys(data).forEach(key => {
       if (data[key] === null) {
         if (this.jsonSchema.required.indexOf(key) >= 0) {
-          throw new QueryError([{message: 'is a required field', field: key}]);
+          errors.push(`Field "${key}" is required`);
         }
         delete validateData[key];
       }
     });
     const validation = this.validatePatch(validateData);
-    if (!validation.valid) {
-      throw new QueryError(validation.errors);
+    if (errors.length > 0 || !validation.valid) {
+      throw new HttpError(400, 'Validation failed', {
+        errors: _.union(errors, this.translateErrors(validation.errors))
+      });
     }
     if (dry) {
       return data;
@@ -108,13 +111,13 @@ class Model {
     });
   }
   update() {
-    throw new Error('Update operation is not supported for ' + this.constructor.name);
+    throw new HttpError(400, `Operation "update" is not supported by model`);
   }
 
   executeRemove(data, fieldNames, dry) {
     const validation = this.validateKey(data);
     if (!validation.valid) {
-      throw new QueryError(validation.errors);
+      throw new HttpError(400, 'Validation failed', {errors: this.translateErrors(validation.errors)});
     }
     if (dry) {
       return {id: data.id};
@@ -124,7 +127,20 @@ class Model {
     });
   }
   remove() {
-    throw new Error('Delete operation is not supported for ' + this.constructor.name);
+    throw new HttpError(400, `Operation "delete" is not supported by model`);
+  }
+
+  translateErrors(errors) {
+    return errors.map(error => {
+      let message = '';
+      if (error.field) {
+        message += `Field "${error.field}" `;
+      }
+      if (error.message) {
+        message += error.message;
+      }
+      return message;
+    });
   }
 }
 

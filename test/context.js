@@ -155,7 +155,8 @@ describe('Context', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.message).to.contain('Permission denied');
+      expect(err.message).to.contain('updatePost');
     }).done();
   });
 
@@ -172,7 +173,8 @@ describe('Context', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.message).to.contain('Permission denied');
+      expect(err.message).to.contain('updatePost');
     }).done();
   });
 

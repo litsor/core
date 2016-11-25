@@ -48,7 +48,8 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.message).to.contain('Syntax Error');
+      expect(err.message).to.contain('Expected');
     }).done();
   });
 
@@ -59,7 +60,8 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.message).to.contain('is not supported by model');
+      expect(err.message).to.contain('write');
     }).done();
   });
 
@@ -304,7 +306,9 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.errors).to.have.length(1);
+      expect(err.errors[0]).to.contain('title');
+      expect(err.errors[0]).to.contain('required');
     }).done();
   });
 
@@ -328,7 +332,9 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.errors).to.have.length(2);
+      expect(err.errors.sort()[1]).to.contain('title');
+      expect(err.errors.sort()[1]).to.contain('wrong type');
     }).done();
   });
 
@@ -339,7 +345,9 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.errors).to.have.length(1);
+      expect(err.errors[0]).to.contain('id');
+      expect(err.errors[0]).to.contain('wrong type');
     }).done();
   });
 
@@ -356,7 +364,9 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.errors).to.have.length(1);
+      expect(err.errors[0]).to.contain('title');
+      expect(err.errors[0]).to.contain('wrong type');
     }).done();
   });
 
@@ -367,7 +377,9 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.errors).to.have.length(1);
+      expect(err.errors[0]).to.contain('id');
+      expect(err.errors[0]).to.contain('wrong type');
     }).done();
   });
 
@@ -441,7 +453,8 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.match(/^Query error: /);
+      expect(err.message).to.contain('Missing value');
+      expect(err.message).to.contain('body');
     }).done();
   });
 

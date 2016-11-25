@@ -2,8 +2,6 @@
 
 const HttpError = require('http-errors');
 
-const QueryError = require('./query-error');
-
 class GraphqlApi {
   constructor(app, storage) {
     this.app = app;
@@ -31,15 +29,6 @@ class GraphqlApi {
       }
       return this.storage.query(query, context, args).then(response => {
         return {data: response};
-      }).catch(err => {
-        const errors = err.errors;
-        if (err.message === 'Query error: Permission denied') {
-          throw new HttpError(403, undefined, {errors});
-        }
-        if (err instanceof QueryError) {
-          throw new HttpError(400, undefined, {errors});
-        }
-        throw err;
       });
     });
   }

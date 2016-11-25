@@ -68,7 +68,6 @@ describe('Application', () => {
       query: '{createPost(teststring:123,testint:"string")}'
     };
     return Needle.postAsync(uri + '/graphql', data, {json: true}).then(response => {
-      console.log(response.body);
       expect(response.statusCode).to.equal(400);
       expect(response.body).to.have.property('errors');
       expect(response.body.errors).to.have.length(2);

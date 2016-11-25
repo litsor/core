@@ -137,6 +137,24 @@ describe('Authentication', () => {
     });
   });
 
+  it('can get user proflle without specifying user id', () => {
+    const data = {
+      query: '{user:User{id, name}}'
+    };
+    const options = {
+      json: true,
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    };
+    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+      expect(response.body.data).have.property('user');
+      expect(response.body.data.user).have.property('id', userId);
+      expect(response.body.data.user).have.property('name', 'Alice');
+    });
+  });
+
   it('cannot get user profile using wrong access token', () => {
     const data = {
       query: '{user:User(id:$userId){id, name}}',
