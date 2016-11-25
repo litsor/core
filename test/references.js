@@ -105,6 +105,22 @@ describe('References', () => {
     });
   });
 
+  it('can get Post via User (reverse link) without requesting id field', () => {
+    const query = `{
+      User(id:$userId) {
+        posts {
+          id
+        }
+      }
+    }`;
+    const args = {userId};
+    return storage.query(query, args).then(result => {
+      expect(result.User).to.have.property('posts');
+      expect(result.User.posts).to.have.length(1);
+      expect(result.User.posts[0]).to.have.property('id', postId);
+    });
+  });
+
   it('can omit fieldnames in references', () => {
     const query = `{
       User(id:$userId) {

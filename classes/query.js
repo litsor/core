@@ -93,6 +93,8 @@ class Query {
             // existence of the 'operation' function, which indicates if the
             // models engine supports this operation.
             if (typeof model[operation] === 'function' && typeof model[functionName] === 'function') {
+              // Always add the "id" field. It is required for references and field access checks.
+              method.fieldNames = _.union(method.fieldNames, ['id']);
               return model[functionName](method.params, method.fieldNames, this.dry);
             }
             throw new HttpError(400, `Operation "${operation}" is not supported by model`);
