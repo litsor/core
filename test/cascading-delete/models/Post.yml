@@ -1,0 +1,9 @@
+database: rethink
+access: 'true'
+mutation: 'true'
+properties:
+  author:
+    type: string
+    references: User
+    reverse: posts
+    cascade: before
