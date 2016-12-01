@@ -57,10 +57,12 @@ class Query {
 
       // Allow us to get the logged in user by requesting readUser without params.
       // @todo: Move to some query preprocessing function.
-      if (operation === 'read' && parts[2] === 'User' && !Object.keys(method.params).length > 0 && typeof this.context !== 'undefined') {
-        const user = this.context.getUser();
+      if (operation === 'read' && parts[2] === 'User' && Object.keys(method.params).length === 0) {
+        const user = typeof this.context === 'undefined' ? {} : this.context.getUser();
         if (user.id) {
           method.params.id = user.id;
+        } else {
+          return {model: null, data: null};
         }
       }
 
@@ -70,6 +72,7 @@ class Query {
           let model;
           return this.models.get(parts[2]).then(_model => {
             model = _model;
+
             if (this.context) {
               // Check entity-level access. Read, update and delete operations
               // are checked on id. Other parameters are not passed.
@@ -110,6 +113,10 @@ class Query {
     const output = {};
     const promises = [];
     const missing = [];
+
+    if (item === null) {
+      return null;
+    }
 
     Object.keys(fields).forEach(alias => {
       const field = fields[alias];
@@ -206,6 +213,10 @@ class Query {
       const isArray = result.data instanceof Array;
       const data = isArray ? result.data : [result.data];
       return Bluebird.resolve(data).each(item => {
+        if (item === null) {
+          // Skip permission checks on empty items.
+          return;
+        }
         let operation;
         const parts = method.name.match(/^([a-z]+)?([A-Z][\w]*)$/);
         if (parts) {

@@ -155,6 +155,19 @@ describe('Authentication', () => {
     });
   });
 
+  it('will return null for user proflle when not authenticated', () => {
+    const data = {
+      query: '{user:User{id, name}}'
+    };
+    const options = {
+      json: true
+    };
+    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+      expect(response.body.data).have.property('user', null);
+    });
+  });
+
   it('cannot get user profile using wrong access token', () => {
     const data = {
       query: '{user:User(id:$userId){id, name}}',
