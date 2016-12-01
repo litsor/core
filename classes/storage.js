@@ -34,7 +34,7 @@ class Storage {
   }
 
   generateModels() {
-    Fs.ensureDirAsync(this.options.cacheDir);
+    Fs.ensureDirSync(this.options.cacheDir);
     const cached = Fs.readdirSync(this.options.cacheDir);
     const dir = this.options.modelsDir;
     const compiler = new ModelsCompiler();
