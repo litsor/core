@@ -93,4 +93,16 @@ describe('Cascading deletes', () => {
       }).catch(() => {});
     });
   });
+
+  it.skip('will fail when on permission errors when deleting referencing items', () => {
+
+  });
+
+  it.skip('will not fail when access on list is denied, but delete is allowed', () => {
+    // @see CascadingDelete::processField()
+  });
+
+  it.skip('can skip permission checks when setting skipPermissionsDuringCascade flag', () => {
+
+  });
 });

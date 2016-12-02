@@ -37,7 +37,8 @@ class CascadingDelete extends Plugin {
           this.data[prop.references].push({
             mode: prop.cascade,
             model: modelName,
-            field: property
+            field: property,
+            skipPermissionsDuringCascade: Boolean(prop.skipPermissionsDuringCascade)
           });
           this[prop.cascade === 'before' ? 'preprocessors' : 'postprocessors'].push(prop.references);
         }
@@ -56,6 +57,9 @@ class CascadingDelete extends Plugin {
     }
     const promises = [];
     this.data[model.name].forEach(link => {
+      if (link.skipPermissionsDuringCascade) {
+        context = undefined;
+      }
       promises.push(this.processField(models, context, link, id));
     });
     return Promise.all(promises).catch(err => {
@@ -74,7 +78,13 @@ class CascadingDelete extends Plugin {
       }
     }`;
     const args = {id};
-    const listQuery = new Query(models, query, context, args).execute();
+    // Not that the list query is context free.
+    // The access check can be based on filters not provided here, for example
+    // when having a Post {group:1, user:2} where access check is on 'group'.
+    // Cascading posts when deleting the user should not fail on the list query,
+    // instead we will check the mutation access of the individual posts
+    // by providing context to the delete query.
+    const listQuery = new Query(models, query, args).execute();
     return Bluebird.resolve(listQuery).then(result => result.items).each(item => {
       const query = `{
         delete${link.model} (id: $id) {
