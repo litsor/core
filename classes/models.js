@@ -18,7 +18,7 @@ class Models {
     this.postprocessors = {};
 
     this.ready = new Promise(resolve => {
-      globby([Path.join(__dirname, '../engines/*.js')]).then(files => {
+      globby([Path.join(__dirname, '../engines/*.js'), '/data/engines/*.js']).then(files => {
         files.forEach(file => {
           const load = require;
           const engine = load(file);
@@ -42,7 +42,7 @@ class Models {
           this.preprocessors[name] = [];
           this.postprocessors[name] = [];
         });
-        return globby([Path.join(__dirname, '../plugins/*.js')]);
+        return globby([Path.join(__dirname, '../plugins/*.js'), '/data/plugins/*.js']);
       }).then(files => {
         files.forEach(file => {
           const name = file.match(/\/([^\/]+)\.js$/)[1];

@@ -15,8 +15,7 @@ class Storage {
     options = _.defaults(options, {
       databases: {},
       cacheDir: '/tmp/cache',
-      modelsDir: 'models',
-      pluginsDir: 'plugins'
+      modelsDir: 'models'
     });
     options.databases = _.defaults(options.databases, {
       internal: {}
