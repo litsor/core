@@ -68,7 +68,7 @@ class RestApi extends Model {
       if (results.length >= index * this.rest.list.itemsPerPage && results.length < maxResults) {
         const uri = uriTemplate.split('{offset}').join(results.length + offset + this.rest.list.offsetBase);
         return Needle.getAsync(uri, {json: true}).catch(() => {
-          throw new Error('Unable to connect to REST API');
+          throw new Error(`Unable to connect to REST API at "${uri}"`);
         }).then(response => {
           if (response.statusCode >= 300) {
             throw new Error('Retrieved error code from REST API: ' + response.statusCode);
