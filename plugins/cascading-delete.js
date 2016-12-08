@@ -97,7 +97,7 @@ class CascadingDelete extends Plugin {
   }
 
   /**
-   * List models that this plugin does pReprocessing for.
+   * List models that this plugin does Preprocessing for.
    */
   getPreprocessors() {
     return this.preprocessors;
