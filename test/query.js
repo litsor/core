@@ -547,4 +547,17 @@ describe('Query', () => {
       throw new Error('Query passed');
     }).catch(() => {});
   });
+
+  it.skip('allows postprocessors to act on method output before extre fields are fetched', () => {
+    /**
+     * Consider the query:
+     * {createEntity(name: "test") { tasks { id } }}
+     *
+     * A postprocessor adds a new task after creating the entity, with the query:
+     * {createTask(entity: $id) { id }}
+     *
+     * The Entity.tasks field is a field from the Reference plugin and lists tasks for that entity.
+     * The createEntity query is expected to contain the new task in its output.
+     */
+  });
 });

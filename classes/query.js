@@ -203,13 +203,18 @@ class Query {
 
   executeMethod(method) {
     let model;
+    let result;
     return this.getModel(method).then(_model => {
       model = _model;
       return this.preprocess(method, model);
     }).then(_method => {
       method = _method;
       return this.callMethod(method);
-    }).then(result => {
+    }).then(_result => {
+      result = _result;
+      return this.postprocess(method, model, result.data);
+    }).then(_data => {
+      result.data = _data;
       const isArray = result.data instanceof Array;
       const data = isArray ? result.data : [result.data];
       return Bluebird.resolve(data).each(item => {
@@ -232,8 +237,6 @@ class Query {
       }).then(items => {
         return isArray ? items : items[0];
       });
-    }).then(data => {
-      return this.postprocess(method, model, data);
     });
   }
 
