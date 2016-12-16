@@ -455,6 +455,20 @@ describe('Query', () => {
    * The value ``null`` is used when a parameter is present in the query,
    * but its value was not provided. It depends on the schema validation
    * if such queries will raise an error.
+   *
+   * @indepth Considerations
+   * The first development version raised an error when it detects that some
+   * variable is missing. The idea is that this is always a programming error
+   * that should throw an exception. However, in the frontend it is often
+   * practical to be able to post empty values. In JavaScript, empty values
+   * are usually represented as ``undefined``. JSON encoding objects with
+   * undefined values result in missing properties. For example:
+   * ```
+   * > JSON.stringify({foo: 'bar', bar: undefined})
+   * '{"foo":"bar"}'
+   * ```
+   * That means that we must explicitly convert ``undefined`` to ``null``
+   * in order to leave off variable values, which means extra coding.
    */
   it('will query when providing too few arguments', () => {
     const query = '{story:createStory(title:$title,body:$body){id}}';
