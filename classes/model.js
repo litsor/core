@@ -64,6 +64,8 @@ class Model {
   }
 
   executeCreate(data, fieldNames, dry) {
+    // Treat nulls as "not provided". The nulls would otherwise raise "wrong type" errors.
+    data = this.removeNulls(data);
     this.fillDefaults(data);
     const validation = this.validateInput(data);
     if (!validation.valid) {
@@ -128,6 +130,16 @@ class Model {
   }
   remove() {
     throw new HttpError(400, `Operation "delete" is not supported by model`);
+  }
+
+  removeNulls(input) {
+    const data = _.clone(input);
+    Object.keys(data).forEach(key => {
+      if (data[key] === null || data[key] === undefined) {
+        delete data[key];
+      }
+    });
+    return data;
   }
 
   translateErrors(errors) {
