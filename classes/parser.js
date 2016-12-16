@@ -7,7 +7,7 @@ const extractValue = function(value, variables) {
   if (value.kind === 'Variable') {
     const name = value.name.value;
     if (typeof variables !== 'object' || typeof variables[name] === 'undefined') {
-      throw new Error(`Missing value for argument ${name}`);
+      variables[name] = null;
     }
     return variables[name];
   }

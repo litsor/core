@@ -446,6 +446,16 @@ describe('Query', () => {
     }).done();
   });
 
+  /**
+   * @doc
+   * ## Query Parameterization
+   * Queries accept variables in the form ``$name``. Variables are passed
+   * to the Query constructor as second argument, or as the key ``variables``
+   * in the ``POST /graphql`` endpoint.
+   * The value ``null`` is used when a parameter is present in the query,
+   * but its value was not provided. It depends on the schema validation
+   * if such queries will raise an error.
+   */
   it('will query when providing too few arguments', () => {
     const query = '{story:createStory(title:$title,body:$body){id}}';
     return Promise.resolve().then(() => {
@@ -453,8 +463,9 @@ describe('Query', () => {
     }).then(() => {
       throw new Error('should be rejected');
     }).catch(err => {
-      expect(err.message).to.contain('Missing value');
-      expect(err.message).to.contain('body');
+      // It will use NULL for missing values. Validation failed because
+      // body is a required field.
+      expect(err.message).to.contain('Validation failed');
     }).done();
   });
 
