@@ -31,11 +31,10 @@ class References extends Plugin {
     const name = model.name + '.' + field.name;
     const fieldData = this.fieldData[name];
 
-    const limit = typeof field.params.limit === 'number' ? field.params.limit : 100;
-    const offset = typeof field.params.offset === 'number' ? field.params.offset : 0;
+    field.params.limit = typeof field.params.limit === 'number' ? field.params.limit : 100;
+    field.params.offset = typeof field.params.offset === 'number' ? field.params.offset : 0;
 
     field.name = 'list' + fieldData.model;
-    field.params = {limit, offset};
     field.params[fieldData.field] = id;
     const query = {items: field};
     if (field.fieldNames.length === 0) {

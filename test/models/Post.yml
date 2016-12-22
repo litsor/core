@@ -32,3 +32,10 @@ properties:
   owneronly:
     type: string
     access: 'i.owner === u.id'
+
+  indexed1:
+    type: integer
+    indexed: true
+  indexed2:
+    type: integer
+    indexed: true

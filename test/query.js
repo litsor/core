@@ -573,6 +573,85 @@ describe('Query', () => {
     }).catch(() => {});
   });
 
+  it('will apply filter in list', () => {
+    let id;
+    return storage.query('{createPost(testint: 10){id}}').then(result => {
+      id = result.createPost.id;
+      return storage.query('{createPost(testint: 11){id}}');
+    }).then(() => {
+      return storage.query('{listPost(testint: 10){id}}');
+    }).then(result => {
+      expect(result.listPost).to.have.length(1);
+      expect(result.listPost[0].id).to.equal(id);
+    });
+  });
+
+  it('will apply two unindexed filters in list', () => {
+    let id;
+    return storage.query('{createPost(testint: 10, teststring: "testindex"){id}}').then(result => {
+      id = result.createPost.id;
+      return storage.query('{createPost(testint: 11, teststring: "testindex"){id}}');
+    }).then(() => {
+      return storage.query('{listPost(testint: 10, teststring: "testindex"){id}}');
+    }).then(result => {
+      expect(result.listPost).to.have.length(1);
+      expect(result.listPost[0].id).to.equal(id);
+    });
+  });
+
+  it('will apply two indexed filters in list', () => {
+    let id;
+    return storage.query('{createPost(indexed1: 1, indexed2: 1){id}}').then(result => {
+      id = result.createPost.id;
+      return storage.query('{createPost(indexed1: 1, indexed2: 2){id}}');
+    }).then(() => {
+      return storage.query('{createPost(indexed1: 2, indexed2: 1){id}}');
+    }).then(() => {
+      return storage.query('{createPost(indexed1: 2, indexed2: 2){id}}');
+    }).then(() => {
+      return storage.query('{listPost(indexed1: 1, indexed2: 1){id}}');
+    }).then(result => {
+      expect(result.listPost).to.have.length(1);
+      expect(result.listPost[0].id).to.equal(id);
+    });
+  });
+
+  it('will apply indexed filter and unindexed filter in list', () => {
+    let id;
+    return storage.query('{createPost(testint: 1, indexed2: 1){id}}').then(result => {
+      id = result.createPost.id;
+      return storage.query('{createPost(testint: 1, indexed2: 2){id}}');
+    }).then(() => {
+      return storage.query('{listPost(testint: 1, indexed2: 1){id}}');
+    }).then(result => {
+      expect(result.listPost).to.have.length(1);
+      expect(result.listPost[0].id).to.equal(id);
+    });
+  });
+
+  it('will apply two indexed filters and unindexed filter in list', () => {
+    let id;
+    return storage.query('{createPost(indexed1: 1, indexed2: 1, testboolean: true){id}}').then(result => {
+      id = result.createPost.id;
+      return storage.query('{createPost(indexed1: 1, indexed2: 2, testboolean: true){id}}');
+    }).then(() => {
+      return storage.query('{createPost(indexed1: 2, indexed2: 1, testboolean: true){id}}');
+    }).then(() => {
+      return storage.query('{createPost(indexed1: 2, indexed2: 2, testboolean: true){id}}');
+    }).then(() => {
+      return storage.query('{listPost(indexed1: 1, indexed2: 1, testboolean: false){id}}');
+    }).then(() => {
+      return storage.query('{createPost(indexed1: 2, indexed2: 1, testboolean: false){id}}');
+    }).then(() => {
+      return storage.query('{createPost(indexed1: 2, indexed2: 2, testboolean: false){id}}');
+    }).then(() => {
+      return storage.query('{listPost(indexed1: 1, indexed2: 1, testboolean: true){id}}');
+    }).then(result => {
+      expect(result.listPost).to.have.length(1);
+      expect(result.listPost[0].id).to.equal(id);
+    });
+  });
+
   it.skip('allows postprocessors to act on method output before extre fields are fetched', () => {
     /**
      * Consider the query:

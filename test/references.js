@@ -42,7 +42,7 @@ describe('References', () => {
     query = `{user:createUser(name: "Alice", mail: "alice@example.com") { id }}`;
     return storage.query(query).then(result => {
       userId = result.user.id;
-      query = '{post:createPost(title:"Test",owner:$userId){id}}';
+      query = '{post:createPost(title:"Test",owner:$userId,testboolean:true){id}}';
       args = {userId};
       return storage.query(query, args);
     }).then(result => {
@@ -118,6 +118,21 @@ describe('References', () => {
       expect(result.User).to.have.property('posts');
       expect(result.User.posts).to.have.length(1);
       expect(result.User.posts[0]).to.have.property('id', postId);
+    });
+  });
+
+  it('can apply filter in reverse link', () => {
+    const query = `{
+      User(id:$userId) {
+        id, posts (testboolean: false) {
+          id
+        }
+      }
+    }`;
+    const args = {userId};
+    return storage.query(query, args).then(result => {
+      expect(result.User).to.have.property('posts');
+      expect(result.User.posts).to.have.length(0);
     });
   });
 
