@@ -15,7 +15,9 @@ class Transformation {
       return null;
     }
     let output = _.cloneDeep(value);
-    Object.keys(this._template).forEach(key => {
+    const keys = Object.keys(this._template);
+    for (let i = 0; i < keys.length; ++i) {
+      const key = keys[i];
       if (typeof this[`_${key}`] !== 'function') {
         throw new Error(`Unknown function ${key}`);
       }
@@ -25,7 +27,7 @@ class Transformation {
         // executing single: '$.unknown' followed by substring.
         return null;
       }
-    });
+    }
     return output;
   }
 
@@ -104,6 +106,41 @@ class Transformation {
       algorithm: 'md5'
     });
     return Crypto.createHash(options.algorithm).update(value).digest(options.encoding);
+  }
+
+  _array(value, options) {
+    if (!(options instanceof Array)) {
+      throw new Error('Options for array transformation must be an array');
+    }
+    return options.map(item => {
+      const transformer = new Transformation(typeof item === 'string' ? {single: item} : item);
+      return transformer.transform(value);
+    });
+  }
+
+  _join(value, options) {
+    if (!(value instanceof Array)) {
+      throw new Error('Value for join transformation must be an array');
+    }
+    const separator = options.separator ? options.separator : '';
+    return value.join(separator);
+  }
+
+  _split(value, options) {
+    if (!options.separator) {
+      throw new Error('Missing separator for split transformation');
+    }
+    if (typeof value !== 'string') {
+      return [];
+    }
+    return value.split(options.separator);
+  }
+
+  _filter(value) {
+    if (!(value instanceof Array)) {
+      throw new Error('Value for filter transformation must be an array');
+    }
+    return value.filter(item => item);
   }
 }
 

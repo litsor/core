@@ -53,6 +53,37 @@ describe('Transformation', () => {
     expect(transformer.transform({})).to.deep.equal({});
   });
 
+  it('will return null when input is null', () => {
+    const transformer = new Transformation({});
+    expect(transformer.transform(null)).to.equal(null);
+  });
+
+  it('will return null when input is undefined', () => {
+    const transformer = new Transformation({});
+    expect(transformer.transform(undefined)).to.equal(null);
+  });
+
+  it('will fail on unknown operator', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        unknownOp: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw('Unknown function unknownOp');
+  });
+
+  /**
+   * Output is null, not the hash of something empty.
+   */
+  it('bails when missing output in chain', () => {
+    const transformer = new Transformation({
+      single: '$.unknown',
+      hash: {algorithm: 'md5', encoding: 'hex'}
+    });
+    expect(transformer.transform({})).to.equal(null);
+  });
+
   it('can return single item from jsonpath query', () => {
     const transformer = new Transformation({
       single: '$.data'
@@ -60,11 +91,45 @@ describe('Transformation', () => {
     expect(transformer.transform({data: {foo: 'bar'}})).to.deep.equal({foo: 'bar'});
   });
 
+  it('will fail on single when value is not a string', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        single: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can return single item from nested jsonpath query', () => {
+    const transformer = new Transformation({
+      single: '$.data.foo'
+    });
+    expect(transformer.transform({data: {foo: 'bar'}})).to.equal('bar');
+  });
+
+  it('will return null from single for unknown properties in nested jsonpath query', () => {
+    const transformer = new Transformation({
+      single: '$.data.foo'
+    });
+    expect(transformer.transform({data: {bar: 'bar'}})).to.equal(null);
+  });
+
   it('can return multiple items from jsonpath query', () => {
     const transformer = new Transformation({
       multiple: '$.data'
     });
     expect(transformer.transform({data: {foo: 'bar'}})).to.deep.equal([{foo: 'bar'}]);
+  });
+
+  it('will fail on multiple when value is not a string', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        multiple: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
   });
 
   it('can generate static value', () => {
@@ -103,6 +168,16 @@ describe('Transformation', () => {
     });
   });
 
+  it('will fail on objects when options is not an object', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        object: 'wrong'
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
   it('can map arrays', () => {
     const transformer = new Transformation({
       map: {object: {baz: '$.foo'}}
@@ -114,6 +189,26 @@ describe('Transformation', () => {
       {baz: 'qux'},
       {baz: 'quux'}
     ]);
+  });
+
+  it('allows using a string as option in map', () => {
+    const transformer = new Transformation({
+      map: '$.foo'
+    });
+    expect(transformer.transform([
+      {foo: 'qux'},
+      {foo: 'quux'}
+    ])).to.deep.equal([
+      'qux',
+      'quux'
+    ]);
+  });
+
+  it('will return null on map when value is not an array', () => {
+    const transformer = new Transformation({
+      map: {}
+    });
+    expect(transformer.transform({})).to.equal(null);
   });
 
   it('can get substring', () => {
@@ -137,6 +232,16 @@ describe('Transformation', () => {
     expect(transformer.transform('Lorem ipsum')).to.equal('Lorem');
   });
 
+  it('will fail on substring when value is not a string', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        substring: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
   it('can get length of array', () => {
     const transformer = new Transformation({
       length: {}
@@ -149,6 +254,16 @@ describe('Transformation', () => {
       length: {}
     });
     expect(transformer.transform('test')).to.equal(4);
+  });
+
+  it('will fail on length when value is not a string or array', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        length: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
   });
 
   it('can get md5/hex hash of a string', () => {
@@ -170,5 +285,110 @@ describe('Transformation', () => {
       hash: {}
     });
     expect(transformer.transform('Lorem')).to.equal(Crypto.createHash('md5').update('Lorem').digest('hex'));
+  });
+
+  it('will convert input to JSON before hashing input when input is not a string', () => {
+    const transformer = new Transformation({
+      hash: {}
+    });
+    expect(transformer.transform({foo: 'bar'})).to.equal(Crypto.createHash('md5').update('{"foo":"bar"}').digest('hex'));
+  });
+
+  it('can create new array', () => {
+    const transformer = new Transformation({
+      array: [
+        {single: '$.foo'},
+        {single: '$.bar'}
+      ]
+    });
+    expect(transformer.transform({foo: 'Foo', bar: 'Bar'})).to.deep.equal(['Foo', 'Bar']);
+  });
+
+  it('allows using a string as array values in array', () => {
+    const transformer = new Transformation({
+      array: ['$.foo', '$.bar']
+    });
+    expect(transformer.transform({foo: 'Foo', bar: 'Bar'})).to.deep.equal(['Foo', 'Bar']);
+  });
+
+  it('will fail on array when options is not an array', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        array: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can join array', () => {
+    const transformer = new Transformation({
+      join: {}
+    });
+    expect(transformer.transform(['foo', 'bar'])).to.equal('foobar');
+  });
+
+  it('will fail on join when value is not an array', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        join: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can join array with separator', () => {
+    const transformer = new Transformation({
+      join: {
+        separator: ' '
+      }
+    });
+    expect(transformer.transform(['foo', 'bar'])).to.equal('foo bar');
+  });
+
+  it('can split string to array', () => {
+    const transformer = new Transformation({
+      split: {
+        separator: ' '
+      }
+    });
+    expect(transformer.transform('foo bar')).to.deep.equal(['foo', 'bar']);
+  });
+
+  it('will return empty array when split value is not an array', () => {
+    const transformer = new Transformation({
+      split: {
+        separator: ' '
+      }
+    });
+    expect(transformer.transform(false)).to.deep.equal([]);
+  });
+
+  it('will fail on split when missing separator', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        split: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can filter empty items from array', () => {
+    const transformer = new Transformation({
+      filter: {}
+    });
+    expect(transformer.transform(['foo', '', 'bar', ''])).to.deep.equal(['foo', 'bar']);
+  });
+
+  it('will fail on filter when value is not an array', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        filter: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
   });
 });
