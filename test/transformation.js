@@ -13,6 +13,7 @@ const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 /**
+ * @doc transformations
  * Transformations define how objects can be transformed from one format to another.
  * Input and output objects are always in JSON format.
  *
@@ -74,7 +75,21 @@ describe('Transformation', () => {
   });
 
   /**
-   * Output is null, not the hash of something empty.
+   * @doc
+   * The output for a transformation is null when encountering errors,
+   * for example when trying to get an unexisting property.
+   * Any null output will break the chain. That means that in the chain below,
+   * the result is ``null``.
+   *
+   * ```yaml
+   * single: $.unknown
+   * hash:
+   *   algorithm: md5
+   *   encoding: hex
+   * ```
+   *
+   * The ``hash`` function is never executed because the execution bails after
+   * the ``single`` function, which returns ``null``.
    */
   it('bails when missing output in chain', () => {
     const transformer = new Transformation({
@@ -390,5 +405,195 @@ describe('Transformation', () => {
       transformer.transform({});
     };
     expect(fn).to.throw();
+  });
+
+  it('can get HTML tag', () => {
+    const transformer = new Transformation({
+      htmlTag: 'strong'
+    });
+    const html = '<p>This is a <strong>test</strong>.</p>';
+    expect(transformer.transform(html)).to.equal('<strong>test</strong>');
+  });
+
+  it('will return null when HTML tag is not found', () => {
+    const transformer = new Transformation({
+      htmlTag: 'em'
+    });
+    const html = '<p>This is a <strong>test</strong>.</p>';
+    expect(transformer.transform(html)).to.equal(null);
+  });
+
+  it('will fail on htmlTag when value is not a string', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        htmlTag: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can get HTML tags', () => {
+    const transformer = new Transformation({
+      htmlTags: 'li'
+    });
+    const html = '<ul><li>Foo</li><li>Bar</li></ul>';
+    expect(transformer.transform(html)).to.deep.equal(['<li>Foo</li>', '<li>Bar</li>']);
+  });
+
+  it('will return an empty array when no HTML tags were found', () => {
+    const transformer = new Transformation({
+      htmlTags: 'strong'
+    });
+    const html = '<ul><li>Foo</li><li>Bar</li></ul>';
+    expect(transformer.transform(html)).to.deep.equal([]);
+  });
+
+  it('will fail on htmlTags when value is not a string', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        htmlTags: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can get HTML tag text', () => {
+    const transformer = new Transformation({
+      htmlTagText: 'strong'
+    });
+    const html = '<p>This is a <strong>test</strong>.</p>';
+    expect(transformer.transform(html)).to.equal('test');
+  });
+
+  it('will return null when HTML tag is not found', () => {
+    const transformer = new Transformation({
+      htmlTagText: 'em'
+    });
+    const html = '<p>This is a <strong>test</strong>.</p>';
+    expect(transformer.transform(html)).to.equal(null);
+  });
+
+  it('will fail on htmlTagText when value is not a string', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        htmlTagText: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can get HTML tags text', () => {
+    const transformer = new Transformation({
+      htmlTagsText: 'li'
+    });
+    const html = '<ul><li>Foo</li><li>Bar</li></ul>';
+    expect(transformer.transform(html)).to.deep.equal(['Foo', 'Bar']);
+  });
+
+  it('will fail on htmlTagsText when value is not a string', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        htmlTagsText: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can get HTML attribute', () => {
+    const transformer = new Transformation({
+      htmlAttribute: 'id'
+    });
+    const html = '<p id="test-paragraph">Lorem ipsum.</p>';
+    expect(transformer.transform(html)).to.equal('test-paragraph');
+  });
+
+  it('will return null when HTML attribute is not found', () => {
+    const transformer = new Transformation({
+      htmlAttribute: 'id'
+    });
+    const html = '<p>Element without id-attribute.</p>';
+    expect(transformer.transform(html)).to.equal(null);
+  });
+
+  it('will return null on htmlAttribute when input is not a string', () => {
+    const transformer = new Transformation({
+      htmlAttribute: 'id'
+    });
+    expect(transformer.transform({})).to.equal(null);
+  });
+
+  it('will return null on htmlAttribute when input is not HTML', () => {
+    const transformer = new Transformation({
+      htmlAttribute: 'id'
+    });
+    expect(transformer.transform('test')).to.equal(null);
+  });
+
+  it('will fail on htmlAttribute when value is not a string', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        htmlAttribute: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can get table row', () => {
+    const transformer = new Transformation({
+      htmlTable: {
+        cell: 0,
+        text: 'age'
+      }
+    });
+    const html = '<table><tr><td>Name</td><td>John</td></tr><tr><td>Age</td><td>34</td></tr></table>';
+    expect(transformer.transform(html)).to.equal('<tr><td>Age</td><td>34</td></tr>');
+  });
+
+  it('can get table cell', () => {
+    const transformer = new Transformation({
+      htmlTable: {
+        cell: 0,
+        text: 'age',
+        returnCell: 1
+      }
+    });
+    const html = '<table><tr><td>Name</td><td>John</td></tr><tr><td>Age</td><td>34</td></tr></table>';
+    expect(transformer.transform(html)).to.equal('34');
+  });
+
+  it('will fail on htmlTable when value is not an object', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        htmlTable: ''
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('will fail on htmlTable when value is missing properties', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        htmlTable: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('will return null on htmlTable when row is not found', () => {
+    const transformer = new Transformation({
+      htmlTable: {
+        cell: 0,
+        text: 'length'
+      }
+    });
+    const html = '<table><tr><td>Name</td><td>John</td></tr><tr><td>Age</td><td>34</td></tr></table>';
+    expect(transformer.transform(html)).to.equal(null);
   });
 });

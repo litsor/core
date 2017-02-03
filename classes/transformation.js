@@ -3,6 +3,7 @@
 const Crypto = require('crypto');
 
 const _ = require('lodash');
+const $ = require('cheerio');
 const JsonPath = require('jsonpath');
 
 class Transformation {
@@ -141,6 +142,92 @@ class Transformation {
       throw new Error('Value for filter transformation must be an array');
     }
     return value.filter(item => item);
+  }
+
+  _htmlTag(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlTag" functions must be a string');
+    }
+    if (typeof value === 'string') {
+      const result = $(options, value);
+      if (result.length > 0) {
+        return $(result[0]).toString();
+      }
+    }
+    return null;
+  }
+
+  _htmlTags(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlTags" functions must be a string');
+    }
+    const output = [];
+    if (typeof value === 'string') {
+      const result = $(options, value);
+      for (let i = 0; i < result.length; ++i) {
+        output.push($(result[i]).toString());
+      }
+    }
+    return output;
+  }
+
+  _htmlTagText(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlTagText" functions must be a string');
+    }
+    if (typeof value === 'string') {
+      const result = $(options, value);
+      if (result.length > 0) {
+        return $(result[0]).text();
+      }
+    }
+    return null;
+  }
+
+  _htmlTagsText(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlTagsText" functions must be a string');
+    }
+    const output = [];
+    if (typeof value === 'string') {
+      const result = $(options, value);
+      for (let i = 0; i < result.length; ++i) {
+        output.push($(result[i]).text());
+      }
+    }
+    return output;
+  }
+
+  _htmlAttribute(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlAttribute" functions must be a string');
+    }
+    if (typeof value === 'string') {
+      const result = $(value).attr(options);
+      return typeof result === 'undefined' ? null : result;
+    }
+    return null;
+  }
+
+  _htmlTable(value, options) {
+    if (typeof options !== 'object' || typeof options.cell !== 'number' || typeof options.text !== 'string') {
+      throw new Error('Value of "htmlTable" functions must be an object with cell and text properties');
+    }
+    if (typeof value === 'string') {
+      const selector = typeof options.selector === 'string' ? `${options.selector}>tr ${options.selector}>tbody>tr` : 'tr';
+      const rows = $(selector, value);
+      for (let i = 0; i < rows.length; ++i) {
+        const cells = $('td', rows[i]);
+        if (cells.length >= options.cell && $(cells[options.cell]).text().trim().toLowerCase() === options.text.trim().toLowerCase()) {
+          if (typeof options.returnCell === 'number') {
+            const cells = $('td', rows[i]);
+            return cells.length >= options.returnCell ? $(cells[options.returnCell]).text() : null;
+          }
+          return $(rows[i]).toString();
+        }
+      }
+    }
+    return null;
   }
 }
 
