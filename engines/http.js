@@ -7,7 +7,7 @@ const Needle = Bluebird.promisifyAll(require('needle'));
 const Transformation = require('../classes/transformation');
 const Model = require('../classes/model');
 
-class RestApi extends Model {
+class Http extends Model {
   constructor(modelData, database, internalDatabase) {
     super(modelData, database, internalDatabase);
 
@@ -18,17 +18,17 @@ class RestApi extends Model {
     this.dbName = database.name;
     this.parameters = database.parameters;
 
-    this.rest = _.defaults(modelData.jsonSchema.restapi, {});
-    if (typeof this.rest.list !== 'undefined') {
-      this.rest.list = _.defaults(this.rest.list, {
+    this.httpOperations = _.defaults(modelData.jsonSchema.httpOperations, {});
+    if (typeof this.httpOperations.list !== 'undefined') {
+      this.httpOperations.list = _.defaults(this.httpOperations.list, {
         maxPages: 1,
         itemsPerPage: 10,
         offsetBase: 0
       });
-      if (typeof this.rest.list.template !== 'object') {
-        throw new Error('Model.restapi.list.template is not defined or not an object');
+      if (typeof this.httpOperations.list.template !== 'object') {
+        throw new Error('Model.httpOperations.list.template is not defined or not an object');
       }
-      this.listTransformer = new Transformation(this.rest.list.template);
+      this.listTransformer = new Transformation(this.httpOperations.list.template);
     }
   }
 
@@ -50,28 +50,28 @@ class RestApi extends Model {
 
   list(filters, fieldNames, options) {
     const offset = options.offset;
-    if (typeof this.rest.list === 'undefined') {
-      throw new Error('List method is not configured for REST API');
+    if (typeof this.httpOperations.list === 'undefined') {
+      throw new Error('List method is not configured');
     }
-    let uriTemplate = this.rest.list.uri;
+    let uriTemplate = this.httpOperations.list.uri;
     uriTemplate = this.replaceTokens(uriTemplate, _.pick(this.parameters, 'baseUri'), false);
     uriTemplate = this.replaceTokens(uriTemplate, _.omit(this.parameters, 'baseUri'));
     uriTemplate = this.replaceTokens(uriTemplate, filters);
     let results = [];
-    const maxResults = this.rest.list.maxPages * this.rest.list.itemsPerPage;
-    return Bluebird.resolve(_.range(0, this.rest.list.maxPages)).each(index => {
+    const maxResults = this.httpOperations.list.maxPages * this.httpOperations.list.itemsPerPage;
+    return Bluebird.resolve(_.range(0, this.httpOperations.list.maxPages)).each(index => {
       // The results array should have at least index * itemsPerPage items,
       // if not. the preceding query returned less than itemsPerPage results
       // which means that we already reached the end of the list.
       // Also skip the request when we already reached maxResults, which
       // can occur when the requests return more than itemsPerPage results.
-      if (results.length >= index * this.rest.list.itemsPerPage && results.length < maxResults) {
-        const uri = uriTemplate.split('{offset}').join(results.length + offset + this.rest.list.offsetBase);
+      if (results.length >= index * this.httpOperations.list.itemsPerPage && results.length < maxResults) {
+        const uri = uriTemplate.split('{offset}').join(results.length + offset + this.httpOperations.list.offsetBase);
         return Needle.getAsync(uri, {json: true}).catch(() => {
-          throw new Error(`Unable to connect to REST API at "${uri}"`);
+          throw new Error(`Unable to connect to "${uri}"`);
         }).then(response => {
           if (response.statusCode >= 300) {
-            throw new Error('Retrieved error code from REST API: ' + response.statusCode);
+            throw new Error('Retrieved error code from remote server: ' + response.statusCode);
           }
           const pageItems = this.listTransformer.transform(response.body);
           if (!(pageItems instanceof Array)) {
@@ -98,4 +98,4 @@ class RestApi extends Model {
   }
 }
 
-module.exports = RestApi;
+module.exports = Http;

@@ -14,7 +14,7 @@ const GoogleSearchMockup = require('./mockups/google-search');
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
-describe('RestApi', () => {
+describe('Http', () => {
   let storage;
   let googleSearch;
 
@@ -23,7 +23,7 @@ describe('RestApi', () => {
 
   before(() => {
     storage = new Storage({
-      modelsDir: 'test/models',
+      modelsDir: 'test/http/models',
       databases: {
         internal: {
           engine: 'redis',
@@ -31,18 +31,18 @@ describe('RestApi', () => {
           port: 6379,
           prefix: ''
         },
-        rethink: {
-          engine: 'RethinkDB',
-          host: 'localhost',
-          port: 28015,
-          name: 'test'
-        },
-        restapi: {
-          engine: 'RestApi',
+        googlesearch: {
+          engine: 'Http',
           parameters: {
             baseUri: 'http://localhost:8371',
             key,
             cx
+          }
+        },
+        website: {
+          engine: 'Http',
+          parameters: {
+            baseUri: 'http://localhost:8372'
           }
         }
       }
@@ -58,7 +58,7 @@ describe('RestApi', () => {
   it('can list results', () => {
     const keyword = 't';
     const query = `{
-      results: listExternal(query:$keyword) {
+      results: listGoogleSearch(query:$keyword) {
         id title link snippet
       }
     }`;
@@ -77,7 +77,7 @@ describe('RestApi', () => {
   it('can compose result of multiple pages', () => {
     const keyword = 'test';
     const query = `{
-      results: listExternal(query:$keyword) {
+      results: listGoogleSearch(query:$keyword) {
         id title link snippet
       }
     }`;
@@ -94,7 +94,7 @@ describe('RestApi', () => {
   it('will not return more results than maxPages * itemsPerPage', () => {
     const keyword = 'lorem';
     const query = `{
-      results: listExternal(query:$keyword) {
+      results: listGoogleSearch(query:$keyword) {
         id title link snippet
       }
     }`;

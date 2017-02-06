@@ -31,12 +31,6 @@ describe('Files', () => {
             port: 6379,
             prefix: ''
           },
-          rethink: {
-            engine: 'RethinkDB',
-            host: 'localhost',
-            port: 28015,
-            name: 'test'
-          },
           files: {
             engine: 'LocalFiles',
             directory: '/tmp/files'

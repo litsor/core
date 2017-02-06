@@ -1,7 +1,7 @@
-database: restapi
+database: googlesearch
 access: 'true'
 mutation: 'false'
-restapi:
+httpOperations:
   list:
     uri: "{baseUri}/customsearch/v1?key={key}&cx={cx}&q={query}&start={offset}"
     maxPages: 3
