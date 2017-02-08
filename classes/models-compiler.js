@@ -21,10 +21,12 @@ class ModelsCompiler {
     }
     schema.required = _.union(['id'], schema.required);
 
-    schema.properties.id = {
-      type: 'string',
-      format: 'id'
-    };
+    if (typeof schema.properties.id === 'undefined') {
+      schema.properties.id = {
+        type: 'string',
+        format: 'id'
+      };
+    }
     const disallowAdditionalProps = function(object) {
       if (typeof object.properties === 'object') {
         Object.keys(object.properties).forEach(key => {
