@@ -88,9 +88,14 @@ describe('Cascading deletes', () => {
       postId = result.createPost.id;
       return query('{deleteUser(id:$userId){id}}', {userId});
     }).then(() => {
-      return query('{Post(id:$postId){id}}', {postId}).then(() => {
-        throw new Error('Query should fail');
-      }).catch(() => {});
+      let failed = false;
+      return query('{Post(id:$postId){id}}', {postId}).catch(() => {
+        failed = true;
+      }).then(() => {
+        if (!failed) {
+          throw new Error('Query should fail');
+        }
+      });
     });
   });
 

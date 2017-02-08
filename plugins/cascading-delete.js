@@ -45,7 +45,7 @@ class CascadingDelete extends Plugin {
       });
     });
     this.postprocessors = _.uniq(this.postprocessors);
-    this.preprocessors = _.uniq(this.postprocessors);
+    this.preprocessors = _.uniq(this.preprocessors);
   }
 
   /**
