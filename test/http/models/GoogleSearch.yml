@@ -8,7 +8,7 @@ httpOperations:
     itemsPerPage: 10
     offsetBase: 1
     template:
-      single: $.items
+      single: $.body.items
       map:
         object:
           id:

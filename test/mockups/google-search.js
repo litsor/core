@@ -3,6 +3,16 @@ const _ = require('lodash');
 const Faker = require('faker');
 const BlueGate = require('bluegate');
 
+/**
+ * Google Custom Search REST API mockup.
+ *
+ * It only implments the /customsearch/v1 endpoint. Returned results are random.
+ * The number of results is 7 times the character length of the search query,
+ * so that reliable testing of pagination is possible. Only 10 results per page
+ * are returned. The ``start`` parameter can be used to obtain more results.
+ *
+ * @see https://developers.google.com/custom-search/json-api/v1/using_rest
+ */
 class GoogleSearch {
   constructor(key, cx) {
     this.key = key;
