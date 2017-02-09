@@ -4,7 +4,7 @@ const Crypto = require('crypto');
 
 const _ = require('lodash');
 const $ = require('cheerio');
-const JsonPath = require('jsonpath');
+const JsonPointer = require('jsonpointer');
 
 class Transformation {
   constructor(template) {
@@ -25,31 +25,18 @@ class Transformation {
       output = this[`_${key}`](output, this._template[key]);
       if (output === null || typeof output === 'undefined') {
         // Bails when missing output in chain. For example when
-        // executing single: '$.unknown' followed by substring.
+        // executing get: '/unknown' followed by substring.
         return null;
       }
     }
     return output;
   }
 
-  _single(value, options) {
+  _get(value, options) {
     if (typeof options !== 'string') {
-      throw new Error('Value of "single" function must be a string');
+      throw new Error('Value of "get" function must be a string');
     }
-    // Performance: skip query parsing if query refers to a simple property.
-    const match = options.match(/^\$\.([\w]+)$/);
-    if (match) {
-      return typeof value[match[1]] === 'undefined' ? null : value[match[1]];
-    }
-    const result = JsonPath.query(value, options);
-    return result.length ? result[0] : null;
-  }
-
-  _multiple(value, options) {
-    if (typeof options !== 'string') {
-      throw new Error('Value of "multiple" functions must be a string');
-    }
-    return JsonPath.query(value, options);
+    return JsonPointer.get(value, options);
   }
 
   _static(value, options) {
@@ -62,7 +49,7 @@ class Transformation {
     }
     const output = {};
     Object.keys(options).forEach(key => {
-      const template = typeof options[key] === 'string' ? {single: options[key]} : options[key];
+      const template = typeof options[key] === 'string' ? {get: options[key]} : options[key];
       const transformer = new Transformation(template);
       output[key] = transformer.transform(value);
     });
@@ -75,7 +62,7 @@ class Transformation {
     }
     const output = [];
     value.forEach(item => {
-      const template = typeof options === 'string' ? {single: options} : options;
+      const template = typeof options === 'string' ? {get: options} : options;
       const transformer = new Transformation(template);
       output.push(transformer.transform(item));
     });
@@ -114,7 +101,7 @@ class Transformation {
       throw new Error('Options for array transformation must be an array');
     }
     return options.map(item => {
-      const transformer = new Transformation(typeof item === 'string' ? {single: item} : item);
+      const transformer = new Transformation(typeof item === 'string' ? {get: item} : item);
       return transformer.transform(value);
     });
   }

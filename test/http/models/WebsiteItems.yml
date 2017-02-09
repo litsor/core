@@ -6,7 +6,7 @@ httpOperations:
     uri: "{baseUri}/list-more"
     maxPages: 10
     template:
-      single: $.body
+      get: /body
       htmlTags: .item
       map:
         object:
@@ -16,13 +16,13 @@ httpOperations:
           name:
             htmlTagText: a
     moreLink:
-      single: $.body
+      get: /body
       htmlTag: .list-more
       htmlAttribute: href
   read:
     uri: "{id}"
     template:
-      single: $.body
+      get: /body
       object:
         name:
           htmlTagText: .name
