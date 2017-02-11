@@ -4,8 +4,10 @@
 const _ = require('lodash');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
+const Bluebird = require('bluebird');
 
 const Script = require('../classes/script');
+const Application = require('../classes/application');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
@@ -25,6 +27,40 @@ const storage = {
  * used by plugins.
  */
 describe('Script', () => {
+  let app;
+  let query;
+
+  before(() => {
+    app = new Application({
+      port: 10023,
+      storage: {
+        modelsDir: 'test/script/models',
+        scriptsDir: 'test/script/scripts',
+        databases: {
+          internal: {
+            engine: 'redis',
+            host: 'localhost',
+            port: 6379,
+            prefix: ''
+          },
+          rethink: {
+            engine: 'RethinkDB',
+            host: 'localhost',
+            port: 28015,
+            name: 'test'
+          }
+        }
+      }
+    });
+    return app.ready().then(() => {
+      query = app.storage.query.bind(app.storage);
+    });
+  });
+
+  after(() => {
+    return app.close();
+  });
+
   /**
    * @doc
    * In its simplest form, the script has only a name and no steps.
@@ -86,7 +122,7 @@ describe('Script', () => {
    * ## Query
    *
    * Set the ``query`` property to execute a query. The output is written on
-   * the ``results`` property.
+   * the ``result`` property.
    */
   it('can execute query', () => {
     const storage = {
@@ -626,6 +662,117 @@ describe('Script', () => {
         i: 1e4 / 2,
         n: 1e4 / 2
       });
+    });
+  });
+
+  it('cannot run a script concurrently', () => {
+    const storage = {
+      query() {
+        return Bluebird.resolve({}).delay(50);
+      }
+    };
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        query: ''
+      }]
+    }, storage);
+    // Let first instance run in background.
+    script.run();
+    return Bluebird.resolve().delay(25).then(() => {
+      // The first instance is still running.
+      expect(() => {
+        script.run();
+      }).to.throw();
+    }).delay(25 + 1).then(() => {
+      // First script ended. Second was not started.
+      // We should be able to start the script now.
+      script.run();
+    });
+  });
+
+  /**
+   * @doc
+   * ## Scheduling
+   *
+   * Scripts can be scheduled for automatic execution by defining the
+   * ``schedule`` property. Its value is in the crontab format, with seconds
+   * included.
+   * Write "* * * * * *" to execute a script every second or "0 /5 * * * *"
+   * for execution every 5 minutes.
+   * Execution will not start if the script is still running.
+   *
+   * The example below is an implementation of a task queue. The script will
+   * consume the oldest task from the queue every second.
+   *
+   * ```
+   * name: Queue worker
+   * schedule: '* * * * * *'
+   * steps:
+   *   - query: |
+   *       {
+   *         item: listQueueItem(type: "addBadge", sort: "created", limit: 1) {
+   *           id data
+   *         }
+   *       }
+   *     transform:
+   *       object:
+   *         item: /result/item/0
+   *     jump:
+   *       left:
+   *         get: '/item'
+   *       operator: '==='
+   *       right: null
+   *       to: end
+   *   - query: '{User(id: $id){ badges }}'
+   *     arguments:
+   *       id: '/item/data/userId'
+   *     transform:
+   *       object:
+   *         item: '/item'
+   *         badges:
+   *           union:
+   *             - /result/User/badges
+   *             - array:
+   *               - /item/data/badge
+   *   - query: '{updateUser(id: $id, badges: $badges)}'
+   *     arguments:
+   *       id: /item/data/userId
+   *       badges: /badges
+   *   - query: '{deleteQueueItem(id: $id)}'
+   *     arguments:
+   *       id: /item/id
+   *   - label: end
+   * ```
+   *
+   * A new task can be created by running the query
+   * ``{createQueueItem(type: "addBadge", data: $data)}``
+   * where ``$data`` is ``{UserId: "123", "badge": "Winner"}``. It will add the
+   * string "Winner" to the ``User.badges`` array.
+   *
+   * Note that this script will never run multiple instances concurrently,
+   * since new instances are not started when the last is still running. There
+   * is no risk of executing the job twice and thus no need to do any locking.
+   *
+   * This setup can process at most one job per second. We can change the design
+   * a bit to allow processing more. Simple add a label "start" on the first
+   * step and an unconditional jump to the first step just before the last step.
+   * We can also use this trick to lower the number of invokes of this script.
+   * This lowers the system resources used, but increases the latency before
+   * new jobs are started.
+   */
+  it('will automatically execute scheduled scripts', () => {
+    let userId;
+    return query('{user: createUser(name: "John", mail: "john@example.com") { id }}').then(result => {
+      userId = result.user.id;
+      const data = {userId, badge: 'Winner'};
+      return query('{createQueueItem(type: "addBadge", data: $data)}', {data});
+    }).delay(1050).then(() => {
+      return query('{User(id: $userId) { badges }}', {userId});
+    }).then(result => {
+      expect(result.User.badges).to.deep.equal(['Winner']);
+    }).then(() => {
+      return query('{deleteUser(id: $userId)}', {userId});
     });
   });
 });

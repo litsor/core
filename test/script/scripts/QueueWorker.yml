@@ -1,0 +1,37 @@
+name: Queue worker
+schedule: '* * * * * *'
+steps:
+  - query: |
+      {
+        item: listQueueItem(type: "addBadge", sort: "created", limit: 1) {
+          id data
+        }
+      }
+    transform:
+      object:
+        item: /result/item/0
+    jump:
+      left:
+        get: '/item'
+      operator: '==='
+      right: null
+      to: end
+  - query: '{User(id: $id){ badges }}'
+    arguments:
+      id: '/item/data/userId'
+    transform:
+      object:
+        item: '/item'
+        badges:
+          union:
+            - /result/User/badges
+            - array:
+              - /item/data/badge
+  - query: '{updateUser(id: $id, badges: $badges)}'
+    arguments:
+      id: /item/data/userId
+      badges: /badges
+  - query: '{deleteQueueItem(id: $id)}'
+    arguments:
+      id: /item/id
+  - label: end

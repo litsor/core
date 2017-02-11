@@ -1,0 +1,14 @@
+database: rethink
+access: 'u.admin'
+mutation: 'false'
+required:
+- type
+- data
+properties:
+  type:
+    type: string
+  data:
+    type: object
+  created:
+    type: integer
+    default: '~~(new Date/1e3)'

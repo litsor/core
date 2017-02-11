@@ -1,18 +1,24 @@
 'use strict';
 
+const fs = require('fs');
 const Path = require('path');
 
+const Yaml = require('js-yaml');
 const _ = require('lodash');
 const globby = require('globby');
-const Promise = require('bluebird');
+
+const Script = require('./script');
 
 class Models {
-  constructor(models, databases) {
+  constructor(models, options, storage) {
     this.models = models;
-    this.databases = databases;
+    this.storage = storage;
+    this.scriptsDir = options.scriptsDir;
+    this.databases = options.databases;
     this.engines = {};
     this.instances = {};
     this.plugins = {};
+    this.scripts = {};
     this.pluginFields = {};
     this.preprocessors = {};
     this.postprocessors = {};
@@ -72,6 +78,14 @@ class Models {
             this.postprocessors[name].push(plugin);
           });
         });
+        return globby([Path.resolve(__dirname, '../', this.scriptsDir) + '/**/*.yml']);
+      }).then(files => {
+        files.forEach(file => {
+          const name = file.match(/\/([^\/]+)\.yml$/)[1];
+          const definition = Yaml.safeLoad(fs.readFileSync(file));
+          this.scripts[name] = new Script(definition, this.storage);
+        });
+      }).then(() => {
         resolve();
       }).catch(error => {
         console.log(error);

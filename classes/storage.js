@@ -15,7 +15,8 @@ class Storage {
     options = _.defaults(options, {
       databases: {},
       cacheDir: '/tmp/cache',
-      modelsDir: 'models'
+      modelsDir: 'models',
+      scriptsDir: 'scripts'
     });
     options.databases = _.defaults(options.databases, {
       internal: {}
@@ -53,7 +54,7 @@ class Storage {
       const load = require;
       items[name] = load(outputFile);
     });
-    this.models = new Models(items, this.options.databases);
+    this.models = new Models(items, this.options, this);
   }
 
   query(query, context, args) {

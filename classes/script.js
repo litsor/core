@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const JsonPointer = require('jsonpointer');
+const Schedule = require('node-schedule');
 
 const Transformation = require('./transformation');
 
@@ -29,6 +30,15 @@ class Script {
     this.running = false;
     this.step = 0;
     this.executedSteps = 0;
+
+    if (typeof definition.schedule === 'string') {
+      this.scheduledJob = Schedule.scheduleJob(definition.schedule, () => {
+        if (!this.running) {
+          this.run({});
+        }
+      });
+      // @todo: Call this.scheduledJob.cancel() when stopping application.
+    }
   }
 
   executeStep() {
@@ -78,7 +88,7 @@ class Script {
           operator: '=='
         });
         ['left', 'right'].forEach(operand => {
-          if (typeof jump[operand] === 'object') {
+          if (typeof jump[operand] === 'object' && jump[operand] !== null) {
             const transformer = new Transformation(jump[operand]);
             jump[operand] = transformer.transform(this.data);
           }
@@ -129,10 +139,18 @@ class Script {
   }
 
   run(input) {
+    if (this.running) {
+      throw new Error('Script is already running');
+    }
+    this.running = true;
     this.data = input || {};
     this.step = 0;
     return this.executeStep().then(() => {
+      this.running = false;
       return this.data;
+    }).catch(err => {
+      this.running = false;
+      throw err;
     });
   }
 }
