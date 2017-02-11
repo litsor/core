@@ -19,7 +19,10 @@ const storage = {
 
 /**
  * @doc scripts
+ * # Scripts
  *
+ * Scripts can be used for more complex and conditional operations that can be
+ * used by plugins.
  */
 describe('Script', () => {
   /**
@@ -77,6 +80,9 @@ describe('Script', () => {
 
   /**
    * @doc
+   * Each step can optionally contain a query, transformation, increment and
+   * jump, which are executed in that order and explained below.
+   *
    * ## Query
    *
    * Set the ``query`` property to execute a query. The output is written on
@@ -474,6 +480,151 @@ describe('Script', () => {
       expect(output).to.deep.equal({
         foo: null,
         bar: 'baz'
+      });
+    });
+  });
+
+  /**
+   * @doc
+   * For-loops can be written using the ``increment`` property. The value is a
+   * json pointer. It will increase its referenced value by 1, or set it to 0
+   * if it isn't already set. This is executed before the jump condition is
+   * evaluated.
+   * We can use it to write a ``for (i = 0; i < n; ++i)`` loop:
+   *
+   * ```
+   * name: For-loop
+   * steps:
+   *   - label: start
+   *     increment: /i
+   *     jump:
+   *       left:
+   *         get: /i
+   *       operator: >=
+   *       right:
+   *         get: /n
+   *       to: end
+   *   - label: firstWorker
+   *   - label: secondWorker
+   *     jump:
+   *       to: start
+   *   - label: end
+   * ```
+   *
+   * Note that we negated the jump conditon, which can now be read as "if i is
+   * greater or equals n".
+   */
+  it('can initialize the i-counter', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        increment: '/i'
+      }]
+    }, storage);
+    return script.run({}).then(output => {
+      expect(output).to.deep.equal({
+        i: 0
+      });
+    });
+  });
+
+  it('can increment the i-counter', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        increment: '/i'
+      }]
+    }, storage);
+    return script.run({i: 0}).then(output => {
+      expect(output).to.deep.equal({
+        i: 1
+      });
+    });
+  });
+
+  it('can execute a for-loop', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        label: 'start',
+        increment: '/i',
+        jump: {
+          left: {get: '/i'},
+          operator: '>=',
+          right: {get: '/n'},
+          to: 'end'
+        }
+      }, {
+        label: 'worker...'
+      }, {
+        jump: {
+          to: 'start'
+        }
+      }, {
+        label: 'end'
+      }]
+    }, storage);
+    return script.run({n: 10}).then(output => {
+      expect(output).to.deep.equal({
+        i: 10,
+        n: 10
+      });
+    });
+  });
+
+  /**
+   * @doc
+   * ### Endless loops
+   *
+   * A protection is build in to prevent endless loops. By default the script
+   * bails after executing 1000 steps. You can override this number per script
+   * in the ``maxSteps`` property, which value must be a positive integer.
+   */
+  it('will fail when executing more steps than maxSteps', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        label: 'start',
+        jump: {
+          to: 'start'
+        }
+      }]
+    }, storage);
+    let failed = false;
+    return script.run({n: 1e4}).catch(() => {
+      failed = true;
+    }).then(() => {
+      if (!failed) {
+        throw new Error('Script should fail');
+      }
+    });
+  });
+
+  it('will not fail when executing many steps (10k)', () => {
+    const script = new Script({
+      name: 'Testscript',
+      maxSteps: 1e4 + 3,
+      steps: [{
+        label: 'start',
+        increment: '/i',
+        jump: {
+          left: {get: '/i'},
+          operator: '>=',
+          right: {get: '/n'},
+          to: 'end'
+        }
+      }, {
+        jump: {
+          to: 'start'
+        }
+      }, {
+        label: 'end'
+      }]
+    }, storage);
+    return script.run({n: 1e4 / 2}).then(output => {
+      expect(output).to.deep.equal({
+        i: 1e4 / 2,
+        n: 1e4 / 2
       });
     });
   });

@@ -22,12 +22,13 @@ class Script {
       throw new Error('Missing steps for script');
     }
     this.definition = _.defaults(definition, {
-      maxInstances: 1
+      maxSteps: 1000
     });
     this.storage = storage;
 
     this.running = false;
     this.step = 0;
+    this.executedSteps = 0;
   }
 
   executeStep() {
@@ -35,6 +36,11 @@ class Script {
     if (typeof step === 'undefined') {
       return Promise.resolve();
     }
+
+    if (++this.executedSteps >= this.definition.maxSteps) {
+      throw new Error('Maximum executed steps reached');
+    }
+
     let queryPromise = Promise.resolve();
     if (typeof step.query === 'string') {
       let args = {};
@@ -59,8 +65,14 @@ class Script {
 
       ++this.step;
 
+      if (step.increment) {
+        let value = JsonPointer.get(this.data, step.increment);
+        value = typeof value === 'number' ? value + 1 : 0;
+        JsonPointer.set(this.data, step.increment, value);
+      }
+
       if (step.jump) {
-        const jump = _.defaults(step.jump || {}, {
+        const jump = _.defaults(_.clone(step.jump) || {}, {
           left: true,
           right: true,
           operator: '=='
