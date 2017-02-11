@@ -316,6 +316,26 @@ describe('Transformation', () => {
     expect(fn).to.throw();
   });
 
+  it('can calculate union', () => {
+    const transformer = new Transformation({
+      union: [
+        {get: '/foo'},
+        {get: '/bar'}
+      ]
+    });
+    expect(transformer.transform({foo: [1, 2, 3], bar: [3, 4, 5]})).to.deep.equal([1, 2, 3, 4, 5]);
+  });
+
+  it('will fail on union when options is not an array', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        union: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
   it('can join array', () => {
     const transformer = new Transformation({
       join: {}

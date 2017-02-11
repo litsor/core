@@ -106,6 +106,13 @@ class Transformation {
     });
   }
 
+  _union(value, options) {
+    if (!(options instanceof Array)) {
+      throw new Error('Options for union transformation must be an array');
+    }
+    return _.union.apply(_, this._array(value, options));
+  }
+
   _join(value, options) {
     if (!(value instanceof Array)) {
       throw new Error('Value for join transformation must be an array');
