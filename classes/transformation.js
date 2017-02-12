@@ -138,6 +138,24 @@ class Transformation {
     return value.filter(item => item);
   }
 
+  _slice(value, options) {
+    if (!(value instanceof Array)) {
+      throw new Error('Value for slice transformation must be an array');
+    }
+    options = _.defaults(options, {
+      from: 0,
+      to: Infinity
+    });
+    return value.slice(options.from, options.to);
+  }
+
+  _count(value) {
+    if (typeof value !== 'string' && !(value instanceof Array)) {
+      return 0;
+    }
+    return value.length;
+  }
+
   _case(value, options) {
     if (typeof options !== 'object' || options === null) {
       throw new Error('Value of "case" functions must be an object');

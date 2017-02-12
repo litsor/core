@@ -407,6 +407,44 @@ describe('Transformation', () => {
     expect(fn).to.throw();
   });
 
+  it('can slice array', () => {
+    const transformer = new Transformation({
+      slice: {from: 1}
+    });
+    expect(transformer.transform([1, 2, 3])).to.deep.equal([2, 3]);
+  });
+
+  it('will fail on slice when value is not an array', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        slice: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
+  it('can count array elements', () => {
+    const transformer = new Transformation({
+      count: {}
+    });
+    expect(transformer.transform([1, 2, 3])).to.equal(3);
+  });
+
+  it('can use count to get string length', () => {
+    const transformer = new Transformation({
+      count: {}
+    });
+    expect(transformer.transform('test')).to.equal(4);
+  });
+
+  it('will return count of 0 for non-countable values', () => {
+    const transformer = new Transformation({
+      count: {}
+    });
+    expect(transformer.transform({})).to.equal(0);
+  });
+
   it('can use "case" for basic value mapping', () => {
     const transformer = new Transformation({
       case: {
