@@ -668,7 +668,7 @@ describe('Script', () => {
   it('cannot run a script concurrently', () => {
     const storage = {
       query() {
-        return Bluebird.resolve({}).delay(50);
+        return Bluebird.resolve({}).delay(100);
       }
     };
     const script = new Script({
@@ -679,12 +679,12 @@ describe('Script', () => {
     }, storage);
     // Let first instance run in background.
     script.run();
-    return Bluebird.resolve().delay(25).then(() => {
+    return Bluebird.resolve().delay(50).then(() => {
       // The first instance is still running.
       expect(() => {
         script.run();
       }).to.throw();
-    }).delay(25 + 1).then(() => {
+    }).delay(60).then(() => {
       // First script ended. Second was not started.
       // We should be able to start the script now.
       script.run();
