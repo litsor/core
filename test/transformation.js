@@ -407,6 +407,39 @@ describe('Transformation', () => {
     expect(fn).to.throw();
   });
 
+  it('can use "case" for basic value mapping', () => {
+    const transformer = new Transformation({
+      case: {
+        Male: 1,
+        Female: 2
+      }
+    });
+    expect(transformer.transform('Male')).to.equal(1);
+    expect(transformer.transform('Female')).to.equal(2);
+    expect(transformer.transform('Unknown')).to.equal(null);
+  });
+
+  it('can override default case', () => {
+    const transformer = new Transformation({
+      case: {
+        Male: 1,
+        Female: 2,
+        default: 0
+      }
+    });
+    expect(transformer.transform('Unknown')).to.equal(0);
+  });
+
+  it('will fail on case when value is not an object', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        case: null
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
   it('can get HTML tag', () => {
     const transformer = new Transformation({
       htmlTag: 'strong'

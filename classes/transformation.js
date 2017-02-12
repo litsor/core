@@ -138,6 +138,20 @@ class Transformation {
     return value.filter(item => item);
   }
 
+  _case(value, options) {
+    if (typeof options !== 'object' || options === null) {
+      throw new Error('Value of "case" functions must be an object');
+    }
+    const operand = String(value);
+    if (typeof options[operand] !== 'undefined') {
+      return options[operand];
+    }
+    if (typeof options.default !== 'undefined') {
+      return options.default;
+    }
+    return null;
+  }
+
   _htmlTag(value, options) {
     if (typeof options !== 'string') {
       throw new Error('Value of "htmlTag" functions must be a string');
