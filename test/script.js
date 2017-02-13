@@ -775,4 +775,58 @@ describe('Script', () => {
       return query('{deleteUser(id: $userId)}', {userId});
     });
   });
+
+  /**
+   * @doc
+   * ## Run script on startup
+   *
+   * Add the property ``runOnStartup: true`` to run a script on startup. The
+   * script will run 2 seconds after startup, to allow the application to boot.
+   */
+  it('can run script on startup', () => {
+    let ran = false;
+    const storage = {
+      query() {
+        ran = true;
+        return Bluebird.resolve({});
+      }
+    };
+    // Use a function to bypass the 'Do not use new for side-effects' error.
+    const fn = () => {
+      return new Script({
+        name: 'Testscript',
+        runOnStartup: true,
+        steps: [{
+          query: ''
+        }]
+      }, storage);
+    };
+    fn();
+    return Bluebird.resolve().delay(2100).then(() => {
+      // The script should start within 2s, without calling run().
+      expect(ran).to.equal(true);
+    });
+  });
+
+  /**
+   * @doc
+   * ## Delay steps
+   *
+   * Add the property ``delay: 1000`` to add a delay between executing the
+   * steps. The value is the interval in milliseconds.
+   */
+  it('can add delay between steps', () => {
+    const script = new Script({
+      name: 'Testscript',
+      delay: 100,
+      steps: [{}, {}, {}]
+    }, storage);
+    const start = new Date();
+    return script.run().then(() => {
+      const end = new Date();
+      const interval = end - start;
+      expect(interval > 250).to.equal(true);
+      expect(interval < 350).to.equal(true);
+    });
+  });
 });

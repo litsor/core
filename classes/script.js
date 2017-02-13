@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const JsonPointer = require('jsonpointer');
 const Schedule = require('node-schedule');
+const Bluebird = require('bluebird');
 
 const Transformation = require('./transformation');
 
@@ -23,7 +24,9 @@ class Script {
       throw new Error('Missing steps for script');
     }
     this.definition = _.defaults(definition, {
-      maxSteps: 1000
+      maxSteps: 1000,
+      delay: 0,
+      runOnStartup: false
     });
     this.storage = storage;
 
@@ -38,6 +41,12 @@ class Script {
         }
       });
       // @todo: Call this.scheduledJob.cancel() when stopping application.
+    }
+
+    if (this.definition.runOnStartup) {
+      setTimeout(() => {
+        this.run();
+      }, 2000);
     }
   }
 
@@ -65,6 +74,8 @@ class Script {
         } else {
           JsonPointer.set(this.data, resultProperty, result);
         }
+      }).catch(err => {
+        console.error(err);
       });
     }
     return queryPromise.then(() => {
@@ -133,7 +144,11 @@ class Script {
           }
         }
       }
-
+      if (this.definition.delay) {
+        // Prevent calling Bluebird.delay(0), as it still has a few ms delay.
+        return Bluebird.delay(this.definition.delay);
+      }
+    }).then(() => {
       return this.executeStep();
     });
   }
