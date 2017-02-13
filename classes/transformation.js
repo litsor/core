@@ -36,7 +36,15 @@ class Transformation {
     if (typeof options !== 'string') {
       throw new Error('Value of "get" function must be a string');
     }
-    return JsonPointer.get(value, options);
+    try {
+      return JsonPointer.get(value, options);
+    } catch (err) {
+      // JsonPointer throws an exception when trying to get a property on null,
+      // for example "/a/b" on {a: null}. This is inconsistent with the behavior
+      // to return null for "/a/b" on {a: {}}. Catch the exception and return
+      // null for all error cases.
+      return null;
+    }
   }
 
   _static(value, options) {
@@ -254,6 +262,10 @@ class Transformation {
       }
     }
     return null;
+  }
+
+  _now() {
+    return ~~(new Date() / 1e3);
   }
 }
 

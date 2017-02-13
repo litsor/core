@@ -103,6 +103,20 @@ describe('Transformation', () => {
     expect(transformer.transform({data: {foo: 'bar'}})).to.deep.equal({foo: 'bar'});
   });
 
+  it('will return null for non-existing items', () => {
+    const transformer = new Transformation({
+      get: '/a/b/c'
+    });
+    expect(transformer.transform({})).to.equal(null);
+  });
+
+  it('will return null for property on null', () => {
+    const transformer = new Transformation({
+      get: '/a/b'
+    });
+    expect(transformer.transform({a: null})).to.equal(null);
+  });
+
   it('will fail on get when value is not a string', () => {
     const fn = () => {
       const transformer = new Transformation({
@@ -666,5 +680,15 @@ describe('Transformation', () => {
     });
     const html = '<table><tr><td>Name</td><td>John</td></tr><tr><td>Age</td><td>34</td></tr></table>';
     expect(transformer.transform(html)).to.equal(null);
+  });
+
+  it('can return current date', () => {
+    const transformer = new Transformation({
+      now: {}
+    });
+    const date = ~~(new Date() / 1e3);
+    const result = transformer.transform({});
+    // Expect date to be identical with at most 1s difference.
+    expect(Math.abs(date - result) <= 1).to.equal(true);
   });
 });
