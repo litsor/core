@@ -267,6 +267,64 @@ class Transformation {
   _now() {
     return ~~(new Date() / 1e3);
   }
+
+  _lowerCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.lowerCase(value);
+  }
+
+  _upperCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.upperCase(value);
+  }
+
+  _camelCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.camelCase(value);
+  }
+
+  _kebabCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.kebabCase(value);
+  }
+
+  _snakeCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.snakeCase(value);
+  }
+
+  _nameCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return value.toLowerCase().split(/[\s]/).map(word => {
+      return word.substring(0, 1).toUpperCase() + word.substring(1);
+    }).join(' ');
+  }
+
+  _capitalize(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.capitalize(value);
+  }
+
+  _deburr(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.deburr(value);
+  }
 }
 
 module.exports = Transformation;

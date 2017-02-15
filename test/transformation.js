@@ -691,4 +691,34 @@ describe('Transformation', () => {
     // Expect date to be identical with at most 1s difference.
     expect(Math.abs(date - result) <= 1).to.equal(true);
   });
+
+  const cases = {
+    lowerCase: 'lorem ipsum',
+    upperCase: 'LOREM IPSUM',
+    camelCase: 'loremIpsum',
+    kebabCase: 'lorem-ipsum',
+    snakeCase: 'lorem_ipsum',
+    nameCase: 'Lorem Ipsum',
+    capitalize: 'Lorem ipsum'
+  };
+  Object.keys(cases).forEach(fn => {
+    it('can change case with ' + fn, () => {
+      const config = {};
+      config[fn] = {};
+      const transformer = new Transformation(config);
+      expect(transformer.transform('lorem ipsum')).to.equal(cases[fn]);
+      expect(transformer.transform('LOREM IPSUM')).to.equal(cases[fn]);
+      expect(transformer.transform({})).to.equal(null);
+    });
+  });
+
+  it('can transliterate unicode characters with deburr', () => {
+    const transformer = new Transformation({
+      deburr: {}
+    });
+    expect(transformer.transform('mi\u00dfstand')).to.equal('missstand');
+    expect(transformer.transform('priv\u00e9')).to.equal('prive');
+    expect(transformer.transform('chate\u00e2u')).to.equal('chateau');
+    expect(transformer.transform({})).to.equal(null);
+  });
 });
