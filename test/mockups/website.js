@@ -99,6 +99,21 @@ class Website {
       </table>`);
     });
 
+    this.api.process('GET /feed.json', () => {
+      return this.people;
+    });
+
+    this.api.process('GET /feed.xml', request => {
+      request.mime = 'text/xml';
+      const items = this.people.map(item => {
+        return `<item>
+          <name>${item.name}</name>
+          <age>${item.age}</age>
+        </item>`;
+      });
+      return '<root>' + items.join('') + '</root>';
+    });
+
     return this.api.listen(8372);
   }
 

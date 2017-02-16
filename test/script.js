@@ -1,6 +1,8 @@
 /* eslint-env node, mocha */
 'use strict';
 
+const Crypto = require('crypto');
+
 const _ = require('lodash');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -8,6 +10,9 @@ const Bluebird = require('bluebird');
 
 const Script = require('../classes/script');
 const Application = require('../classes/application');
+
+const GoogleSearchMockup = require('./mockups/google-search');
+const WebsiteMockup = require('./mockups/website');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
@@ -29,6 +34,11 @@ const storage = {
 describe('Script', () => {
   let app;
   let query;
+  let googleSearch;
+  let website;
+
+  const cx = Crypto.randomBytes(8).toString('base64');
+  const key = Crypto.randomBytes(8).toString('base64');
 
   before(() => {
     app = new Application({
@@ -52,13 +62,23 @@ describe('Script', () => {
         }
       }
     });
-    return app.ready().then(() => {
+    googleSearch = new GoogleSearchMockup(key, cx);
+    website = new WebsiteMockup();
+    return Promise.all([
+      app.ready(),
+      googleSearch.startup(),
+      website.startup()
+    ]).then(() => {
       query = app.storage.query.bind(app.storage);
     });
   });
 
   after(() => {
-    return app.close();
+    return Promise.all([
+      app.close(),
+      googleSearch.shutdown(),
+      website.shutdown()
+    ]);
   });
 
   /**
@@ -237,6 +257,56 @@ describe('Script', () => {
           Item: {id: 2, title: 'Foo'}
         }
       });
+    });
+  });
+
+  /**
+   * @doc
+   * ## Requests
+   *
+   * The ``request`` property allows you to execute an HTTP GET request. its
+   * value is either an json pointer to an uri or an uri directly. The response
+   * is set in the result property (identical to queries). The response is
+   * an object with the properties ``headers`` and ``body``. The body is parsed
+   * when in JSON format, or a string otherwise.
+   */
+  it('can execute request', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        request: 'http://localhost:8372/list-pages'
+      }]
+    });
+    return script.run({}).then(output => {
+      expect(output).to.have.property('result');
+      expect(output.result).to.have.property('headers');
+      expect(output.result).to.have.property('body');
+      expect(output.result.body).to.be.a('string');
+      expect(output.result.headers).to.have.property('content-type');
+    });
+  });
+
+  it('will parse JSON output on request', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        request: 'http://localhost:8372/feed.json'
+      }]
+    });
+    return script.run({}).then(output => {
+      expect(output.result.body instanceof Array).to.equal(true);
+    });
+  });
+
+  it('will return XML output as string on request', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        request: 'http://localhost:8372/feed.xml'
+      }]
+    });
+    return script.run({}).then(output => {
+      expect(output.result.body).to.be.a('string');
     });
   });
 

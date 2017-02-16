@@ -4,6 +4,7 @@ const _ = require('lodash');
 const JsonPointer = require('jsonpointer');
 const Schedule = require('node-schedule');
 const Bluebird = require('bluebird');
+const Needle = Bluebird.promisifyAll(require('needle'));
 
 const Transformation = require('./transformation');
 
@@ -60,14 +61,41 @@ class Script {
       throw new Error('Maximum executed steps reached');
     }
 
-    let queryPromise = Promise.resolve();
+    const promises = [];
+
+    if (typeof step.request === 'string') {
+      let uri = step.request;
+      if (uri.match(/^\//)) {
+        const transformer = new Transformation({get: uri});
+        uri = transformer.transform(this.data);
+      }
+      const promise = Needle.getAsync(uri, {json: true}).catch(() => {
+        throw new Error(`Unable to connect to "${uri}"`);
+      }).then(response => {
+        if (response.statusCode >= 300) {
+          throw new Error('Retrieved error code from remote server: ' + response.statusCode);
+        }
+        const result = {
+          headers: response.headers,
+          body: response.body
+        };
+        const resultProperty = typeof step.resultProperty === 'string' ? step.resultProperty : '/result';
+        if (resultProperty === '') {
+          this.data = result;
+        } else {
+          JsonPointer.set(this.data, resultProperty, result);
+        }
+      });
+      promises.push(promise);
+    }
+
     if (typeof step.query === 'string') {
       let args = {};
       if (typeof step.arguments === 'object') {
         const transformer = new Transformation({object: step.arguments});
         args = transformer.transform(this.data);
       }
-      queryPromise = this.storage.query(step.query, args).then(result => {
+      const promise = this.storage.query(step.query, args).then(result => {
         const resultProperty = typeof step.resultProperty === 'string' ? step.resultProperty : '/result';
         if (resultProperty === '') {
           this.data = result;
@@ -77,8 +105,10 @@ class Script {
       }).catch(err => {
         console.error(err);
       });
+      promises.push(promise);
     }
-    return queryPromise.then(() => {
+
+    return Promise.all(promises).then(() => {
       if (step.transform) {
         const transformer = new Transformation(step.transform);
         this.data = transformer.transform(this.data);
