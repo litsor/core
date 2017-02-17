@@ -356,7 +356,7 @@ class Transformation {
       properties: options
     };
     if (!isMyJsonValid(schema)(value)) {
-      throw new Exception('Assertion did not pass: ' + JSON.stringify(value));
+      throw new Error('Assertion did not pass: ' + JSON.stringify(value));
     }
     return value;
   }
