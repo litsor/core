@@ -6,6 +6,7 @@ const _ = require('lodash');
 const $ = require('cheerio');
 const JsonPointer = require('jsonpointer');
 const isMyJsonValid = require('is-my-json-valid');
+const XmlConvJson = require('xml-conv-json');
 
 class Transformation {
   constructor(template) {
@@ -286,6 +287,13 @@ class Transformation {
 
   _toJson(value) {
     return JSON.stringify(value);
+  }
+
+  _fromXml(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return JSON.parse(XmlConvJson.parseXML(value));
   }
 
   _now() {

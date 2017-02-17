@@ -298,7 +298,7 @@ describe('Script', () => {
     });
   });
 
-  it('will return XML output as string on request', () => {
+  it('will return XML output as object on request', () => {
     const script = new Script({
       name: 'Testscript',
       steps: [{
@@ -306,7 +306,7 @@ describe('Script', () => {
       }]
     });
     return script.run({}).then(output => {
-      expect(output.result.body).to.be.a('string');
+      expect(output.result.body).to.be.an('object');
     });
   });
 

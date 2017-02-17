@@ -748,6 +748,37 @@ describe('Transformation', () => {
     expect(transformer.transform(object)).to.equal(JSON.stringify(object));
   });
 
+  it('can read XML with fromXml', () => {
+    const transformer = new Transformation({
+      fromXml: {}
+    });
+    const xml = `<root test="true">
+      <a>foo</a>
+      <a>bar</a>
+      <b>baz</b>
+      <c type="text">qux</c>
+    </root>`;
+    const object = {
+      root: {
+        '@test': 'true',
+        a: ['foo', 'bar'],
+        b: 'baz',
+        c: {
+          '#text': 'qux',
+          '@type': 'text'
+        }
+      }
+    };
+    expect(transformer.transform(xml)).to.deep.equal(object);
+  });
+
+  it('will return null when input for fromXml is not a string', () => {
+    const transformer = new Transformation({
+      fromXml: {}
+    });
+    expect(transformer.transform({})).to.equal(null);
+  });
+
   it('can return current date', () => {
     const transformer = new Transformation({
       now: {}
