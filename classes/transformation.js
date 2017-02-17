@@ -264,6 +264,21 @@ class Transformation {
     return null;
   }
 
+  _replace(value, options) {
+    if (typeof options !== 'object' || typeof options.search !== 'string' || typeof options.replace !== 'string') {
+      throw new Error('Value of "replace" functions must be an object with search and replace properties');
+    }
+    if (typeof value === 'string') {
+      let search = options.search;
+      const match = search.match(/^\/(.+)\/([img]*)$/);
+      if (match) {
+        search = new RegExp(match[1], match[2]);
+      }
+      return value.replace(search, options.replace);
+    }
+    return null;
+  }
+
   _now() {
     return ~~(new Date() / 1e3);
   }

@@ -682,6 +682,56 @@ describe('Transformation', () => {
     expect(transformer.transform(html)).to.equal(null);
   });
 
+  it('can replace string', () => {
+    const transformer = new Transformation({
+      replace: {
+        search: 'b',
+        replace: 'g'
+      }
+    });
+    expect(transformer.transform('boat')).to.equal('goat');
+  });
+
+  it('can replace string with regular expression', () => {
+    const transformer = new Transformation({
+      replace: {
+        search: '/B/i',
+        replace: 'g'
+      }
+    });
+    expect(transformer.transform('boat')).to.equal('goat');
+  });
+
+  it('can replace string with regular expression', () => {
+    const transformer = new Transformation({
+      replace: {
+        search: '/b([an]+)/',
+        replace: '$1s'
+      }
+    });
+    expect(transformer.transform('banana')).to.equal('ananas');
+  });
+
+  it('will return null on replace when input is not a string', () => {
+    const transformer = new Transformation({
+      replace: {
+        search: 'a',
+        replace: 'b'
+      }
+    });
+    expect(transformer.transform({})).to.equal(null);
+  });
+
+  it('will fail on replace when value is missing properties', () => {
+    const fn = () => {
+      const transformer = new Transformation({
+        replace: {}
+      });
+      transformer.transform({});
+    };
+    expect(fn).to.throw();
+  });
+
   it('can return current date', () => {
     const transformer = new Transformation({
       now: {}
