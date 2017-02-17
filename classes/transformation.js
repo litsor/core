@@ -279,6 +279,14 @@ class Transformation {
     return null;
   }
 
+  _fromJson(value) {
+    return JSON.parse(value);
+  }
+
+  _toJson(value) {
+    return JSON.stringify(value);
+  }
+
   _now() {
     return ~~(new Date() / 1e3);
   }

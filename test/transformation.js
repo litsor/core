@@ -732,6 +732,22 @@ describe('Transformation', () => {
     expect(fn).to.throw();
   });
 
+  it('can read JSON with fromJson', () => {
+    const transformer = new Transformation({
+      fromJson: {}
+    });
+    const object = {foo: 'bar'};
+    expect(transformer.transform(JSON.stringify(object))).to.deep.equal(object);
+  });
+
+  it('can write JSON with toJson', () => {
+    const transformer = new Transformation({
+      toJson: {}
+    });
+    const object = {foo: 'bar'};
+    expect(transformer.transform(object)).to.equal(JSON.stringify(object));
+  });
+
   it('can return current date', () => {
     const transformer = new Transformation({
       now: {}
