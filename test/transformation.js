@@ -787,4 +787,27 @@ describe('Transformation', () => {
     expect(transformer.transform('chate\u00e2u')).to.equal('chateau');
     expect(transformer.transform({})).to.equal(null);
   });
+
+  it('can match value with schema using assert function', () => {
+    const transformer = new Transformation({
+      assert: {
+        name: {type: 'string'}
+      }
+    });
+    const data = {name: 'John'};
+    // Explicitly clone the value to make sure it wasn't changed.
+    expect(transformer.transform(_.clone(data))).to.deep.equal(data);
+  });
+
+  it('will throw error when assertion did not pass', () => {
+    const transformer = new Transformation({
+      assert: {
+        name: {type: 'string'}
+      }
+    });
+    const data = {name: true};
+    expect(() => {
+      transformer.transform(data);
+    }).to.throw();
+  });
 });

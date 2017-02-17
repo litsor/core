@@ -5,6 +5,7 @@ const Crypto = require('crypto');
 const _ = require('lodash');
 const $ = require('cheerio');
 const JsonPointer = require('jsonpointer');
+const isMyJsonValid = require('is-my-json-valid');
 
 class Transformation {
   constructor(template) {
@@ -347,6 +348,17 @@ class Transformation {
       return null;
     }
     return _.deburr(value);
+  }
+
+  _assert(value, options) {
+    const schema = {
+      type: 'object',
+      properties: options
+    };
+    if (!isMyJsonValid(schema)(value)) {
+      throw new Exception('Assertion did not pass: ' + JSON.stringify(value));
+    }
+    return value;
   }
 }
 
