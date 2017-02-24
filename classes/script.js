@@ -140,9 +140,43 @@ class Script {
       format: 'auto'
     });
 
-    return this.shorthand(value, options.url).then(url => {
+    const getCookies = (res, initialCookies) => {
+      const cookies = _.clone(initialCookies || {});
+      res.headers.getAll('set-cookie').forEach(header => {
+        const match = header.match(/^([^=]+)=([^;]*)/);
+        if (match) {
+          const name = match[1];
+          const value = match[2];
+          if (value) {
+            cookies[name] = value;
+          } else if (typeof cookies[name] !== 'undefined') {
+            delete cookies[name];
+          }
+        }
+      });
+      return cookies;
+    };
+
+    const getCookieHeader = cookies => {
+      const output = [];
+      Object.keys(cookies).forEach(name => {
+        output.push(name + '=' + cookies[name]);
+      });
+      return output.join('; ');
+    };
+
+    const script = new Script({
+      name: `${this.name}:request`,
+      steps: [{
+        object: options
+      }]
+    }, this.storage);
+    return script.run(value).then(options => {
       let response;
-      options.url = url;
+      const cookies = options.cookies || {};
+      if (typeof cookies === 'object' && Object.keys(cookies).length > 0) {
+        options.headers.Cookie = getCookieHeader(cookies);
+      }
       return fetch(options.url, {
         method: options.method,
         headers: options.headers
@@ -163,7 +197,8 @@ class Script {
       }).then(body => {
         const result = {
           body,
-          headers: response.headers.raw()
+          headers: response.headers.raw(),
+          cookies: getCookies(response, cookies)
         };
         const resultProperty = typeof options.resultProperty === 'string' ? options.resultProperty : '/result';
         if (resultProperty === '') {

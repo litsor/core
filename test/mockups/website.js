@@ -114,6 +114,16 @@ class Website {
       return '<root>' + items.join('') + '</root>';
     });
 
+    this.api.process('GET /cookie/a', request => {
+      request.setCookie('sessId', 'abc_ABC-342');
+      return {};
+    });
+
+    this.api.process('GET /cookie/b', request => {
+      const foundCookie = request.getCookie('sessId', 'string') === 'abc_ABC-342';
+      return {foundCookie};
+    });
+
     return this.api.listen(8372);
   }
 

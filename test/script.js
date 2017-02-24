@@ -300,6 +300,37 @@ describe('Script', () => {
     });
   });
 
+  it('will return cookies on request', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        request: 'http://localhost:8372/cookie/a'
+      }]
+    });
+    return script.run({}).then(output => {
+      expect(output.result.cookies).to.be.an('object');
+    });
+  });
+
+  it('can provide cookies for request', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [
+        {
+          request: 'http://localhost:8372/cookie/a'
+        }, {
+          request: {
+            url: 'http://localhost:8372/cookie/b',
+            cookies: '/result/cookies'
+          }
+        }
+      ]
+    });
+    return script.run({}).then(output => {
+      expect(output.result.body).to.deep.equal({foundCookie: true});
+    });
+  });
+
   /**
    * @doc
    * ## Transformations
