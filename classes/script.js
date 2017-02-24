@@ -319,12 +319,20 @@ class Script {
     if (typeof options !== 'object') {
       throw new Error('Value of "object" functions must be an object');
     }
-    const output = {};
+    let output = {};
+    let retainData = false;
     return Promise.all(Object.keys(options).map(key => {
+      if (key === '...') {
+        retainData = true;
+        return null;
+      }
       return this.shorthand(value, options[key]).then(result => {
         output[key] = result;
       });
     })).then(() => {
+      if (retainData && typeof value === 'object' && value !== null) {
+        output = _.defaults(output, value);
+      }
       return output;
     });
   }

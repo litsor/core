@@ -904,4 +904,22 @@ describe('Script', () => {
       expect(result.createPost.title).to.equal('TEST');
     });
   });
+
+  it('can retain data in object transformation', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        object: {
+          foo: 'bar',
+          '...': '...'
+        }
+      }]
+    }, storage);
+    return script.run({bar: 'baz'}).then(result => {
+      expect(result).to.deep.equal({
+        foo: 'bar',
+        bar: 'baz'
+      });
+    });
+  });
 });
