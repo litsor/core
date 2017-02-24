@@ -1,12 +1,15 @@
 'use strict';
 
+const Crypto = require('crypto');
+
 const _ = require('lodash');
+const $ = require('cheerio');
 const JsonPointer = require('jsonpointer');
 const Schedule = require('node-schedule');
 const Bluebird = require('bluebird');
-const Needle = Bluebird.promisifyAll(require('needle'));
-
-const Transformation = require('./transformation');
+const XmlToJson = Bluebird.promisifyAll(require('xml2js'));
+const fetch = require('node-fetch');
+const isMyJsonValid = require('is-my-json-valid');
 
 class Script {
   /**
@@ -46,141 +49,11 @@ class Script {
 
     if (this.definition.runOnStartup) {
       setTimeout(() => {
-        this.run();
+        this.run().catch(err => {
+          console.error(err);
+        });
       }, 2000);
     }
-  }
-
-  executeStep() {
-    const step = this.definition.steps[this.step];
-    if (typeof step === 'undefined') {
-      return Promise.resolve();
-    }
-
-    if (++this.executedSteps >= this.definition.maxSteps) {
-      throw new Error('Maximum executed steps reached');
-    }
-
-    const promises = [];
-
-    if (typeof step.request === 'string') {
-      let uri = step.request;
-      if (uri.match(/^\//)) {
-        const transformer = new Transformation({get: uri});
-        uri = transformer.transform(this.data);
-      }
-      const promise = Needle.getAsync(uri, {json: true}).catch(() => {
-        throw new Error(`Unable to connect to "${uri}"`);
-      }).then(response => {
-        if (response.statusCode >= 300) {
-          throw new Error('Retrieved error code from remote server: ' + response.statusCode);
-        }
-        const result = {
-          headers: response.headers,
-          body: response.body
-        };
-        const resultProperty = typeof step.resultProperty === 'string' ? step.resultProperty : '/result';
-        if (resultProperty === '') {
-          this.data = result;
-        } else {
-          JsonPointer.set(this.data, resultProperty, result);
-        }
-      });
-      promises.push(promise);
-    }
-
-    if (typeof step.query === 'string') {
-      let args = {};
-      if (typeof step.arguments === 'object') {
-        const transformer = new Transformation({object: step.arguments});
-        args = transformer.transform(this.data);
-      }
-      const promise = this.storage.query(step.query, args).then(result => {
-        const resultProperty = typeof step.resultProperty === 'string' ? step.resultProperty : '/result';
-        if (resultProperty === '') {
-          this.data = result;
-        } else {
-          JsonPointer.set(this.data, resultProperty, result);
-        }
-      }).catch(err => {
-        console.error(err);
-      });
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then(() => {
-      if (step.transform) {
-        const transformer = new Transformation(step.transform);
-        this.data = transformer.transform(this.data);
-      }
-
-      ++this.step;
-
-      if (step.increment) {
-        let value = JsonPointer.get(this.data, step.increment);
-        value = typeof value === 'number' ? value + 1 : 0;
-        JsonPointer.set(this.data, step.increment, value);
-      }
-
-      if (step.jump) {
-        const jump = _.defaults(_.clone(step.jump) || {}, {
-          left: true,
-          right: true,
-          operator: '=='
-        });
-        ['left', 'right'].forEach(operand => {
-          if (typeof jump[operand] === 'object' && jump[operand] !== null) {
-            const transformer = new Transformation(jump[operand]);
-            jump[operand] = transformer.transform(this.data);
-          }
-        });
-        let match;
-        switch (jump.operator) {
-          case '==':
-            match = String(jump.left) === String(jump.right);
-            break;
-          case '===':
-            match = jump.left === jump.right;
-            break;
-          case '!=':
-            match = String(jump.left) !== String(jump.right);
-            break;
-          case '!==':
-            match = jump.left !== jump.right;
-            break;
-          case '<':
-            match = jump.left < jump.right;
-            break;
-          case '>':
-            match = jump.left > jump.right;
-            break;
-          case '<=':
-            match = jump.left <= jump.right;
-            break;
-          case '>=':
-            match = jump.left >= jump.right;
-            break;
-          case 'in':
-            match = jump.right instanceof Array ? jump.right.indexOf(jump.left) >= 0 : false;
-            break;
-          default:
-            match = false;
-        }
-        if (match) {
-          for (let i = 0; i < this.definition.steps.length; ++i) {
-            if (this.definition.steps[i].label === jump.to) {
-              this.step = i;
-            }
-          }
-        }
-      }
-      if (this.definition.delay) {
-        // Prevent calling Bluebird.delay(0), as it still has a few ms delay.
-        return Bluebird.delay(this.definition.delay);
-      }
-    }).then(() => {
-      return this.executeStep();
-    });
   }
 
   run(input) {
@@ -197,6 +70,533 @@ class Script {
       this.running = false;
       throw err;
     });
+  }
+
+  executeStep() {
+    const step = this.definition.steps[this.step];
+    ++this.step;
+    if (typeof step === 'undefined') {
+      return Promise.resolve();
+    }
+
+    if (++this.executedSteps >= this.definition.maxSteps) {
+      throw new Error('Maximum executed steps reached');
+    }
+
+    if (typeof step === 'string') {
+      // It's a label. Proceed with the next step.
+      return this.executeStep();
+    }
+
+    const keys = Object.keys(step);
+    if (keys.length !== 1) {
+      throw new Error('Each step must have exactly one key that define the action');
+    }
+    const action = keys[0];
+    this.lastAction = action;
+
+    if (typeof this['_' + action] !== 'function') {
+      throw new Error('Unknown function ' + action + ' in script');
+    }
+
+    return Promise.resolve(this['_' + action](this.data, step[action])).then(output => {
+      this.data = output;
+      if (this.definition.delay) {
+        // Prevent calling Bluebird.delay(0), as it still has a few ms delay.
+        return Bluebird.delay(this.definition.delay);
+      }
+    }).then(() => {
+      return this.executeStep();
+    });
+  }
+
+  shorthand(input, value) {
+    if (typeof value === 'string') {
+      if (value.match(/^\//)) {
+        value = [{get: value}];
+      }
+    }
+    if (!(value instanceof Array)) {
+      return Promise.resolve(value);
+    }
+    const script = new Script({
+      name: this.name + ':' + this.lastAction,
+      steps: value
+    }, this.storage);
+    return script.run(_.cloneDeep(input));
+  }
+
+  _request(value, options) {
+    // Allows writing "- request: 'url'" for simple GET requests.
+    if (typeof options === 'string') {
+      options = {
+        url: options
+      };
+    }
+
+    options = _.defaults(options, {
+      headers: {},
+      method: 'GET',
+      format: 'auto'
+    });
+
+    return this.shorthand(value, options.url).then(url => {
+      let response;
+      options.url = url;
+      return fetch(options.url, {
+        method: options.method,
+        headers: options.headers
+      }).then(_response => {
+        response = _response;
+        if (response.statusCode >= 300) {
+          throw new Error('Retrieved error code from remote server: ' + response.statusCode);
+        }
+        if (options.format === 'json' || (options.format === 'auto' && response.headers.get('content-type').match(/^application\/json/))) {
+          return response.json();
+        }
+        if (options.format === 'xml' || (options.format === 'auto' && response.headers.get('content-type').match(/^text\/xml/))) {
+          return response.text().then(text => {
+            return XmlToJson.parseStringAsync(text);
+          });
+        }
+        return response.text();
+      }).then(body => {
+        const result = {
+          body,
+          headers: response.headers.raw()
+        };
+        const resultProperty = typeof options.resultProperty === 'string' ? options.resultProperty : '/result';
+        if (resultProperty === '') {
+          return result;
+        }
+        JsonPointer.set(value, resultProperty, result);
+        return value;
+      }).catch(err => {
+        console.error(err);
+        throw new Error(`Unable to connect to "${options.url}"`);
+      });
+    });
+  }
+
+  _query(value, options) {
+    // Allows writing "- query: '...'" for queries without arguments.
+    if (typeof options === 'string') {
+      options = {query: options};
+    }
+    options = _.defaults(options, {
+      arguments: {}
+    });
+    return this.shorthand(value, [{object: options.arguments}]).then(args => {
+      return this.storage.query(options.query, args);
+    }).then(result => {
+      const resultProperty = typeof options.resultProperty === 'string' ? options.resultProperty : '/result';
+      if (resultProperty === '') {
+        return result;
+      }
+      JsonPointer.set(value, resultProperty, result);
+      return value;
+    });
+  }
+
+  _jump(value, options) {
+    const jump = _.defaults(_.clone(options) || {}, {
+      left: true,
+      right: true,
+      operator: '=='
+    });
+    return Promise.all([
+      this.shorthand(value, jump.left),
+      this.shorthand(value, jump.right)
+    ]).then(values => {
+      jump.left = values[0];
+      jump.right = values[1];
+      let match;
+      switch (jump.operator) {
+        case '==':
+          match = String(jump.left) === String(jump.right);
+          break;
+        case '===':
+          match = jump.left === jump.right;
+          break;
+        case '!=':
+          match = String(jump.left) !== String(jump.right);
+          break;
+        case '!==':
+          match = jump.left !== jump.right;
+          break;
+        case '<':
+          match = jump.left < jump.right;
+          break;
+        case '>':
+          match = jump.left > jump.right;
+          break;
+        case '<=':
+          match = jump.left <= jump.right;
+          break;
+        case '>=':
+          match = jump.left >= jump.right;
+          break;
+        case 'in':
+          match = jump.right instanceof Array ? jump.right.indexOf(jump.left) >= 0 : false;
+          break;
+        default:
+          match = false;
+      }
+      if (match) {
+        for (let i = 0; i < this.definition.steps.length; ++i) {
+          if (this.definition.steps[i] === jump.to) {
+            this.step = i;
+          }
+        }
+      }
+      return value;
+    });
+  }
+
+  _increment(value, options) {
+    let counter = JsonPointer.get(value, options);
+    counter = typeof counter === 'number' ? counter + 1 : 0;
+    JsonPointer.set(value, options, counter);
+    return value;
+  }
+
+  _get(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "get" function must be a string');
+    }
+    try {
+      const result = JsonPointer.get(value, options);
+      return typeof result === 'undefined' ? null : result;
+    } catch (err) {
+      // JsonPointer throws an exception when trying to get a property on null,
+      // for example "/a/b" on {a: null}. This is inconsistent with the behavior
+      // to return null for "/a/b" on {a: {}}. Catch the exception and return
+      // null for all error cases.
+      return null;
+    }
+  }
+
+  _static(value, options) {
+    return options;
+  }
+
+  _object(value, options) {
+    if (typeof options !== 'object') {
+      throw new Error('Value of "object" functions must be an object');
+    }
+    const output = {};
+    return Promise.all(Object.keys(options).map(key => {
+      return this.shorthand(value, options[key]).then(result => {
+        output[key] = result;
+      });
+    })).then(() => {
+      return output;
+    });
+  }
+
+  _map(value, options) {
+    if (!(value instanceof Array)) {
+      return null;
+    }
+    return Bluebird.resolve(value).map(item => {
+      return this.shorthand(item, options);
+    });
+  }
+
+  _substring(value, options) {
+    if (typeof value !== 'string') {
+      throw new Error('Cannot execute substring on ' + (typeof value));
+    }
+    const start = typeof options.start === 'number' ? options.start : 0;
+    const length = typeof options.length === 'number' ? options.length : Infinity;
+    return value.substring(start, start + length);
+  }
+
+  _length(value) {
+    if (typeof value !== 'string' && !(value instanceof Array)) {
+      throw new Error('Can only get length of arrays and strings');
+    }
+    return value.length;
+  }
+
+  _hash(value, options) {
+    if (typeof value !== 'string') {
+      value = JSON.stringify(value);
+    }
+    options = _.defaults(options, {
+      encoding: 'hex',
+      algorithm: 'md5'
+    });
+    return Crypto.createHash(options.algorithm).update(value).digest(options.encoding);
+  }
+
+  _array(value, options) {
+    if (!(options instanceof Array)) {
+      throw new Error('Options for array transformation must be an array');
+    }
+    return Bluebird.resolve(options).map(item => {
+      return this.shorthand(value, item);
+    });
+  }
+
+  _union(value, options) {
+    if (!(options instanceof Array)) {
+      throw new Error('Options for union transformation must be an array');
+    }
+    return this._array(value, options).map(chunk => {
+      if (chunk === null) {
+        return [];
+      }
+      return chunk instanceof Array ? chunk : this.shorthand(value, [chunk]);
+    }).then(chunks => {
+      return _.union.apply(_, chunks);
+    });
+  }
+
+  _join(value, options) {
+    if (!(value instanceof Array)) {
+      throw new Error('Value for join transformation must be an array');
+    }
+    const separator = options.separator ? options.separator : '';
+    return value.join(separator);
+  }
+
+  _split(value, options) {
+    if (!options.separator) {
+      throw new Error('Missing separator for split transformation');
+    }
+    if (typeof value !== 'string') {
+      return [];
+    }
+    return value.split(options.separator);
+  }
+
+  _filter(value) {
+    if (!(value instanceof Array)) {
+      throw new Error('Value for filter transformation must be an array');
+    }
+    return value.filter(item => item);
+  }
+
+  _slice(value, options) {
+    if (!(value instanceof Array)) {
+      throw new Error('Value for slice transformation must be an array');
+    }
+    options = _.defaults(options, {
+      from: 0,
+      to: Infinity
+    });
+    return value.slice(options.from, options.to);
+  }
+
+  _count(value) {
+    if (typeof value !== 'string' && !(value instanceof Array)) {
+      return 0;
+    }
+    return value.length;
+  }
+
+  _case(value, options) {
+    if (typeof options !== 'object' || options === null) {
+      throw new Error('Value of "case" functions must be an object');
+    }
+    const operand = String(value);
+    if (typeof options[operand] !== 'undefined') {
+      return options[operand];
+    }
+    if (typeof options.default !== 'undefined') {
+      return options.default;
+    }
+    return null;
+  }
+
+  _htmlTag(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlTag" functions must be a string');
+    }
+    if (typeof value === 'string') {
+      const result = $(options, value);
+      if (result.length > 0) {
+        return $(result[0]).toString();
+      }
+    }
+    return null;
+  }
+
+  _htmlTags(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlTags" functions must be a string');
+    }
+    const output = [];
+    if (typeof value === 'string') {
+      const result = $(options, value);
+      for (let i = 0; i < result.length; ++i) {
+        output.push($(result[i]).toString());
+      }
+    }
+    return output;
+  }
+
+  _htmlTagText(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlTagText" functions must be a string');
+    }
+    if (typeof value === 'string') {
+      const result = $(options, value);
+      if (result.length > 0) {
+        return $(result[0]).text();
+      }
+    }
+    return null;
+  }
+
+  _htmlTagsText(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlTagsText" functions must be a string');
+    }
+    const output = [];
+    if (typeof value === 'string') {
+      const result = $(options, value);
+      for (let i = 0; i < result.length; ++i) {
+        output.push($(result[i]).text());
+      }
+    }
+    return output;
+  }
+
+  _htmlAttribute(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "htmlAttribute" functions must be a string');
+    }
+    if (typeof value === 'string') {
+      const result = $(value).attr(options);
+      return typeof result === 'undefined' ? null : result;
+    }
+    return null;
+  }
+
+  _htmlTable(value, options) {
+    if (typeof options !== 'object' || typeof options.cell !== 'number' || typeof options.text !== 'string') {
+      throw new Error('Value of "htmlTable" functions must be an object with cell and text properties');
+    }
+    if (typeof value === 'string') {
+      const selector = typeof options.selector === 'string' ? `${options.selector}>tr ${options.selector}>tbody>tr` : 'tr';
+      const rows = $(selector, value);
+      for (let i = 0; i < rows.length; ++i) {
+        const cells = $('td', rows[i]);
+        if (cells.length >= options.cell && $(cells[options.cell]).text().trim().toLowerCase() === options.text.trim().toLowerCase()) {
+          if (typeof options.returnCell === 'number') {
+            const cells = $('td', rows[i]);
+            return cells.length >= options.returnCell ? $(cells[options.returnCell]).text() : null;
+          }
+          return $(rows[i]).toString();
+        }
+      }
+    }
+    return null;
+  }
+
+  _replace(value, options) {
+    if (typeof options !== 'object' || typeof options.search !== 'string' || typeof options.replace !== 'string') {
+      throw new Error('Value of "replace" functions must be an object with search and replace properties');
+    }
+    if (typeof value === 'string') {
+      let search = options.search;
+      const match = search.match(/^\/(.+)\/([img]*)$/);
+      if (match) {
+        search = new RegExp(match[1], match[2]);
+      }
+      return value.replace(search, options.replace);
+    }
+    return null;
+  }
+
+  _fromJson(value) {
+    return JSON.parse(value);
+  }
+
+  _toJson(value) {
+    return JSON.stringify(value);
+  }
+
+  _fromXml(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return XmlToJson.parseStringAsync(value);
+  }
+
+  _now() {
+    return ~~(new Date() / 1e3);
+  }
+
+  _lowerCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.lowerCase(value);
+  }
+
+  _upperCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.upperCase(value);
+  }
+
+  _camelCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.camelCase(value);
+  }
+
+  _kebabCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.kebabCase(value);
+  }
+
+  _snakeCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.snakeCase(value);
+  }
+
+  _nameCase(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return value.toLowerCase().split(/[\s]/).map(word => {
+      return word.substring(0, 1).toUpperCase() + word.substring(1);
+    }).join(' ');
+  }
+
+  _capitalize(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.capitalize(value);
+  }
+
+  _deburr(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return _.deburr(value);
+  }
+
+  _assert(value, options) {
+    const schema = {
+      type: 'object',
+      properties: options
+    };
+    if (!isMyJsonValid(schema)(value)) {
+      throw new Error('Assertion did not pass: ' + JSON.stringify(value));
+    }
+    return value;
   }
 }
 

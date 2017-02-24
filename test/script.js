@@ -120,22 +120,6 @@ describe('Script', () => {
 
   /**
    * @doc
-   * Each step is an object with optional properties that define the action.
-   * All available properties are optional. Although useless, an empty object
-   * is a valid script. It will return the input as-is.
-   */
-  it('can execute empty steps', () => {
-    const script = new Script({
-      name: 'Testscript',
-      steps: [{}]
-    }, storage);
-    return script.run({}).then(output => {
-      expect(output).to.deep.equal({});
-    });
-  });
-
-  /**
-   * @doc
    * Each step can optionally contain a query, transformation, increment and
    * jump, which are executed in that order and explained below.
    *
@@ -188,8 +172,10 @@ describe('Script', () => {
     const script = new Script({
       name: 'Testscript',
       steps: [{
-        query: '{listItem{id}}',
-        resultProperty: '/output'
+        query: {
+          query: '{listItem{id}}',
+          resultProperty: '/output'
+        }
       }]
     }, storage);
     return script.run({}).then(output => {
@@ -213,8 +199,10 @@ describe('Script', () => {
     const script = new Script({
       name: 'Testscript',
       steps: [{
-        query: '{listItem{id}}',
-        resultProperty: ''
+        query: {
+          query: '{listItem{id}}',
+          resultProperty: ''
+        }
       }]
     }, storage);
     return script.run({}).then(output => {
@@ -244,9 +232,11 @@ describe('Script', () => {
     const script = new Script({
       name: 'Testscript',
       steps: [{
-        query: '{Item(id: $id){id title}}',
-        arguments: {
-          id: '/id'
+        query: {
+          query: '{Item(id: $id){id title}}',
+          arguments: {
+            id: '/id'
+          }
         }
       }]
     }, storage);
@@ -321,10 +311,8 @@ describe('Script', () => {
     const script = new Script({
       name: 'Testscript',
       steps: [{
-        transform: {
-          object: {
-            foo: {static: 'bar'}
-          }
+        object: {
+          foo: [{static: 'bar'}]
         }
       }]
     }, storage);
@@ -334,49 +322,18 @@ describe('Script', () => {
       });
     });
   });
-  it('will execute transformation after executing query', () => {
-    const storage = {
-      query(query) {
-        if (query === '{listItem{id}}') {
-          return Promise.resolve({
-            listItem: [{id: 1}, {id: 2}, {id: 3}]
-          });
-        }
-      }
-    };
-    const script = new Script({
-      name: 'Testscript',
-      steps: [{
-        query: '{listItem{id}}',
-        transform: {
-          object: {
-            items: {get: '/result/listItem'}
-          }
-        }
-      }]
-    }, storage);
-    return script.run({}).then(output => {
-      expect(output).to.deep.equal({
-        items: [{id: 1}, {id: 2}, {id: 3}]
-      });
-    });
-  });
 
   it('can execute multiple steps', () => {
     const script = new Script({
       name: 'Testscript',
       steps: [{
-        transform: {
-          object: {
-            foo: {static: 'bar'}
-          }
+        object: {
+          foo: [{static: 'bar'}]
         }
       }, {
-        transform: {
-          object: {
-            foo: {get: '/foo'},
-            bar: {static: 'baz'}
-          }
+        object: {
+          foo: [{get: '/foo'}],
+          bar: [{static: 'baz'}]
         }
       }]
     }, storage);
@@ -415,23 +372,22 @@ describe('Script', () => {
   it('can do an unconditional jump', () => {
     const script = new Script({
       name: 'Testscript',
-      steps: [{
-        jump: {to: 'last'}
-      }, {
-        transform: {
+      steps: [
+        {
+          jump: {to: 'last'}
+        }, {
           object: {
-            foo: {static: 'bar'}
+            foo: [{static: 'bar'}]
+          }
+        },
+        'last',
+        {
+          object: {
+            foo: [{get: '/foo'}],
+            bar: [{static: 'baz'}]
           }
         }
-      }, {
-        label: 'last',
-        transform: {
-          object: {
-            foo: {get: '/foo'},
-            bar: {static: 'baz'}
-          }
-        }
-      }]
+      ]
     }, storage);
     return script.run({}).then(output => {
       expect(output).to.deep.equal({
@@ -480,26 +436,25 @@ describe('Script', () => {
   it('can do a conditional jump with the default operator', () => {
     const script = new Script({
       name: 'Testscript',
-      steps: [{
-        jump: {
-          to: 'last',
-          left: false
-        }
-      }, {
-        transform: {
+      steps: [
+        {
+          jump: {
+            to: 'last',
+            left: false
+          }
+        }, {
           object: {
-            foo: {static: 'bar'}
+            foo: [{static: 'bar'}]
+          }
+        },
+        'last',
+        {
+          object: {
+            foo: [{get: '/foo'}],
+            bar: [{static: 'baz'}]
           }
         }
-      }, {
-        label: 'last',
-        transform: {
-          object: {
-            foo: {get: '/foo'},
-            bar: {static: 'baz'}
-          }
-        }
-      }]
+      ]
     }, storage);
     return script.run({}).then(output => {
       expect(output).to.deep.equal({
@@ -524,28 +479,27 @@ describe('Script', () => {
     it('can do a conditional jump with the ' + operator + ' operator', () => {
       const script = new Script({
         name: 'Testscript',
-        steps: [{
-          jump: {
-            to: 'last',
-            left: 1,
-            right: 2,
-            operator
-          }
-        }, {
-          transform: {
+        steps: [
+          {
+            jump: {
+              to: 'last',
+              left: 1,
+              right: 2,
+              operator
+            }
+          }, {
             object: {
-              foo: {static: 'bar'}
+              foo: [{static: 'bar'}]
+            }
+          },
+          'last',
+          {
+            object: {
+              foo: [{get: '/foo'}],
+              bar: [{static: 'baz'}]
             }
           }
-        }, {
-          label: 'last',
-          transform: {
-            object: {
-              foo: {get: '/foo'},
-              bar: {static: 'baz'}
-            }
-          }
-        }]
+        ]
       }, storage);
       return script.run({}).then(output => {
         expect(output).to.deep.equal({
@@ -559,28 +513,27 @@ describe('Script', () => {
   it('can do a conditional jump with the "in" operator', () => {
     const script = new Script({
       name: 'Testscript',
-      steps: [{
-        jump: {
-          to: 'last',
-          left: 2,
-          right: {get: '/array'},
-          operator: 'in'
-        }
-      }, {
-        transform: {
+      steps: [
+        {
+          jump: {
+            to: 'last',
+            left: 2,
+            right: [{get: '/array'}],
+            operator: 'in'
+          }
+        }, {
           object: {
-            foo: {static: 'bar'}
+            foo: [{static: 'bar'}]
+          }
+        },
+        'last',
+        {
+          object: {
+            foo: [{get: '/foo'}],
+            bar: [{static: 'baz'}]
           }
         }
-      }, {
-        label: 'last',
-        transform: {
-          object: {
-            foo: {get: '/foo'},
-            bar: {static: 'baz'}
-          }
-        }
-      }]
+      ]
     }, storage);
     return script.run({array: [1, 2, 3]}).then(output => {
       expect(output).to.deep.equal({
@@ -651,24 +604,27 @@ describe('Script', () => {
   it('can execute a for-loop', () => {
     const script = new Script({
       name: 'Testscript',
-      steps: [{
-        label: 'start',
-        increment: '/i',
-        jump: {
-          left: {get: '/i'},
-          operator: '>=',
-          right: {get: '/n'},
-          to: 'end'
-        }
-      }, {
-        label: 'worker...'
-      }, {
-        jump: {
-          to: 'start'
-        }
-      }, {
-        label: 'end'
-      }]
+      steps: [
+        'start',
+        {
+          increment: '/i'
+        },
+        {
+          jump: {
+            left: '/i',
+            operator: '>=',
+            right: '/n',
+            to: 'end'
+          }
+        },
+        'worker...',
+        {
+          jump: {
+            to: 'start'
+          }
+        },
+        'end'
+      ]
     }, storage);
     return script.run({n: 10}).then(output => {
       expect(output).to.deep.equal({
@@ -689,12 +645,14 @@ describe('Script', () => {
   it('will fail when executing more steps than maxSteps', () => {
     const script = new Script({
       name: 'Testscript',
-      steps: [{
-        label: 'start',
-        jump: {
-          to: 'start'
+      steps: [
+        'start',
+        {
+          jump: {
+            to: 'start'
+          }
         }
-      }]
+      ]
     }, storage);
     let failed = false;
     return script.run({n: 1e4}).catch(() => {
@@ -709,23 +667,27 @@ describe('Script', () => {
   it('will not fail when executing many steps (10k)', () => {
     const script = new Script({
       name: 'Testscript',
-      maxSteps: 1e4 + 3,
-      steps: [{
-        label: 'start',
-        increment: '/i',
-        jump: {
-          left: {get: '/i'},
-          operator: '>=',
-          right: {get: '/n'},
-          to: 'end'
-        }
-      }, {
-        jump: {
-          to: 'start'
-        }
-      }, {
-        label: 'end'
-      }]
+      maxSteps: (1e4 * 4) + 1,
+      steps: [
+        'start',
+        {
+          increment: '/i'
+        },
+        {
+          jump: {
+            left: [{get: '/i'}],
+            operator: '>=',
+            right: [{get: '/n'}],
+            to: 'end'
+          }
+        },
+        {
+          jump: {
+            to: 'start'
+          }
+        },
+        'end'
+      ]
     }, storage);
     return script.run({n: 1e4 / 2}).then(output => {
       expect(output).to.deep.equal({
@@ -889,7 +851,13 @@ describe('Script', () => {
     const script = new Script({
       name: 'Testscript',
       delay: 100,
-      steps: [{}, {}, {}]
+      steps: [{
+        object: {}
+      }, {
+        object: {}
+      }, {
+        object: {}
+      }]
     }, storage);
     const start = new Date();
     return script.run().then(() => {
