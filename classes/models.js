@@ -41,7 +41,7 @@ class Models {
             throw new Error('Unknown engine ' + engine + ' in database ' + databaseName);
           }
           try {
-            this.instances[name] = new this.engines[engine](this.models[name], database, this.databases.internal);
+            this.instances[name] = new this.engines[engine](this.models[name], database, this.databases.internal, this.storage);
           } catch (err) {
             console.log(err.stack);
           }

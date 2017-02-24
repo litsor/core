@@ -58,6 +58,12 @@ describe('Script', () => {
             host: 'localhost',
             port: 28015,
             name: 'test'
+          },
+          website: {
+            engine: 'Script',
+            parameters: {
+              baseUri: 'http://localhost:8372'
+            }
           }
         }
       }
@@ -920,6 +926,14 @@ describe('Script', () => {
         foo: 'bar',
         bar: 'baz'
       });
+    });
+  });
+
+  it('can read data with Script engine', () => {
+    return app.storage.query('{listWebsiteItem { id name }}').then(result => {
+      expect(result.listWebsiteItem).to.have.length(10);
+      expect(result.listWebsiteItem[0]).to.have.property('id');
+      expect(result.listWebsiteItem[0]).to.have.property('name');
     });
   });
 });
