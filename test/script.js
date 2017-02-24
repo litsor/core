@@ -936,4 +936,16 @@ describe('Script', () => {
       expect(result.listWebsiteItem[0]).to.have.property('name');
     });
   });
+
+  it('can read config', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        config: '/storage/databases/website/parameters/baseUri'
+      }]
+    }, app.storage);
+    return script.run({}).then(result => {
+      expect(result).to.equal('http://localhost:8372');
+    });
+  });
 });

@@ -126,6 +126,19 @@ class Script {
     return script.run(_.cloneDeep(input));
   }
 
+  _config(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value for "config" method must be a string');
+    }
+    if (!options.match(/^\/storage\//)) {
+      throw new Error('Only config inside /storage is accessible');
+    }
+    const config = {
+      storage: this.storage.options
+    };
+    return JsonPointer.get(config, options);
+  }
+
   _request(value, options) {
     // Allows writing "- request: 'url'" for simple GET requests.
     if (typeof options === 'string') {
