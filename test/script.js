@@ -867,4 +867,10 @@ describe('Script', () => {
       expect(interval < 350).to.equal(true);
     });
   });
+
+  it('will execute postprocessor scripts in model', () => {
+    return app.storage.query('{createPost(title:"test"){id title}}').then(result => {
+      expect(result.createPost.title).to.equal('TEST');
+    });
+  });
 });

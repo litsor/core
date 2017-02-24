@@ -1,0 +1,16 @@
+database: rethink
+access: 'true'
+mutation: 'true'
+properties:
+  title:
+    type: string
+postprocess:
+  - object:
+      operator: /operator
+      params:
+        - get: /params
+        - object:
+            id: /id
+            title:
+              - get: /title
+              - upperCase:

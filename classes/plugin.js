@@ -6,9 +6,12 @@ class Plugin {
    *
    * @param object models
    *   Object with all models in storage.
+   * @param object storage
+   *   Reference to Storage object.
    */
-  constructor(models) {
+  constructor(models, storage) {
     this.models = models;
+    this.storage = storage;
   }
 
   /**
