@@ -33,58 +33,37 @@ class Script extends Model {
   }
 
   read(data) {
-    return this.scripts.read.run({
-      id: data.id,
-      options: _.omit(data, 'id'),
-      config: this.parameters
-    }).then(result => {
+    return this.scripts.read.run(data).then(result => {
       return this.castTypes(result);
     });
   }
 
   list(filters, options) {
-    return this.scripts.list.run({
-      filters,
-      options,
-      config: this.parameters
-    }).then(result => {
+    return this.scripts.list.run(_.defaults(filters, options)).then(result => {
       return this.castTypes(result);
     });
   }
 
   create(data) {
-    return this.scripts.create.run({
-      data,
-      config: this.parameters
-    }).then(result => {
+    return this.scripts.create.run(data).then(result => {
       return this.castTypes(result);
     });
   }
 
   update(data) {
-    return this.scripts.update.run({
-      data,
-      config: this.parameters
-    }).then(result => {
+    return this.scripts.update.run(data).then(result => {
       return this.castTypes(result);
     });
   }
 
   remove(data) {
-    return this.scripts.remove.run({
-      id: data.id,
-      options: _.omit(data, 'id'),
-      config: this.parameters
-    }).then(result => {
+    return this.scripts.remove.run(data).then(result => {
       return this.castTypes(result);
     });
   }
 
   count(data) {
-    return this.scripts.count.run({
-      data,
-      config: this.parameters
-    });
+    return this.scripts.count.run(data);
   }
 
   castTypes(data) {

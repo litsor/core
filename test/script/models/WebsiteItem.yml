@@ -13,7 +13,7 @@ list:
           name:
             - htmlTagText: a
 read:
-  - request: "{id}"
+  - request: /id
   - get: /body
   - object:
       name:
