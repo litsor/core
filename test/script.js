@@ -306,6 +306,26 @@ describe('Script', () => {
     });
   });
 
+  it('can use shorthand in url parametert', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        static: {url: 'http://localhost:8372/list-pages'}
+      }, {
+        request: {
+          url: '/url'
+        }
+      }]
+    });
+    return script.run({}).then(output => {
+      expect(output).to.have.property('result');
+      expect(output.result).to.have.property('headers');
+      expect(output.result).to.have.property('body');
+      expect(output.result.body).to.be.a('string');
+      expect(output.result.headers).to.have.property('content-type');
+    });
+  });
+
   it('will return cookies on request', () => {
     const script = new Script({
       name: 'Testscript',
