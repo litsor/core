@@ -101,6 +101,9 @@ class Models {
 
   get(name) {
     return this.ready.then(() => {
+      if (typeof this.instances[name] === 'undefined') {
+        throw new Error('Model "' + name + '" does not exists');
+      }
       return this.instances[name];
     });
   }
