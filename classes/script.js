@@ -735,6 +735,29 @@ class Script {
       return output;
     });
   }
+
+  _change(value, options) {
+    if (!options.target || !options.changes) {
+      throw new Error('Change requires target and changes properties');
+    }
+    return Promise.all([
+      this.shorthand(value, options.target, 'target'),
+      this.shorthand(value, options.changes, 'changes')
+    ]).then(sides => {
+      let [target, changes] = sides;
+      target = typeof target === 'object' && target !== null ? target : {};
+      changes = typeof changes === 'object' && changes !== null ? changes : {};
+      const output = JSON.parse(JSON.stringify(target));
+      Object.keys(changes).forEach(key => {
+        if (changes[key] === null) {
+          delete output[key];
+        } else {
+          output[key] = changes[key];
+        }
+      });
+      return output;
+    });
+  }
 }
 
 module.exports = Script;
