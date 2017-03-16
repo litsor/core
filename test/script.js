@@ -1021,6 +1021,27 @@ describe('Script', () => {
     });
   });
 
+  it('can detect changes on object', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        changed: {
+          left: '/left',
+          right: '/right'
+        }
+      }]
+    }, app.storage);
+    const left = {a: 1, b: 'test', c: {foo: 'bar'}, d: {foo: 'bar'}};
+    const right = {a: 1, e: 'test', c: {foo: 'baz'}, d: {foo: 'bar'}};
+    return script.run({left, right}).then(result => {
+      expect(result).to.deep.equal({
+        b: null,
+        c: {foo: 'baz'},
+        e: 'test'
+      });
+    });
+  });
+
   it('can provide debug information', () => {
     const steps = [{
       static: {foo: 'bar'}

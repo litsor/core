@@ -703,6 +703,38 @@ class Script {
     }
     return value;
   }
+
+  _changed(value, options) {
+    if (!options.left || !options.right) {
+      throw new Error('Changed requires left and right properties');
+    }
+    return Promise.all([
+      this.shorthand(value, options.left, 'left'),
+      this.shorthand(value, options.right, 'right')
+    ]).then(sides => {
+      let [left, right] = sides;
+      left = typeof left === 'object' && left !== null ? left : {};
+      right = typeof right === 'object' && right !== null ? right : {};
+      const output = {};
+      const keysLeft = Object.keys(left);
+      const keysRight = Object.keys(right);
+      // Removed keys.
+      _.difference(keysLeft, keysRight).forEach(key => {
+        output[key] = null;
+      });
+      // Added keys.
+      _.difference(keysRight, keysLeft).forEach(key => {
+        output[key] = right[key];
+      });
+      // Changed keys.
+      _.intersection(keysLeft, keysRight).forEach(key => {
+        if (JSON.stringify(left[key]) !== JSON.stringify(right[key])) {
+          output[key] = right[key];
+        }
+      });
+      return output;
+    });
+  }
 }
 
 module.exports = Script;
