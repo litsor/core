@@ -296,6 +296,7 @@ class Script {
   }
 
   _jump(value, options) {
+    options = typeof options === 'string' ? {to: options} : _.clone(options);
     const jump = _.defaults(_.clone(options) || {}, {
       left: true,
       right: true,
@@ -704,6 +705,13 @@ class Script {
     return value;
   }
 
+  _keys(value) {
+    if (typeof value !== 'object' || value === null) {
+      return [];
+    }
+    return Object.keys(value);
+  }
+
   _changed(value, options) {
     if (!options.left || !options.right) {
       throw new Error('Changed requires left and right properties');
@@ -720,11 +728,15 @@ class Script {
       const keysRight = Object.keys(right);
       // Removed keys.
       _.difference(keysLeft, keysRight).forEach(key => {
-        output[key] = null;
+        if (left[key] !== null) {
+          output[key] = null;
+        }
       });
       // Added keys.
       _.difference(keysRight, keysLeft).forEach(key => {
-        output[key] = right[key];
+        if (right[key] !== null) {
+          output[key] = right[key];
+        }
       });
       // Changed keys.
       _.intersection(keysLeft, keysRight).forEach(key => {

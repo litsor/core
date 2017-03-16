@@ -454,6 +454,34 @@ describe('Script', () => {
     });
   });
 
+  it('can provide label as string for unconditional jump', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [
+        {
+          jump: 'last'
+        }, {
+          object: {
+            foo: [{static: 'bar'}]
+          }
+        },
+        'last',
+        {
+          object: {
+            foo: [{get: '/foo'}],
+            bar: [{static: 'baz'}]
+          }
+        }
+      ]
+    }, storage);
+    return script.run({}).then(output => {
+      expect(output).to.deep.equal({
+        foo: null,
+        bar: 'baz'
+      });
+    });
+  });
+
   /**
    * @doc
    * Jumps can be conditional by defining an operator and operands. The operator
@@ -1021,6 +1049,18 @@ describe('Script', () => {
     });
   });
 
+  it('can get object property keys', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        keys: {}
+      }]
+    }, app.storage);
+    return script.run({a: 1, b: 2, c: 3}).then(result => {
+      expect(result).to.deep.equal(['a', 'b', 'c']);
+    });
+  });
+
   it('can detect changes on object', () => {
     const script = new Script({
       name: 'Testscript',
@@ -1031,8 +1071,8 @@ describe('Script', () => {
         }
       }]
     }, app.storage);
-    const left = {a: 1, b: 'test', c: {foo: 'bar'}, d: {foo: 'bar'}};
-    const right = {a: 1, e: 'test', c: {foo: 'baz'}, d: {foo: 'bar'}};
+    const left = {a: 1, b: 'test', c: {foo: 'bar'}, d: {foo: 'bar'}, f: null};
+    const right = {a: 1, e: 'test', c: {foo: 'baz'}, d: {foo: 'bar'}, g: null};
     return script.run({left, right}).then(result => {
       expect(result).to.deep.equal({
         b: null,
