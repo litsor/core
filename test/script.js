@@ -31,7 +31,7 @@ const storage = {
  * Scripts can be used for more complex and conditional operations that can be
  * used by plugins.
  */
-describe('Script', () => {
+describe.only('Script', () => {
   let app;
   let query;
   let googleSearch;
@@ -966,6 +966,37 @@ describe('Script', () => {
     }, app.storage);
     return script.run({}).then(result => {
       expect(result).to.equal('http://localhost:8372');
+    });
+  });
+
+  it('can provide debug information', () => {
+    const steps = [{
+      static: {foo: 'bar'}
+    }, {
+      object: {
+        baz: '/foo'
+      }
+    }];
+    const script = new Script({name: 'Testscript', steps}, {}, {debug: true});
+    return script.run({}).then(result => {
+      // The result is split up in 'output', 'definition' and 'children'.
+      expect(result).to.have.property('output');
+      expect(result).to.have.property('definition');
+      expect(result).to.have.property('children');
+
+      expect(result.output).to.deep.equal({baz: 'bar'});
+      expect(result.definition).to.deep.equal(steps);
+      expect(result.children).to.have.length(2);
+
+      expect(result.children[1].definition).to.deep.equal({
+        object: {baz: '/foo'}
+      });
+      expect(result.children[1].children).to.have.length(1);
+      expect(result.children[1].children[0].definition).to.deep.equal([{
+        get: '/foo'
+      }]);
+      expect(result.children[1].children[0].output).to.equal('bar');
+      expect(result.children[1].children[0].info).to.equal('baz property, using shorthand');
     });
   });
 });

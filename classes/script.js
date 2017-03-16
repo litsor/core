@@ -19,8 +19,10 @@ class Script {
    *   Script definition.
    * @param Storage storage
    *   Storage.
+   * @param object options
+   *   Script options.
    */
-  constructor(definition, storage) {
+  constructor(definition, storage, options) {
     if (typeof definition.name !== 'string') {
       throw new Error('Missing name for script');
     }
@@ -31,6 +33,9 @@ class Script {
       maxSteps: 1000,
       delay: 0,
       runOnStartup: false
+    });
+    this.options = _.defaults(options, {
+      debug: false
     });
     this.storage = storage;
 
@@ -63,8 +68,18 @@ class Script {
     this.running = true;
     this.data = input || {};
     this.step = 0;
+    if (this.options.debug) {
+      this.debugData = [];
+    }
     return this.executeStep().then(() => {
       this.running = false;
+      if (this.options.debug) {
+        return {
+          definition: this.definition.steps,
+          children: this.debugData,
+          output: this.data
+        };
+      }
       return this.data;
     }).catch(err => {
       this.running = false;
@@ -99,7 +114,24 @@ class Script {
       throw new Error('Unknown function ' + action + ' in script');
     }
 
+    let originalPointer;
+    let debugData;
+    if (this.options.debug) {
+      originalPointer = this.debugPointer ? this.debugPointer : this.debugData;
+      debugData = {
+        definition: step,
+        children: []
+      };
+      this.debugPointer = debugData.children;
+    }
+
     return Promise.resolve(this['_' + action](this.data, step[action])).then(output => {
+      if (this.options.debug) {
+        debugData.output = JSON.parse(JSON.stringify(output));
+        this.debugPointer = originalPointer;
+        this.debugPointer.push(debugData);
+      }
+
       this.data = output;
       if (this.definition.delay) {
         // Prevent calling Bluebird.delay(0), as it still has a few ms delay.
@@ -110,9 +142,10 @@ class Script {
     });
   }
 
-  shorthand(input, value) {
+  shorthand(input, value, sourceName) {
     if (typeof value === 'string') {
       if (value.match(/^\//)) {
+        sourceName = `${sourceName}, using shorthand`;
         value = [{get: value}];
       }
     }
@@ -122,8 +155,15 @@ class Script {
     const script = new Script({
       name: this.name + ':' + this.lastAction,
       steps: value
-    }, this.storage);
-    return script.run(_.cloneDeep(input));
+    }, this.storage, this.options);
+    return script.run(_.cloneDeep(input)).then(result => {
+      if (this.options.debug) {
+        result.info = sourceName;
+        this.debugPointer.push(result);
+        return result.output;
+      }
+      return result;
+    });
   }
 
   _config(value, options) {
@@ -234,7 +274,7 @@ class Script {
     options = _.defaults(options, {
       arguments: {}
     });
-    return this.shorthand(value, [{object: options.arguments}]).then(args => {
+    return this.shorthand(value, [{object: options.arguments}], 'query arguments').then(args => {
       return this.storage.query(options.query, args);
     }).then(result => {
       const resultProperty = typeof options.resultProperty === 'string' ? options.resultProperty : '/result';
@@ -253,8 +293,8 @@ class Script {
       operator: '=='
     });
     return Promise.all([
-      this.shorthand(value, jump.left),
-      this.shorthand(value, jump.right)
+      this.shorthand(value, jump.left, 'left operand'),
+      this.shorthand(value, jump.right, 'right operand')
     ]).then(values => {
       jump.left = values[0];
       jump.right = values[1];
@@ -339,7 +379,7 @@ class Script {
         retainData = true;
         return null;
       }
-      return this.shorthand(value, options[key]).then(result => {
+      return this.shorthand(value, options[key], `${key} property`).then(result => {
         output[key] = result;
       });
     })).then(() => {
@@ -355,7 +395,7 @@ class Script {
       return null;
     }
     return Bluebird.resolve(value).map(item => {
-      return this.shorthand(item, options);
+      return this.shorthand(item, options, 'array item');
     });
   }
 
@@ -391,7 +431,7 @@ class Script {
       throw new Error('Options for array transformation must be an array');
     }
     return Bluebird.resolve(options).map(item => {
-      return this.shorthand(value, item);
+      return this.shorthand(value, item, 'array item');
     });
   }
 
@@ -403,7 +443,7 @@ class Script {
       if (chunk === null) {
         return [];
       }
-      return chunk instanceof Array ? chunk : this.shorthand(value, [chunk]);
+      return chunk instanceof Array ? chunk : this.shorthand(value, [chunk], 'array');
     }).then(chunks => {
       return _.union.apply(_, chunks);
     });
