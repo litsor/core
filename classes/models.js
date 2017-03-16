@@ -53,7 +53,7 @@ class Models {
         files.forEach(file => {
           const name = file.match(/\/([^\/]+)\.js$/)[1];
           const load = require;
-          this.plugins[name] = new (load(file))(this.models);
+          this.plugins[name] = new (load(file))(this.models, this.storage);
         });
         Object.keys(this.plugins).forEach(name => {
           const plugin = this.plugins[name];
