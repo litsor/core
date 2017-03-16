@@ -5,6 +5,7 @@ const Bluebird = require('bluebird');
 const HttpError = require('http-errors');
 
 const parser = require('./parser');
+const Script = require('./script');
 
 class Query {
   constructor(models, query, context, args) {
@@ -201,7 +202,42 @@ class Query {
     });
   }
 
+  executeScript(method) {
+    const params = _.defaults(method.params, {
+      name: null,
+      data: {},
+      steps: [],
+      debug: false
+    });
+    let script;
+    if (params.name) {
+      script = this.models.getScript(params.name);
+    } else {
+      // @todo: Replace with actual Storage object.
+      const storage = {
+        query(query, args) {
+          return new Query(this.models, query, args).execute();
+        }
+      };
+      script = new Script({
+        name: 'Query',
+        steps: params.steps
+      }, storage);
+    }
+    return Promise.resolve(script).then(script => {
+      if (params.debug) {
+        script = script.clone().setDebug(true);
+      }
+      return script.run(params.data);
+    });
+  }
+
   executeMethod(method) {
+    if (method.name === 'script' && typeof this.context === 'undefined') {
+      // @todo: Allow plugins to add fields and move to plugin.
+      return this.executeScript(method);
+    }
+
     let model;
     let result;
     return this.getModel(method).then(_model => {

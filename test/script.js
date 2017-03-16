@@ -31,7 +31,7 @@ const storage = {
  * Scripts can be used for more complex and conditional operations that can be
  * used by plugins.
  */
-describe.only('Script', () => {
+describe('Script', () => {
   let app;
   let query;
   let googleSearch;
@@ -894,6 +894,58 @@ describe.only('Script', () => {
     return Bluebird.resolve().delay(2100).then(() => {
       // The script should start within 2s, without calling run().
       expect(ran).to.equal(true);
+    });
+  });
+
+  /**
+   * @doc
+   * ## Run script from query
+   *
+   * It is possible to run scripts from a query, either by providing a name
+   * (for scripts located in the scripts directory) or by providing the steps
+   * inline.
+   *
+   * ```
+   * {
+   *   named: script(name: "Testscript", data: {})
+   *   inline: script(steps: [{camelCase: {}}], data: "lorem ipsum")
+   * }
+   * ```
+   *
+   * The data property is optional and defaults to an empty object.
+   *
+   * Debug information can be enabled by providing `debug: true`. The output
+   * format will change to an object with properties `output`, `definition`
+   * and `children`.
+   *
+   * Running scripts from queries is currently only possible for context-free
+   * queries.
+   */
+  it('can execute named script from query', () => {
+    return query(`{
+      script(name: "Uppercase", data: "test")
+    }`).then(result => {
+      expect(result).to.have.property('script');
+      expect(result.script).to.equal('TEST');
+    });
+  });
+
+  it('can execute script provided in query', () => {
+    return query(`{
+      script(steps: [{camelCase: {}}], data: "lorem ipsum")
+    }`).then(result => {
+      expect(result).to.have.property('script');
+      expect(result.script).to.equal('loremIpsum');
+    });
+  });
+
+  it('can return debug information for query', () => {
+    return query(`{
+      script(name: "Uppercase", data: "test", debug: true)
+    }`).then(result => {
+      expect(result).to.have.property('script');
+      expect(result.script).to.have.property('children');
+      expect(result.script).to.have.property('output');
     });
   });
 

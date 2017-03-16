@@ -108,6 +108,15 @@ class Models {
     });
   }
 
+  getScript(name) {
+    return this.ready.then(() => {
+      if (typeof this.scripts[name] === 'undefined') {
+        throw new Error('Script "' + name + '" does not exists');
+      }
+      return this.scripts[name];
+    });
+  }
+
   hasPluginField(model, field) {
     const name = model.name + '.' + field.name;
     return typeof this.pluginFields[name] !== 'undefined';

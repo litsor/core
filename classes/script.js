@@ -61,6 +61,15 @@ class Script {
     }
   }
 
+  clone() {
+    return new Script(this.definition, this.storage, this.options);
+  }
+
+  setDebug(value) {
+    this.options.debug = value;
+    return this;
+  }
+
   run(input) {
     if (this.running) {
       throw new Error('Script is already running');
