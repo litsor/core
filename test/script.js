@@ -31,7 +31,7 @@ const storage = {
  * Scripts can be used for more complex and conditional operations that can be
  * used by plugins.
  */
-describe.only('Script', () => {
+describe('Script', () => {
   let app;
   let query;
   let googleSearch;
@@ -1145,6 +1145,18 @@ describe.only('Script', () => {
     }, app.storage);
     return script.run(new Buffer('test').toString('base64')).then(result => {
       expect(result).to.equal('test');
+    });
+  });
+
+  it('can render HTML template', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        render: '<h1>{{title}}</h1>'
+      }]
+    }, app.storage);
+    return script.run({title: 'Test'}).then(result => {
+      expect(result).to.equal('<h1>Test</h1>');
     });
   });
 

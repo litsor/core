@@ -10,6 +10,8 @@ const Bluebird = require('bluebird');
 const XmlToJson = Bluebird.promisifyAll(require('xml2js'));
 const fetch = require('node-fetch');
 const isMyJsonValid = require('is-my-json-valid');
+const Swig = require('swig-templates');
+const SwigExtra = require('swig-extras');
 
 class Script {
   /**
@@ -59,6 +61,14 @@ class Script {
         });
       }, 2000);
     }
+
+    // Initialize rendering.
+    ['batch', 'groupby', 'markdown', 'nl2br', 'pluck', 'split', 'trim', 'truncate'].forEach(key => {
+      SwigExtra.useFilter(Swig, key);
+    });
+    ['markdown', 'switch', 'case'].forEach(key => {
+      SwigExtra.useTag(Swig, key);
+    });
   }
 
   clone() {
@@ -639,6 +649,14 @@ class Script {
       return null;
     }
     return XmlToJson.parseStringAsync(value);
+  }
+
+  _render(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Render method requires a template string');
+    }
+    const render = Swig.compile(options);
+    return render(typeof value === 'object' ? value : {input: value});
   }
 
   _now() {

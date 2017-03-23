@@ -60,6 +60,8 @@
     "rc": "^1.1.6",
     "redis": "^2.6.2",
     "rethinkdb": "^2.3.3",
+    "swig-extras": "0.0.1",
+    "swig-templates": "^2.0.2",
     "xml-conv-json": "^1.0.2",
     "xml2js": "^0.4.17"
   },
