@@ -266,6 +266,11 @@ class Script {
             return XmlToJson.parseStringAsync(text);
           });
         }
+        if (options.format === 'blob') {
+          return response.buffer().then(buffer => {
+            return buffer.toString('base64');
+          });
+        }
         return response.text();
       }).then(body => {
         const result = {
