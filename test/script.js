@@ -31,7 +31,7 @@ const storage = {
  * Scripts can be used for more complex and conditional operations that can be
  * used by plugins.
  */
-describe('Script', () => {
+describe.only('Script', () => {
   let app;
   let query;
   let googleSearch;
@@ -354,6 +354,26 @@ describe('Script', () => {
     });
     return script.run({}).then(output => {
       expect(output.result.body).to.deep.equal({foundCookie: true});
+    });
+  });
+
+  it('can post request body', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        request: {
+          method: 'POST',
+          url: 'http://localhost:8372/echo',
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8'
+          },
+          body: 'Lorem ipsum'
+        }
+      }]
+    });
+    return script.run({}).then(output => {
+      expect(output.result.headers['content-type'][0]).to.equal('text/plain; charset=utf-8');
+      expect(output.result.body).to.equal('Lorem ipsum');
     });
   });
 

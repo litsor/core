@@ -241,7 +241,8 @@ class Script {
       }
       return fetch(options.url, {
         method: options.method,
-        headers: options.headers
+        headers: options.headers,
+        body: options.body
       }).then(_response => {
         response = _response;
         if (response.statusCode >= 300) {

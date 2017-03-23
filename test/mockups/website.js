@@ -124,6 +124,11 @@ class Website {
       return {foundCookie};
     });
 
+    this.api.process('POST /echo', request => {
+      request.mime = request.headers['content-type'];
+      return request.body;
+    });
+
     return this.api.listen(8372);
   }
 
