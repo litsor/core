@@ -1124,6 +1124,30 @@ describe.only('Script', () => {
     });
   });
 
+  it('can convert text to base64', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        toBase64: {}
+      }]
+    }, app.storage);
+    return script.run('test').then(result => {
+      expect(result).to.equal(new Buffer('test').toString('base64'));
+    });
+  });
+
+  it('can convert text from base64', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        fromBase64: {}
+      }]
+    }, app.storage);
+    return script.run(new Buffer('test').toString('base64')).then(result => {
+      expect(result).to.equal('test');
+    });
+  });
+
   it('can provide debug information', () => {
     const steps = [{
       static: {foo: 'bar'}

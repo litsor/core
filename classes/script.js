@@ -626,6 +626,14 @@ class Script {
     return JSON.stringify(value);
   }
 
+  _fromBase64(value) {
+    return new Buffer(value, 'base64').toString();
+  }
+
+  _toBase64(value) {
+    return new Buffer(value).toString('base64');
+  }
+
   _fromXml(value) {
     if (typeof value !== 'string') {
       return null;
