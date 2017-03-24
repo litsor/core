@@ -12,6 +12,7 @@ const fetch = require('node-fetch');
 const isMyJsonValid = require('is-my-json-valid');
 const Swig = require('swig-templates');
 const SwigExtra = require('swig-extras');
+const MathJS = require('mathjs');
 
 class Script {
   /**
@@ -801,6 +802,14 @@ class Script {
       });
       return output;
     });
+  }
+
+  _math(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Math requires the options to be a string');
+    }
+    const scope = typeof value === 'object' && value !== null ? value : {};
+    return MathJS.eval(options, scope);
   }
 }
 
