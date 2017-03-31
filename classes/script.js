@@ -811,6 +811,11 @@ class Script {
     const scope = typeof value === 'object' && value !== null ? value : {};
     return MathJS.eval(options, scope);
   }
+
+  _log(value) {
+    console.log(JSON.stringify(value, null, 2));
+    return value;
+  }
 }
 
 module.exports = Script;
