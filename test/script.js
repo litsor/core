@@ -28,8 +28,64 @@ const storage = {
  * @doc scripts
  * # Scripts
  *
+ * Restapir supports an imperative-style scripting language based on JSON,
+ * simply referenced as "scripts".
  * Scripts can be used for more complex and conditional operations that can be
- * used by plugins.
+ * used in various configurable parts, or run on their own using a schedule.
+ *
+ * The script must have a name and steps property.
+ * Scripting is done by defining all steps in an array. Each step is one of the
+ * following forms:
+ *
+ * * An object with a single property. That property name defines the method
+ *   to be executed and its value contains the method arguments.
+ * * A string that defines a label. This label can be used as a destination
+ *   for jumps.
+ *
+ * For example, a script can be used to transform the following input:
+ *
+ * ```
+ * {
+ *   "body": {
+ *     "items": [{
+ *       "title": "Foo",
+ *       "url": "http://foo/",
+ *       "snippet": "..."
+ *     }, {
+ *       "title": "Bar",
+ *       "url": "http://bar/",
+ *       "snippet": "..."
+ *     }]
+ *   }
+ * }
+ * ```
+ * Into the following output:
+ * ```
+ * [{
+ *   "title": "Foo",
+ *   "link": "http://foo/"
+ * }, {
+ *   "title": "Bar",
+ *   "link": "http://bar/"
+ * }]
+ * ```
+ * The script for this is:
+ * ```
+ * name: Search results
+ * steps:
+ *   - get: /body/items
+ *   - map:
+ *       - object:
+ *           title: /title
+ *           link: /url
+ * ```
+ *
+ * The script has two top-level methods; 'get' and 'map'. The 'map' function
+ * takes script steps as its arguments, while the 'get' method can only
+ * consume strings. Every method declares their own argument format.
+ * Note that every step takes the output of the preceding step as its input.
+ * Scripts may have input as well, which is provided as input for the first
+ * step. The output of the last (top-level) step is the script output.
  */
 describe('Script', () => {
   let app;

@@ -6,12 +6,14 @@ const _ = require('lodash');
 const Bluebird = require('bluebird');
 const Needle = Bluebird.promisifyAll(require('needle'));
 
-const Transformation = require('../classes/transformation');
+const Script = require('../classes/script');
 const Model = require('../classes/model');
 
 class Http extends Model {
-  constructor(modelData, database, internalDatabase) {
+  constructor(modelData, database, internalDatabase, storage) {
     super(modelData, database, internalDatabase);
+
+    this.storage = storage;
 
     database = _.defaults(database, {
       parameters: {}
@@ -30,9 +32,15 @@ class Http extends Model {
       if (typeof this.httpOperations.list.template !== 'object') {
         throw new Error('Model.httpOperations.list.template is not defined or not an object');
       }
-      this.listTransformer = new Transformation(this.httpOperations.list.template);
+      this.listScript = new Script({
+        name: `${this.name}: list`,
+        steps: this.httpOperations.list.template
+      }, this.storage);
       if (this.httpOperations.list.moreLink) {
-        this.listMoreLinkTransformer = new Transformation(this.httpOperations.list.moreLink);
+        this.listMoreLinkScript = new Script({
+          name: `${this.name}: more link`,
+          steps: this.httpOperations.list.moreLink
+        }, this.storage);
       }
     }
     if (typeof this.httpOperations.read !== 'undefined') {
@@ -40,7 +48,10 @@ class Http extends Model {
       if (typeof this.httpOperations.read.template !== 'object') {
         throw new Error('Model.httpOperations.read.template is not defined or not an object');
       }
-      this.readTransformer = new Transformation(this.httpOperations.read.template);
+      this.readScript = new Script({
+        name: `${this.name}: read`,
+        steps: this.httpOperations.read.template
+      }, this.storage);
     }
   }
 
@@ -105,7 +116,8 @@ class Http extends Model {
         headers: response.headers,
         body: response.body
       };
-      let output = this.readTransformer.transform(input);
+      return this.readScript.run(input);
+    }).then(output => {
       if (output !== null) {
         output.id = data.id;
         output = this.castTypes(output);
@@ -115,7 +127,7 @@ class Http extends Model {
   }
 
   list(filters, fieldNames, options) {
-    const strategy = this.listMoreLinkTransformer ? 'more-link' : 'pages';
+    const strategy = this.listMoreLinkScript ? 'more-link' : 'pages';
     const offset = options.offset;
     const uriTemplate = this.getRequestUri('list', filters);
     let results = [];
@@ -132,6 +144,7 @@ class Http extends Model {
       // can occur when the requests return more than itemsPerPage results.
       if (results.length >= index * this.httpOperations.list.itemsPerPage && results.length < maxResults) {
         let uri;
+        let input;
         if (nextUri) {
           uri = nextUri;
         } else {
@@ -143,20 +156,23 @@ class Http extends Model {
           if (response.statusCode >= 300) {
             throw new Error('Retrieved error code from remote server: ' + response.statusCode);
           }
-          const input = {
+          input = {
             headers: response.headers,
             body: response.body
           };
-          const pageItems = this.listTransformer.transform(input);
+          return this.listScript.run(input);
+        }).then(pageItems => {
           if (!(pageItems instanceof Array)) {
             throw new Error('List template should return an array');
           }
           results = _.concat(results, pageItems);
           if (strategy === 'more-link') {
-            nextUri = this.listMoreLinkTransformer.transform(input);
-            if (nextUri !== null) {
-              nextUri = Url.resolve(uri, nextUri);
-            }
+            return this.listMoreLinkScript.run(input).then(_nextUri => {
+              nextUri = _nextUri;
+              if (nextUri !== null) {
+                nextUri = Url.resolve(uri, nextUri);
+              }
+            });
           }
         });
       }

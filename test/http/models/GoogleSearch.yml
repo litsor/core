@@ -8,17 +8,17 @@ httpOperations:
     itemsPerPage: 10
     offsetBase: 1
     template:
-      get: /body/items
-      map:
-        object:
-          id:
-            get: /link
-            hash: {}
-            substring:
-              length: 16
-          title: /title
-          link: /link
-          snippet: /snippet
+      - get: /body/items
+      - map:
+          - object:
+              id:
+                - get: /link
+                - hash: {}
+                - substring:
+                    length: 16
+              title: /title
+              link: /link
+              snippet: /snippet
   timeout: 250
 properties:
   title:
