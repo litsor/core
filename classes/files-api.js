@@ -1,7 +1,10 @@
 'use strict';
 
-const Fs = require('fs');
 const Path = require('path');
+const _Fs = require('fs');
+const Bluebird = require('bluebird');
+
+const Fs = Bluebird.promisifyAll(_Fs);
 
 const _ = require('lodash');
 const Dicer = require('dicer');
@@ -71,8 +74,9 @@ class FilesApi {
       });
     });
 
-    app.process('GET /file/<model:string>/<id:string>', (model, id, context) => {
+    app.process('GET /file/<model:string>/<id:string>', (model, id, context, request) => {
       let modelInstance;
+      let filename;
       const query = `{file:${model}(id:$id){id}}`;
       return this.storage.query(query, context, {id}).then(result => {
         if (result.file === null) {
@@ -83,7 +87,10 @@ class FilesApi {
       }).then(_model => {
         modelInstance = _model;
         const directory = modelInstance.getDirectory(id);
-        const filename = Path.join(directory, id + '.0');
+        filename = Path.join(directory, id + '.0');
+        return Fs.statAsync(filename);
+      }).then(stat => {
+        request.setHeader('Content-Length', String(stat.size));
         return Fs.createReadStream(filename);
       }).catch(err => {
         if (err.message === 'Not found') {

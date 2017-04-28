@@ -160,15 +160,24 @@ describe('Files', () => {
     });
   });
 
-  it.skip('can upload a file in multiple parts', () => {
-
-  });
-
-  it.skip('sets Content-Length header on GET requests', () => {
-
-  });
-
-  it.skip('knows Content-Length of uploads with multiple parts', () => {
-
+  it('sets Content-Length header on GET requests', () => {
+    let id;
+    const data = Crypto.randomBytes(8);
+    const options = {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': data.byteLength
+      }
+    };
+    return Needle.putAsync(uri + '/file/File', data, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+      id = response.body.id;
+      return Needle.getAsync(uri + '/file/File/' + id);
+    }).then(response => {
+      expect(response.statusCode).to.equal(200);
+      expect(response.body.toString('hex')).to.equal(data.toString('hex'));
+      expect(response.headers).to.have.property('content-length');
+      expect(response.headers['content-length']).to.equal(String(data.byteLength));
+    });
   });
 });
