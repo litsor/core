@@ -10,6 +10,7 @@ const Bluebird = require('bluebird');
 
 const Script = require('../classes/script');
 const Application = require('../classes/application');
+const Context = require('../classes/context');
 
 const GoogleSearchMockup = require('./mockups/google-search');
 const WebsiteMockup = require('./mockups/website');
@@ -328,13 +329,14 @@ describe('Script', () => {
           return Promise.resolve({
             Item: {
               id: 2,
-              user: typeof context === 'undefined' ? 0 : context.id
+              user: typeof context === 'undefined' ? 0 : context.getUser().id
             }
           });
         }
       }
     };
-    const context = {id: 1};
+    const context = new Context();
+    context.setUser({id: 1});
     const script = new Script({
       name: 'Testscript',
       steps: [{
@@ -345,7 +347,7 @@ describe('Script', () => {
           }
         }
       }]
-    }, storage, {}, context);
+    }, storage, {context});
     return script.run({id: 2}).then(output => {
       expect(output).to.deep.equal({
         id: 2,
@@ -363,13 +365,14 @@ describe('Script', () => {
           return Promise.resolve({
             Item: {
               id: 2,
-              user: typeof context === 'undefined' ? 0 : context.id
+              user: typeof context === 'undefined' ? 0 : context.getUser().id
             }
           });
         }
       }
     };
-    const context = {id: 1};
+    const context = new Context();
+    context.setUser({id: 1});
     const script = new Script({
       name: 'Testscript',
       steps: [{
@@ -381,7 +384,7 @@ describe('Script', () => {
           }
         }
       }]
-    }, storage, {}, context);
+    }, storage, {context});
     return script.run({id: 2}).then(output => {
       expect(output).to.deep.equal({
         id: 2,

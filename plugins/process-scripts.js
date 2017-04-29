@@ -35,7 +35,7 @@ class ProcessScripts extends Plugin {
     return new Script({
       name: `${operation}${model.name}:${name}`,
       steps: this.models[model.name].jsonSchema[name]
-    }, this.storage, {}, context).run({
+    }, this.storage, {context}).run({
       operation,
       params
     }).then(response => response.params);
