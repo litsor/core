@@ -39,8 +39,8 @@ class Model {
   executeList(data, fieldNames) {
     const limit = typeof data.limit === 'number' ? data.limit : 10;
     const offset = typeof data.offset === 'number' ? data.offset : 0;
-    const sort = typeof data.sort === 'string' ? data.sort : 'id';
-    const ascending = sort[0] !== '!';
+    const sort = typeof data.sort === 'string' ? data.sort.replace('!', '') : 'id';
+    const ascending = typeof data.sort === 'string' ? data.sort.substring(0, 1) !== '!' : true;
     const filters = _.omit(data, ['limit', 'offset', 'sort']);
     return Promise.resolve(this.ready()).then(() => {
       return this.list(filters, fieldNames, {limit, offset, sort, ascending});
