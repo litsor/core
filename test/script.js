@@ -283,7 +283,7 @@ describe('Script', () => {
    */
   it('can execute parameterized query', () => {
     const storage = {
-      query(query, args) {
+      query(query, context, args) {
         if (args.id === 2) {
           return Promise.resolve({
             Item: {id: 2, title: 'Foo'}

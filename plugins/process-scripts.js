@@ -31,11 +31,11 @@ class ProcessScripts extends Plugin {
     });
   }
 
-  process(models, model, operation, params, name) {
+  process(model, operation, params, name, context) {
     return new Script({
       name: `${operation}${model.name}:${name}`,
       steps: this.models[model.name].jsonSchema[name]
-    }, this.storage).run({
+    }, this.storage, context).run({
       operation,
       params
     }).then(response => response.params);
@@ -51,8 +51,8 @@ class ProcessScripts extends Plugin {
   /**
    * Execute preprocessing.
    */
-  preprocess(models, model, operation, params) {
-    return this.process(models, model, operation, params, 'preprocess');
+  preprocess(models, model, operation, params, context) {
+    return this.process(model, operation, params, 'preprocess', context);
   }
 
   /**
@@ -65,8 +65,8 @@ class ProcessScripts extends Plugin {
   /**
    * Execute postprocessing.
    */
-  postprocess(models, model, operation, params) {
-    return this.process(models, model, operation, params, 'postprocess');
+  postprocess(models, model, operation, params, context) {
+    return this.process(model, operation, params, 'postprocess', context);
   }
 }
 

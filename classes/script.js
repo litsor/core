@@ -26,8 +26,10 @@ class Script {
    *   Storage.
    * @param object options
    *   Script options.
+   * @param Context context
+   *   Context to use for running queries in script.
    */
-  constructor(definition, storage, options) {
+  constructor(definition, storage, options, context) {
     if (typeof definition.name !== 'string') {
       throw new Error('Missing name for script');
     }
@@ -49,6 +51,8 @@ class Script {
     this.running = false;
     this.step = 0;
     this.executedSteps = 0;
+
+    this.context = context;
 
     if (typeof definition.schedule === 'string') {
       this.scheduledJob = Schedule.scheduleJob(definition.schedule, () => {
@@ -307,7 +311,11 @@ class Script {
       arguments: {}
     });
     return this.shorthand(value, [{object: options.arguments}], 'query arguments').then(args => {
-      return this.storage.query(options.query, args);
+      let context;
+      if (options.runInContext) {
+        context = this.context;
+      }
+      return this.storage.query(options.query, context, args);
     }).then(result => {
       const resultProperty = typeof options.resultProperty === 'string' ? options.resultProperty : '/result';
       if (resultProperty === '') {

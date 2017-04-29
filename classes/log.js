@@ -3,15 +3,20 @@
 class Log {
   constructor(prefix) {
     this._prefix = prefix || '';
+
+    this._debug = process.env.debug;
+    this._test = process.argv[1].match(/mocha$/);
   }
 
   _log(message) {
-    const date = (new Date()).toISOString();
-    console.log(`${date} ${this._prefix}${message}`);
+    if (!this._test) {
+      const date = (new Date()).toISOString();
+      console.log(`${date} ${this._prefix}${message}`);
+    }
   }
 
   exception(error, prefix) {
-    if (process.env.debug && error.stack) {
+    if ((this._debug || this._test) && error.stack) {
       console.log(error.stack);
     }
     this.error((prefix || '') + error.message);
