@@ -4,6 +4,7 @@ const _ = require('lodash');
 const BlueGate = require('bluegate');
 const HttpError = require('http-errors');
 
+const Log = require('./log');
 const Storage = require('./storage');
 const GraphqlApi = require('./graphql-api.js');
 const FilesApi = require('./files-api.js');
@@ -23,6 +24,7 @@ class Application {
       }
     });
     this.app = new BlueGate({log: false});
+    this.log = new Log();
 
     this.storage = new Storage(config.storage);
 
@@ -53,9 +55,7 @@ class Application {
         });
         return _.merge({errors}, request.error.body);
       }
-      if (process.env.debug) {
-        console.log(request.error);
-      }
+      this.log.exception(request.error.stack, `${request.method} ${request.path}: `);
     });
 
     this._ready = this.app.listen(config.port);

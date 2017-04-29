@@ -14,6 +14,8 @@ const Swig = require('swig-templates');
 const SwigExtra = require('swig-extras');
 const MathJS = require('mathjs');
 
+const Log = require('./log');
+
 class Script {
   /**
    * Initialize script.
@@ -42,6 +44,8 @@ class Script {
     });
     this.storage = storage;
 
+    this.log = new Log(`script ${definition.name}: `);
+
     this.running = false;
     this.step = 0;
     this.executedSteps = 0;
@@ -58,7 +62,7 @@ class Script {
     if (this.definition.runOnStartup) {
       setTimeout(() => {
         this.run().catch(err => {
-          console.error(err);
+          this.log.exception(err);
         });
       }, 2000);
     }
@@ -102,6 +106,7 @@ class Script {
       }
       return this.data;
     }).catch(err => {
+      this.log.exception(err);
       this.running = false;
       throw err;
     });
@@ -256,8 +261,9 @@ class Script {
         body: options.body
       }).then(_response => {
         response = _response;
-        if (response.statusCode >= 300) {
-          throw new Error('Retrieved error code from remote server: ' + response.statusCode);
+        this.log.notice(`request ${options.url} code ${response.status} size ${response.size}`);
+        if (response.status >= 300) {
+          throw new Error('Retrieved error code from remote server: ' + response.status);
         }
         if (options.format === 'json' || (options.format === 'auto' && response.headers.get('content-type').match(/^application\/json/))) {
           return response.json();
@@ -286,7 +292,7 @@ class Script {
         JsonPointer.set(value, resultProperty, result);
         return value;
       }).catch(err => {
-        console.error(err);
+        this.log.warning(`request ${options.url} error ${err.message}`);
         throw new Error(`Unable to connect to "${options.url}"`);
       });
     });
