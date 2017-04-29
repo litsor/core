@@ -314,6 +314,86 @@ describe('Script', () => {
 
   /**
    * @doc
+   *
+   * Queries will run context-free by default. This means that no permissions
+   * will be checked, and thus scripts can do things outside the scope that
+   * the regular user would be able to do.
+   * The `runInContext` option can be set to true to run the query in its
+   * context.
+   */
+  it('will run queries context-free by default', () => {
+    const storage = {
+      query(query, context, args) {
+        if (args.id === 2) {
+          return Promise.resolve({
+            Item: {
+              id: 2,
+              user: typeof context === 'undefined' ? 0 : context.id
+            }
+          });
+        }
+      }
+    };
+    const context = {id: 1};
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        query: {
+          query: '{Item(id: $id){id title}}',
+          arguments: {
+            id: '/id'
+          }
+        }
+      }]
+    }, storage, {}, context);
+    return script.run({id: 2}).then(output => {
+      expect(output).to.deep.equal({
+        id: 2,
+        result: {
+          Item: {id: 2, user: 0}
+        }
+      });
+    });
+  });
+
+  it('can run queries in context', () => {
+    const storage = {
+      query(query, context, args) {
+        if (args.id === 2) {
+          return Promise.resolve({
+            Item: {
+              id: 2,
+              user: typeof context === 'undefined' ? 0 : context.id
+            }
+          });
+        }
+      }
+    };
+    const context = {id: 1};
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        query: {
+          query: '{Item(id: $id){id title}}',
+          runInContext: true,
+          arguments: {
+            id: '/id'
+          }
+        }
+      }]
+    }, storage, {}, context);
+    return script.run({id: 2}).then(output => {
+      expect(output).to.deep.equal({
+        id: 2,
+        result: {
+          Item: {id: 2, user: 1}
+        }
+      });
+    });
+  });
+
+  /**
+   * @doc
    * ## Requests
    *
    * The ``request`` property allows you to execute an HTTP GET request. its
