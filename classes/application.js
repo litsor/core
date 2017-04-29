@@ -55,7 +55,7 @@ class Application {
         });
         return _.merge({errors}, request.error.body);
       }
-      this.log.exception(request.error.stack, `${request.method} ${request.path}: `);
+      this.log.exception(request.error, `${request.method} ${request.path}: `);
     });
 
     this._ready = this.app.listen(config.port);
