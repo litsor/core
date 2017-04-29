@@ -265,7 +265,7 @@ class Script {
         body: options.body
       }).then(_response => {
         response = _response;
-        this.log.notice(`request ${options.url} code ${response.status} size ${response.size}`);
+        this.log.notice(`request ${options.url} code ${response.status}`);
         if (response.status >= 300) {
           throw new Error('Retrieved error code from remote server: ' + response.status);
         }

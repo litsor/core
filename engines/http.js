@@ -116,7 +116,7 @@ class Http extends Model {
         headers: response.headers,
         body: response.body
       };
-      return this.readScript.run(input);
+      return this.readScript.clone().run(input);
     }).then(output => {
       if (output !== null) {
         output.id = data.id;
@@ -160,14 +160,14 @@ class Http extends Model {
             headers: response.headers,
             body: response.body
           };
-          return this.listScript.run(input);
+          return this.listScript.clone().run(input);
         }).then(pageItems => {
           if (!(pageItems instanceof Array)) {
             throw new Error('List template should return an array');
           }
           results = _.concat(results, pageItems);
           if (strategy === 'more-link') {
-            return this.listMoreLinkScript.run(input).then(_nextUri => {
+            return this.listMoreLinkScript.clone().run(input).then(_nextUri => {
               nextUri = _nextUri;
               if (nextUri !== null) {
                 nextUri = Url.resolve(uri, nextUri);
