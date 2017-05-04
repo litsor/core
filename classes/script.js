@@ -679,6 +679,13 @@ class Script {
     return ~~(new Date() / 1e3);
   }
 
+  _trim(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return value.trim();
+  }
+
   _lowerCase(value) {
     if (typeof value !== 'string') {
       return null;
