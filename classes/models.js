@@ -51,7 +51,7 @@ class Models {
         return globby([Path.join(__dirname, '../plugins/**/*.js')]);
       }).then(files => {
         files.forEach(file => {
-          const name = file.match(/\/([^\/]+)\.js$/)[1];
+          const name = file.match(/\/([^/]+)\.js$/)[1];
           const load = require;
           this.plugins[name] = new (load(file))(this.models, this.storage);
         });
@@ -81,7 +81,7 @@ class Models {
         return globby([Path.resolve(__dirname, '../', this.scriptsDir) + '/**/*.yml']);
       }).then(files => {
         files.forEach(file => {
-          const name = file.match(/\/([^\/]+)\.yml$/)[1];
+          const name = file.match(/\/([^/]+)\.yml$/)[1];
           const definition = Yaml.safeLoad(fs.readFileSync(file));
           this.scripts[name] = new Script(definition, this.storage);
         });

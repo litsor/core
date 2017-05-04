@@ -9,7 +9,7 @@ const isMyJsonValid = require('is-my-json-valid');
 
 class ModelsCompiler {
   generate(inputFile, outputFile) {
-    const name = inputFile.match(/\/([^\/]+)\.yml/)[1];
+    const name = inputFile.match(/\/([^/]+)\.yml/)[1];
     const schema = Yaml.safeLoad(fs.readFileSync(inputFile));
 
     schema.type = 'object';
