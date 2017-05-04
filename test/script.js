@@ -88,7 +88,7 @@ const storage = {
  * Scripts may have input as well, which is provided as input for the first
  * step. The output of the last (top-level) step is the script output.
  */
-describe('Script', () => {
+describe.only('Script', () => {
   let app;
   let query;
   let googleSearch;
@@ -1217,6 +1217,46 @@ describe('Script', () => {
     }, app.storage);
     return script.run({a: 1, b: 2, c: 3}).then(result => {
       expect(result).to.deep.equal(['a', 'b', 'c']);
+    });
+  });
+
+  it('can omit keys from object', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        object: {
+          string: [{
+            omit: 'a'
+          }],
+          array: [{
+            omit: ['b', 'c']
+          }]
+        }
+      }]
+    }, app.storage);
+    return script.run({a: 1, b: 2, c: 3}).then(result => {
+      expect(result.string).to.deep.equal({b: 2, c: 3});
+      expect(result.array).to.deep.equal({a: 1});
+    });
+  });
+
+  it('can pick keys from object', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        object: {
+          string: [{
+            pick: 'a'
+          }],
+          array: [{
+            pick: ['b', 'c']
+          }]
+        }
+      }]
+    }, app.storage);
+    return script.run({a: 1, b: 2, c: 3}).then(result => {
+      expect(result.string).to.deep.equal({a: 1});
+      expect(result.array).to.deep.equal({b: 2, c: 3});
     });
   });
 

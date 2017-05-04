@@ -529,6 +529,22 @@ class Script {
     return value.length;
   }
 
+  _omit(value, options) {
+    options = typeof options === 'string' ? [options] : options;
+    if (!(options instanceof Array)) {
+      throw new Error('Omit requires a string or array');
+    }
+    return _.omit(value, options);
+  }
+
+  _pick(value, options) {
+    options = typeof options === 'string' ? [options] : options;
+    if (!(options instanceof Array)) {
+      throw new Error('Pick requires a string or array');
+    }
+    return _.pick(value, options);
+  }
+
   _case(value, options) {
     if (typeof options !== 'object' || options === null) {
       throw new Error('Value of "case" functions must be an object');
