@@ -13,6 +13,7 @@ const isMyJsonValid = require('is-my-json-valid');
 const Swig = require('swig-templates');
 const SwigExtra = require('swig-extras');
 const MathJS = require('mathjs');
+const moment = require('moment-timezone');
 
 const Log = require('./log');
 
@@ -693,6 +694,42 @@ class Script {
 
   _now() {
     return ~~(new Date() / 1e3);
+  }
+
+  _parseDate(value, options) {
+    if (typeof options === 'string') {
+      options = {format: options};
+    }
+    if (typeof options !== 'object' || typeof options.format === 'undefined') {
+      throw new Error('Options for parseDate must be a string or object with format property');
+    }
+    options = _.defaults(options, {
+      locale: 'en',
+      timezone: 'UTC'
+    });
+    if (typeof options.format !== 'string' && !(options.format instanceof Array)) {
+      throw new Error('Format for parseDate must be a string or array');
+    }
+    moment.locale(options.locale);
+    return moment.tz(value, options.format, options.timezone).toISOString();
+  }
+
+  _formatDate(value, options) {
+    if (typeof options === 'string') {
+      options = {format: options};
+    }
+    if (typeof options !== 'object' || typeof options.format === 'undefined') {
+      throw new Error('Options for formatDate must be a string or object with format property');
+    }
+    options = _.defaults(options, {
+      locale: 'en',
+      timezone: 'UTC'
+    });
+    if (typeof options.format !== 'string') {
+      throw new Error('Format for formatDate must be a string');
+    }
+    moment.locale(options.locale);
+    return moment.tz(value, options.timezone).tz(options.timezone).format(options.format);
   }
 
   _trim(value) {

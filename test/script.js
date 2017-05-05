@@ -1339,6 +1339,36 @@ describe('Script', () => {
     });
   });
 
+  it('can parse date', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        parseDate: {
+          format: 'D MMMM YYYY',
+          locale: 'nl'
+        }
+      }]
+    }, app.storage);
+    return script.run('3 mei 2017').then(result => {
+      expect(result).to.equal('2017-05-03T00:00:00.000Z');
+    });
+  });
+
+  it('can format date', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        formatDate: {
+          format: 'D MMMM YYYY',
+          locale: 'nl'
+        }
+      }]
+    }, app.storage);
+    return script.run('2017-05-03').then(result => {
+      expect(result).to.equal('3 mei 2017');
+    });
+  });
+
   it('can provide debug information', () => {
     const steps = [{
       static: {foo: 'bar'}
