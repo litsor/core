@@ -1399,4 +1399,14 @@ describe('Script', () => {
       expect(result.children[1].children[0].info).to.equal('baz property, using shorthand');
     });
   });
+
+  it('can run a named script', () => {
+    const steps = [{
+      script: 'Uppercase'
+    }];
+    const script = new Script({name: 'Testscript', steps}, app.storage);
+    return script.run('foo').then(result => {
+      expect(result).to.equal('FOO');
+    });
+  });
 });

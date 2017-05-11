@@ -78,7 +78,7 @@ class Script {
   }
 
   clone() {
-    return new Script(this.definition, this.storage, this.options);
+    return new Script(this.definition, this.storage, _.clone(this.options));
   }
 
   setDebug(value) {
@@ -190,6 +190,17 @@ class Script {
       }
       return result;
     });
+  }
+
+  _script(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value for "script" method must be a string');
+    }
+    if (typeof this.storage.models.scripts[options] === 'undefined') {
+      throw new Error('Script not found: ' + options);
+    }
+    const script = this.storage.models.scripts[options].clone();
+    return script.run(value);
   }
 
   _config(value, options) {
