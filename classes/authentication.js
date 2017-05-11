@@ -43,6 +43,7 @@ class Authentication {
     app.authentication(request => {
       let context = new Context();
       let promise;
+      let admin = false;
       const authnHeader = typeof request.headers.authorization === 'string' ? request.headers.authorization : '';
 
       // Check Basic auth - used for admin tokens.
@@ -55,6 +56,7 @@ class Authentication {
           // Authenticated as admin user.
           // Allow execution of context-free queries.
           context = undefined;
+          admin = true;
         }
       }
 
@@ -73,6 +75,7 @@ class Authentication {
       }
       return Promise.resolve(promise).then(() => {
         request.setParameter('context', context);
+        request.setParameter('admin', admin);
       });
     });
 

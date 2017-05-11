@@ -20,6 +20,13 @@ describe('Application', () => {
   before(() => {
     app = new Application({
       port: 10023,
+      authentication: {
+        admins: {
+          admin: 'pbkdf2$sha256$7ps$w$ROMbPRTvX0w=$cTFu+GcA562wCATxUcNlR0cbKx7nG6fBU0IsS5wWusI='
+        },
+        userFields: ['id', 'admin'],
+        usernameField: 'mail'
+      },
       storage: {
         modelsDir: 'test/application/models',
         databases: {
@@ -81,6 +88,27 @@ describe('Application', () => {
       expect(response).to.have.property('post');
       expect(response.post).to.have.property('id');
       expect(response.post).to.have.property('title', 'Test');
+    });
+  });
+
+  it('has a POST /script endpoint', () => {
+    const options = {
+      headers: {
+        Authorization: 'Basic ' + (new Buffer('admin:secret').toString('base64'))
+      },
+      json: true
+    };
+    const data = {
+      definition: {
+        name: 'Testscript',
+        steps: [{
+          static: 'test'
+        }]
+      }
+    };
+    return Needle.postAsync(uri + '/script', data, options).then(response => {
+      expect(response.statusCode).to.equal(200);
+      expect(response.body.data).to.deep.equal('test');
     });
   });
 });

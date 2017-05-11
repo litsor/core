@@ -8,6 +8,7 @@ const Log = require('./log');
 const Storage = require('./storage');
 const GraphqlApi = require('./graphql-api.js');
 const FilesApi = require('./files-api.js');
+const ScriptApi = require('./script-api.js');
 const Authentication = require('./authentication.js');
 
 class Application {
@@ -20,6 +21,9 @@ class Application {
         enabled: true
       },
       files: {
+        enabled: true
+      },
+      script: {
         enabled: true
       }
     });
@@ -35,6 +39,9 @@ class Application {
     }
     if (config.files.enabled) {
       this.instances.files = new FilesApi(this.app, this.storage, config.files);
+    }
+    if (config.script.enabled) {
+      this.instances.script = new ScriptApi(this.app, this.storage, config.script);
     }
 
     this.app.error(request => {
