@@ -14,6 +14,7 @@ const Swig = require('swig-templates');
 const SwigExtra = require('swig-extras');
 const MathJS = require('mathjs');
 const moment = require('moment-timezone');
+const HttpError = require('http-errors');
 
 const Log = require('./log');
 
@@ -310,6 +311,11 @@ class Script {
     });
   }
 
+  _log(value) {
+    console.log(JSON.stringify(value));
+    return value;
+  }
+
   _query(value, options) {
     // Allows writing "- query: '...'" for queries without arguments.
     if (typeof options === 'string') {
@@ -331,6 +337,11 @@ class Script {
       }
       JsonPointer.set(value, resultProperty, result);
       return value;
+    }).catch(err => {
+      if (err instanceof HttpError.HttpError) {
+        console.log(err.errors);
+      }
+      throw err;
     });
   }
 
@@ -516,11 +527,16 @@ class Script {
     return value.split(options.separator);
   }
 
-  _filter(value) {
+  _filter(value, options) {
     if (!(value instanceof Array)) {
       throw new Error('Value for filter transformation must be an array');
     }
-    return value.filter(item => item);
+    return Bluebird.resolve(value).filter(item => {
+      if (options instanceof Array || typeof options === 'string') {
+        return this.shorthand(item, options, 'condition');
+      }
+      return item;
+    });
   }
 
   _slice(value, options) {
@@ -891,11 +907,6 @@ class Script {
     }
     const scope = typeof value === 'object' && value !== null ? value : {};
     return MathJS.eval(options, scope);
-  }
-
-  _log(value) {
-    console.log(JSON.stringify(value, null, 2));
-    return value;
   }
 }
 
