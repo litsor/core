@@ -1369,6 +1369,136 @@ describe('Script', () => {
     });
   });
 
+  /**
+   * @doc
+   * ## Filter
+   *
+   * Simple filtering of arrays can be done using the ``filter`` method.
+   * The following script will transform ``[3, 2, 56, 0, 3]`` Into
+   * ``[3, 2, 56, 3]``.
+   *
+   * ```
+   * - filter: {}
+   * ```
+   */
+  it('can do simple filtering on arrays', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        filter: {}
+      }]
+    }, app.storage);
+    return script.run([3, 2, 56, 0, 3]).then(result => {
+      expect(result).to.deep.equal([3, 2, 56, 3]);
+    });
+  });
+
+  /**
+   * @doc
+   *
+   * A script can be provided as option. This allows for filtering on values
+   * inside objects. We can use this to filter out objects with a count of 0
+   * in the following input:
+   *
+   * ```
+   * [{
+   *  id: 1, count: 3
+   * }, {
+   *  id: 2, count: 0
+   * }]
+   * ```
+   *
+   * Script for filtering:
+   *
+   * ```
+   * - filter:
+   *     - get: /count
+   * ```
+   */
+  it('can filter with subscript on arrays', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        filter: [{
+          get: '/count'
+        }]
+      }]
+    }, app.storage);
+    const input = [{
+      id: 1, count: 3
+    }, {
+      id: 2, count: 0
+    }];
+    return script.run(input).then(result => {
+      expect(result).to.deep.equal([{
+        id: 1, count: 3
+      }]);
+    });
+  });
+
+  /**
+   * @doc
+   *
+   * More complex filtering can be done by specifying ``source`` and ``filter``
+   * properties as the method arguments. The ``source`` is a script (shorthand)
+   * that provides the input for filtering, and ``filter`` provides the script.
+   * The advantage is that we can use values outside the array in our filtering
+   * script. The example below filters all items from the array that have an
+   * ``id`` that is equal to ``excludeId``.
+   *
+   * ```
+   * - filter:
+   *     source: /items
+   *     filter:
+   *       - jump:
+   *           left: /excludeId
+   *           right: /item/id
+   *           to: identical
+   *       - static: true
+   *       - jump: end
+   *       - identical
+   *       - static: false
+   *       - end
+   * ```
+   */
+  it('can filter with source / filter keys on arrays', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        filter: {
+          source: '/items',
+          filter: [
+            {
+              jump: {
+                left: '/excludeId',
+                right: '/item/id',
+                to: 'identical'
+              }
+            },
+            {static: true},
+            {jump: 'end'},
+            'identical',
+            {static: false},
+            'end'
+          ]
+        }
+      }]
+    }, app.storage);
+    const input = {
+      excludeId: 2,
+      items: [{
+        id: 1, count: 3
+      }, {
+        id: 2, count: 0
+      }]
+    };
+    return script.run(input).then(result => {
+      expect(result).to.deep.equal([{
+        id: 1, count: 3
+      }]);
+    });
+  });
+
   it('can provide debug information', () => {
     const steps = [{
       static: {foo: 'bar'}

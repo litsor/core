@@ -528,14 +528,26 @@ class Script {
   }
 
   _filter(value, options) {
-    if (!(value instanceof Array)) {
-      throw new Error('Value for filter transformation must be an array');
+    let source = value;
+    let filter = options;
+    let useSourceKey = false;
+    if (typeof options === 'object' && options !== null && typeof options.source !== 'undefined' && typeof options.filter !== 'undefined') {
+      useSourceKey = true;
+      source = this.shorthand(value, options.source, 'source');
+      filter = options.filter;
     }
-    return Bluebird.resolve(value).filter(item => {
-      if (options instanceof Array || typeof options === 'string') {
-        return this.shorthand(item, options, 'condition');
+    return Bluebird.resolve(source).then(source => source instanceof Array ? source : []).filter(item => {
+      let filterInput = item;
+      if (useSourceKey) {
+        filterInput = _.clone(value);
+        filterInput.item = item;
       }
-      return item;
+      if (filter instanceof Array || typeof filter === 'string') {
+        return this.shorthand(filterInput, filter, 'item').then(output => {
+          return output;
+        });
+      }
+      return filterInput;
     });
   }
 
