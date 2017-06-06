@@ -949,6 +949,18 @@ class Script {
     const scope = typeof value === 'object' && value !== null ? value : {};
     return MathJS.eval(options, scope);
   }
+
+  _eval(value, options) {
+    return this.shorthand(value, options).then(steps => {
+      const script = new Script({
+        name: `${this.name}:eval`,
+        steps
+      }, this.storage, {
+        context: this.options.context
+      });
+      return script.run(value);
+    });
+  }
 }
 
 module.exports = Script;

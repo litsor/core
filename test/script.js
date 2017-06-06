@@ -1615,6 +1615,48 @@ describe('Script', () => {
     });
   });
 
+  /**
+   * @doc
+   * ## Eval
+   * The ``eval`` method can be used to execute arbitrary scripts.
+   * The options must provide an array with the script steps. It is allowed
+   * to use the shorthand syntax.
+   *
+   * Example script:
+   * ```
+   * - eval: /steps
+   * ```
+   *
+   * Example input:
+   * ```
+   * {
+   *   steps: [{
+   *     get: '/foo'
+   *   }],
+   *   foo: 'bar'
+   * }
+   * ```
+   *
+   * Output: ``"bar"``.
+   */
+  it('can run script with eval', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        eval: '/steps'
+      }]
+    }, app.storage);
+    const input = {
+      steps: [{
+        get: '/foo'
+      }],
+      foo: 'bar'
+    };
+    return script.run(input).then(result => {
+      expect(result).to.equal('bar');
+    });
+  });
+
   it('can provide debug information', () => {
     const steps = [{
       static: {foo: 'bar'}
