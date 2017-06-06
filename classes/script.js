@@ -695,6 +695,25 @@ class Script {
     return null;
   }
 
+  _match(value, options) {
+    if (typeof options !== 'string') {
+      throw new Error('Value of "match" functions must be a string');
+    }
+    if (typeof value === 'string') {
+      const match = options.match(/^\/(.+)\/([img]*)$/);
+      if (!match) {
+        throw new Error('Invalid expression provided for "match" function');
+      }
+      const pattern = new RegExp(match[1], match[2]);
+      const output = value.match(pattern);
+      if (output) {
+        // Removes the "index" and "input" keys.
+        return output.splice(0);
+      }
+    }
+    return false;
+  }
+
   _replace(value, options) {
     if (typeof options !== 'object' || typeof options.search !== 'string' || typeof options.replace !== 'string') {
       throw new Error('Value of "replace" functions must be an object with search and replace properties');

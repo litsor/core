@@ -1583,6 +1583,38 @@ describe('Script', () => {
     });
   });
 
+  /**
+   * @doc
+   * ## Match
+   *
+   * The ``match`` method can be used to check if the value matches a given
+   * regular expression. The result is either false or an array containing
+   * the full match as first element followed by all captured groups.
+   * All matches are returned when the "g" flag is provided, but no captured
+   * groups are returned in that case.
+   *
+   * The provided expression must be a full literal, in the form
+   * ``/body/flags``.
+   *
+   * ```
+   * - match: /^[a-z]$/i
+   * ```
+   */
+  it('can match value with regex', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        match: '/^(.)[a-z]$/i'
+      }]
+    }, app.storage);
+    return script.run('ab').then(result => {
+      expect(result).to.deep.equal(['ab', 'a']);
+      return script.run('abc');
+    }).then(result => {
+      expect(result).to.equal(false);
+    });
+  });
+
   it('can provide debug information', () => {
     const steps = [{
       static: {foo: 'bar'}
