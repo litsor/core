@@ -1617,6 +1617,34 @@ describe('Script', () => {
 
   /**
    * @doc
+   * The value for ``match`` may be an object with the keys ``pattern`` and
+   * ``input``. Let both be a shorthand which resolves to the regular expression
+   * and input.
+   */
+  it('can use shorthand in match', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        match: {
+          pattern: '/pattern',
+          input: '/input'
+        }
+      }]
+    }, app.storage);
+    const input = {
+      pattern: '/^(.)[a-z]$/i',
+      input: 'ab'
+    };
+    return script.run(input).then(result => {
+      expect(result).to.deep.equal(['ab', 'a']);
+      return script.run('abc');
+    }).then(result => {
+      expect(result).to.equal(false);
+    });
+  });
+
+  /**
+   * @doc
    * ## Eval
    * The ``eval`` method can be used to execute arbitrary scripts.
    * The options must provide an array with the script steps. It is allowed

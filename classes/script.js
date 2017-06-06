@@ -171,7 +171,7 @@ class Script {
 
   shorthand(input, value, sourceName) {
     if (typeof value === 'string') {
-      if (value.match(/^\//)) {
+      if (value === '/' || value.match(/^\/[\w]/i)) {
         sourceName = `${sourceName}, using shorthand`;
         value = [{get: value}];
       }
@@ -696,22 +696,39 @@ class Script {
   }
 
   _match(value, options) {
-    if (typeof options !== 'string') {
-      throw new Error('Value of "match" functions must be a string');
+    let pattern;
+    let input;
+    let promises = [];
+    if (typeof options === 'object' && options.pattern && options.input) {
+      promises = [
+        this.shorthand(value, options.pattern).then(_pattern => {
+          pattern = _pattern;
+        }),
+        this.shorthand(value, options.input).then(_input => {
+          input = _input;
+        })
+      ];
+    } else if (typeof options === 'string') {
+      input = value;
+      pattern = options;
+    } else {
+      throw new Error('Incorrect options for "match" function');
     }
-    if (typeof value === 'string') {
-      const match = options.match(/^\/(.+)\/([img]*)$/);
-      if (!match) {
-        throw new Error('Invalid expression provided for "match" function');
+    return Promise.all(promises).then(() => {
+      if (typeof input === 'string') {
+        const match = pattern.match(/^\/(.+)\/([img]*)$/);
+        if (!match) {
+          throw new Error('Invalid expression provided for "match" function');
+        }
+        pattern = new RegExp(match[1], match[2]);
+        const output = input.match(pattern);
+        if (output) {
+          // Removes the "index" and "input" keys.
+          return output.splice(0);
+        }
       }
-      const pattern = new RegExp(match[1], match[2]);
-      const output = value.match(pattern);
-      if (output) {
-        // Removes the "index" and "input" keys.
-        return output.splice(0);
-      }
-    }
-    return false;
+      return false;
+    });
   }
 
   _replace(value, options) {
