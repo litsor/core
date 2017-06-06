@@ -524,6 +524,16 @@ class Script {
     if (typeof value !== 'string') {
       return [];
     }
+    const maxItems = typeof options.maxItems === 'number' ? options.maxItems : false;
+    if (maxItems && options.addRemainder) {
+      const parts = value.split(options.separator);
+      const output = parts.slice(0, maxItems - 1);
+      output.push(parts.slice(maxItems - 1).join(options.separator));
+      return output;
+    }
+    if (maxItems) {
+      return value.split(options.separator, maxItems);
+    }
     return value.split(options.separator);
   }
 

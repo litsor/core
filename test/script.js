@@ -1499,6 +1499,90 @@ describe('Script', () => {
     });
   });
 
+  /**
+   * @doc
+   * ## Split
+   *
+   * Strings can be split using the ``split`` method.
+   *
+   * ```
+   * - split:
+   *     separator: '/'
+   * ```
+   *
+   * This will produce the output ``["a", "b", "c"]`` for input ``"a/b/c"``.
+   */
+  it('can split strings', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        split: {
+          separator: '/'
+        }
+      }]
+    }, app.storage);
+    return script.run('a/b/c').then(result => {
+      expect(result).to.deep.equal(['a', 'b', 'c']);
+    });
+  });
+
+  /**
+   * @doc
+   * A maximum number of items can be specified using ``maxItems``.
+   *
+   * ```
+   * - split:
+   *     separator: '/'
+   *     maxItems: 2
+   * ```
+   *
+   * This will produce the output ``["a", "b"]`` for input ``"a/b/c"``.
+   */
+  it('can split strings with maxItems', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        split: {
+          separator: '/',
+          maxItems: 2
+        }
+      }]
+    }, app.storage);
+    return script.run('a/b/c').then(result => {
+      expect(result).to.deep.equal(['a', 'b']);
+    });
+  });
+
+  /**
+   * @doc
+   * The remainder can be added to the last item by setting ``addRemainder``
+   * to true.
+   *
+   * ```
+   * - split:
+   *     separator: '/'
+   *     maxItems: 2
+   *     addRemainder: true
+   * ```
+   *
+   * This will produce the output ``["a", "b/c"]`` for input ``"a/b/c"``.
+   */
+  it('can add remainder on split', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        split: {
+          separator: '/',
+          maxItems: 2,
+          addRemainder: true
+        }
+      }]
+    }, app.storage);
+    return script.run('a/b/c').then(result => {
+      expect(result).to.deep.equal(['a', 'b/c']);
+    });
+  });
+
   it('can provide debug information', () => {
     const steps = [{
       static: {foo: 'bar'}
