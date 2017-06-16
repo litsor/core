@@ -1,10 +1,9 @@
 /* eslint-env node, mocha */
 'use strict';
 
-const Bluebird = require('bluebird');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const Needle = Bluebird.promisifyAll(require('needle'));
+const fetch = require('node-fetch');
 const Lokka = require('lokka-transport-http').Transport;
 
 const Application = require('../classes/application');
@@ -54,9 +53,11 @@ describe('Application', () => {
 
   it('has a GET /graphql endpoint', () => {
     const query = '{listPost{id}}';
-    return Needle.getAsync(uri + '/graphql?q=' + encodeURIComponent(query)).then(response => {
-      expect(response.statusCode).to.equal(200);
-      expect(response.body.data).to.deep.equal({listPost: []});
+    return fetch(uri + '/graphql?q=' + encodeURIComponent(query)).then(response => {
+      expect(response.status).to.equal(200);
+      return response.json();
+    }).then(body => {
+      expect(body.data).to.deep.equal({listPost: []});
     });
   });
 
@@ -64,9 +65,11 @@ describe('Application', () => {
     const data = {
       query: '{listPost{id}}'
     };
-    return Needle.postAsync(uri + '/graphql', data, {json: true}).then(response => {
-      expect(response.statusCode).to.equal(200);
-      expect(response.body.data).to.deep.equal({listPost: []});
+    return fetch(uri + '/graphql', {method: 'POST', body: JSON.stringify(data), headers: {'Content-Type': 'application/json'}}).then(response => {
+      expect(response.status).to.equal(200);
+      return response.json();
+    }).then(body => {
+      expect(body.data).to.deep.equal({listPost: []});
     });
   });
 
@@ -74,11 +77,13 @@ describe('Application', () => {
     const data = {
       query: '{createPost(teststring:123,testint:"string")}'
     };
-    return Needle.postAsync(uri + '/graphql', data, {json: true}).then(response => {
-      expect(response.statusCode).to.equal(400);
-      expect(response.body).to.have.property('errors');
-      expect(response.body.errors).to.have.length(2);
-      expect(response.body.errors[0]).to.contain('wrong type');
+    return fetch(uri + '/graphql', {method: 'POST', body: JSON.stringify(data), headers: {'Content-Type': 'application/json'}}).then(response => {
+      expect(response.status).to.equal(400);
+      return response.json();
+    }).then(body => {
+      expect(body).to.have.property('errors');
+      expect(body.errors).to.have.length(2);
+      expect(body.errors[0]).to.contain('wrong type');
     });
   });
 
@@ -92,12 +97,6 @@ describe('Application', () => {
   });
 
   it('has a POST /script endpoint', () => {
-    const options = {
-      headers: {
-        Authorization: 'Basic ' + (new Buffer('admin:secret').toString('base64'))
-      },
-      json: true
-    };
     const data = {
       definition: {
         name: 'Testscript',
@@ -106,9 +105,19 @@ describe('Application', () => {
         }]
       }
     };
-    return Needle.postAsync(uri + '/script', data, options).then(response => {
-      expect(response.statusCode).to.equal(200);
-      expect(response.body.data).to.deep.equal('test');
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Basic ' + (new Buffer('admin:secret').toString('base64'))
+      }
+    };
+    return fetch(uri + '/script', options).then(response => {
+      expect(response.status).to.equal(200);
+      return response.json();
+    }).then(body => {
+      expect(body.data).to.deep.equal('test');
     });
   });
 });
