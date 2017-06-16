@@ -4,7 +4,7 @@ const Url = require('url');
 
 const _ = require('lodash');
 const Bluebird = require('bluebird');
-const Needle = Bluebird.promisifyAll(require('needle'));
+const fetch = require('node-fetch');
 
 const Script = require('../classes/script');
 const Model = require('../classes/model');
@@ -106,11 +106,20 @@ class Http extends Model {
   read(data) {
     const uriTemplate = this.getRequestUri('read', _.omit(data, 'id'));
     const uri = uriTemplate.split('{id}').join(data.id);
-    return Needle.getAsync(uri, {json: true}).catch(() => {
-      throw new Error(`Unable to connect to "${uri}"`);
-    }).then(response => {
-      if (response.statusCode >= 300) {
-        throw new Error('Retrieved error code from remote server: ' + response.statusCode);
+    let response;
+    return fetch(uri).then(_response => {
+      response = _response;
+      if (response.headers.get('Content-Type') === 'application/json') {
+        return response.json();
+      }
+      return response.text();
+    }).then(body => {
+      response.body = body;
+    }).catch(() => {
+      throw new Error(`Unable to fetch "${uri}"`);
+    }).then(() => {
+      if (response.status >= 300) {
+        throw new Error('Retrieved error code from remote server: ' + response.status);
       }
       const input = {
         headers: response.headers,
@@ -150,11 +159,20 @@ class Http extends Model {
         } else {
           uri = uriTemplate.split('{offset}').join(results.length + offset + this.httpOperations.list.offsetBase);
         }
-        return Needle.getAsync(uri, {json: true}).catch(() => {
-          throw new Error(`Unable to connect to "${uri}"`);
-        }).then(response => {
-          if (response.statusCode >= 300) {
-            throw new Error('Retrieved error code from remote server: ' + response.statusCode);
+        let response;
+        return fetch(uri).then(_response => {
+          response = _response;
+          if (response.headers.get('Content-Type') === 'application/json') {
+            return response.json();
+          }
+          return response.text();
+        }).then(body => {
+          response.body = body;
+        }).catch(() => {
+          throw new Error(`Unable to fetch "${uri}"`);
+        }).then(() => {
+          if (response.status >= 300) {
+            throw new Error('Retrieved error code from remote server: ' + response.status);
           }
           input = {
             headers: response.headers,
