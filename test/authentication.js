@@ -3,10 +3,9 @@
 
 const Crypto = require('crypto');
 
-const Bluebird = require('bluebird');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const Needle = Bluebird.promisifyAll(require('needle'));
+const fetch = require('node-fetch');
 
 const Application = require('../classes/application');
 
@@ -57,8 +56,8 @@ describe('Authentication', () => {
 
   it('cannot create User without authentication', () => {
     const query = '{createUser(name:"Alice",mail:"alice@example.com",password:""){id}}';
-    return Needle.getAsync(uri + '/graphql?q=' + encodeURIComponent(query)).then(response => {
-      expect(response.statusCode).to.equal(403);
+    return fetch(uri + '/graphql?q=' + encodeURIComponent(query)).then(response => {
+      expect(response.status).to.equal(403);
     });
   });
 
@@ -69,171 +68,210 @@ describe('Authentication', () => {
       }
     };
     const query = '{createUser(name:"Alice",mail:"alice@example.com",password:"Welcome!"){id}}';
-    return Needle.getAsync(uri + '/graphql?q=' + encodeURIComponent(query), options).then(response => {
-      expect(response.statusCode).to.equal(200);
-      expect(response.body.data).to.have.property('createUser');
-      expect(response.body.data.createUser).to.have.property('id');
-      expect(response.body.data.createUser.id).to.be.a('string');
-      userId = response.body.data.createUser.id;
+    return fetch(uri + '/graphql?q=' + encodeURIComponent(query), options).then(response => {
+      expect(response.status).to.equal(200);
+      return response.json();
+    }).then(body => {
+      expect(body.data).to.have.property('createUser');
+      expect(body.data.createUser).to.have.property('id');
+      expect(body.data.createUser.id).to.be.a('string');
+      userId = body.data.createUser.id;
     });
   });
 
   it('will not provide an access token with invalid password', () => {
-    const data = {
-      grant_type: 'password',
-      username: 'alice@example.com',
-      password: 'invalid'
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        grant_type: 'password',
+        username: 'alice@example.com',
+        password: 'invalid'
+      })
     };
-    return Needle.postAsync(uri + '/token', data).then(response => {
-      expect(response.statusCode).to.equal(401);
+    return fetch(uri + '/token', options).then(response => {
+      expect(response.status).to.equal(401);
     });
   });
 
   it('will not provide an access token with invalid grant_type', () => {
-    const data = {
-      grant_type: 'test',
-      username: 'alice@example.com',
-      password: 'Welcome!'
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+        grant_type: 'test',
+        username: 'alice@example.com',
+        password: 'Welcome!'
+      })
     };
-    return Needle.postAsync(uri + '/token', data).then(response => {
+    return fetch(uri + '/token', options).then(response => {
       // The request body is invalid, should give a 400 Bad Request.
-      expect(response.statusCode).to.equal(400);
+      expect(response.status).to.equal(400);
     });
   });
 
   it('will provide an access token with valid password', () => {
-    const data = {
-      grant_type: 'password',
-      username: 'alice@example.com',
-      password: 'Welcome!'
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        grant_type: 'password',
+        username: 'alice@example.com',
+        password: 'Welcome!'
+      })
     };
-    return Needle.postAsync(uri + '/token', data).then(response => {
-      expect(response.statusCode).to.equal(200);
-      expect(response.body.token_type).to.equal('bearer');
-      expect(response.body.access_token).to.be.a('string');
-      accessToken = response.body.access_token;
+    return fetch(uri + '/token', options).then(response => {
+      expect(response.status).to.equal(200);
+      return response.json();
+    }).then(body => {
+      expect(body.token_type).to.equal('bearer');
+      expect(body.access_token).to.be.a('string');
+      accessToken = body.access_token;
     });
   });
 
   it('can get user proflle using access token', () => {
-    const data = {
-      query: '{user:User(id:$userId){id, name}}',
-      variables: {userId}
-    };
     const options = {
-      json: true,
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`
-      }
+      },
+      body: JSON.stringify({
+        query: '{user:User(id:$userId){id, name}}',
+        variables: {userId}
+      })
     };
-    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
-      expect(response.statusCode).to.equal(200);
-      expect(response.body.data).have.property('user');
-      expect(response.body.data.user).have.property('id', userId);
-      expect(response.body.data.user).have.property('name', 'Alice');
+    return fetch(uri + '/graphql', options).then(response => {
+      expect(response.status).to.equal(200);
+      return response.json();
+    }).then(body => {
+      expect(body.data).have.property('user');
+      expect(body.data.user).have.property('id', userId);
+      expect(body.data.user).have.property('name', 'Alice');
     });
   });
 
   it('can get user proflle without specifying user id', () => {
-    const data = {
-      query: '{user:User{id, name}}'
-    };
     const options = {
-      json: true,
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`
-      }
+      },
+      body: JSON.stringify({
+        query: '{user:User{id, name}}'
+      })
     };
-    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
-      expect(response.statusCode).to.equal(200);
-      expect(response.body.data).have.property('user');
-      expect(response.body.data.user).have.property('id', userId);
-      expect(response.body.data.user).have.property('name', 'Alice');
+    return fetch(uri + '/graphql', options).then(response => {
+      expect(response.status).to.equal(200);
+      return response.json();
+    }).then(body => {
+      expect(body.data).have.property('user');
+      expect(body.data.user).have.property('id', userId);
+      expect(body.data.user).have.property('name', 'Alice');
     });
   });
 
   it('will return null for user proflle when not authenticated', () => {
-    const data = {
-      query: '{user:User{id, name}}'
-    };
     const options = {
-      json: true
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: '{user:User{id, name}}'
+      })
     };
-    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
-      expect(response.statusCode).to.equal(200);
-      expect(response.body.data).have.property('user', null);
+    return fetch(uri + '/graphql', options).then(response => {
+      expect(response.status).to.equal(200);
+      return response.json();
+    }).then(body => {
+      expect(body.data).have.property('user', null);
     });
   });
 
   it('cannot get user profile using wrong access token', () => {
-    const data = {
-      query: '{user:User(id:$userId){id, name}}',
-      variables: {userId}
-    };
     const accessToken = Crypto.randomBytes(32).toString('base64');
     const options = {
-      json: true,
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`
-      }
+      },
+      body: JSON.stringify({
+        query: '{user:User(id:$userId){id, name}}',
+        variables: {userId}
+      })
     };
-    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
-      expect(response.statusCode).to.equal(401);
-      expect(response.body).to.not.have.property('data');
+    return fetch(uri + '/graphql', options).then(response => {
+      expect(response.status).to.equal(401);
+      return response.json();
+    }).then(body => {
+      expect(body).to.not.have.property('data');
     });
   });
 
   it('can pass access check with query function', () => {
     // The access function is 'q("rank").rank >= i.rank'.
     // The user has rank 10, so this test should pass.
-    const data = {
-      query: '{story: createStory(title:$title,body:$body,rank:5){id}}',
-      variables: {title: 'test', body: 'test'}
-    };
     const options = {
-      json: true,
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`
-      }
+      },
+      body: JSON.stringify({
+        query: '{story: createStory(title:$title,body:$body,rank:5){id}}',
+        variables: {title: 'test', body: 'test'}
+      })
     };
-    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
-      expect(response.statusCode).to.equal(200);
+    return fetch(uri + '/graphql', options).then(response => {
+      expect(response.status).to.equal(200);
     });
   });
 
   it('can pass access check that rely on default values', () => {
     // The access function is 'q("rank").rank >= i.rank'.
     // i.rank is not provided, but has a default value of 1.
-    const data = {
-      query: '{story: createStory(title:$title,body:$body){id}}',
-      variables: {title: 'test', body: 'test'}
-    };
     const options = {
-      json: true,
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`
-      }
+      },
+      body: JSON.stringify({
+        query: '{story: createStory(title:$title,body:$body){id}}',
+        variables: {title: 'test', body: 'test'}
+      })
     };
-    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
-      expect(response.statusCode).to.equal(200);
+    return fetch(uri + '/graphql', options).then(response => {
+      expect(response.status).to.equal(200);
     });
   });
 
   it('can deny access with query function', () => {
     // The access function is 'q("rank").rank >= i.rank'.
     // The user has rank 10, so we may not post a Story with rank 15.
-    const data = {
-      query: '{story: createStory(title:$title,body:$body,rank:15){id}}',
-      variables: {title: 'test', body: 'test'}
-    };
     const options = {
-      json: true,
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`
-      }
+      },
+      body: JSON.stringify({
+        query: '{story: createStory(title:$title,body:$body,rank:15){id}}',
+        variables: {title: 'test', body: 'test'}
+      })
     };
-    return Needle.postAsync(uri + '/graphql', data, options).then(response => {
-      expect(response.statusCode).to.equal(403);
+    return fetch(uri + '/graphql', options).then(response => {
+      expect(response.status).to.equal(403);
     });
   });
 });
