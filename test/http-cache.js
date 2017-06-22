@@ -71,7 +71,11 @@ describe('Http Cache', () => {
   });
 
   after(() => {
-    return app.close();
+    return Promise.all([
+      app.close(),
+      googleSearch.shutdown(),
+      website.shutdown()
+    ]);
   });
 
   beforeEach(() => {
