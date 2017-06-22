@@ -9,6 +9,7 @@ const Storage = require('./storage');
 const GraphqlApi = require('./graphql-api.js');
 const FilesApi = require('./files-api.js');
 const ScriptApi = require('./script-api.js');
+const HttpCache = require('./http-cache.js');
 const Authentication = require('./authentication.js');
 
 class Application {
@@ -43,6 +44,7 @@ class Application {
     if (config.script.enabled) {
       this.instances.script = new ScriptApi(this.app, this.storage, config.script);
     }
+    this.instances.httpCache = new HttpCache(this.app, this.storage, config.httpCache);
 
     this.app.error(request => {
       if (request.error instanceof HttpError.HttpError) {

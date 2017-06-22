@@ -129,6 +129,10 @@ class Website {
       return request.body;
     });
 
+    this.api.process('GET /headers', request => {
+      return request.headers;
+    });
+
     return this.api.listen(8372);
   }
 
