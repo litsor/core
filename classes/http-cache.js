@@ -120,7 +120,9 @@ class HttpCache {
       body = _body;
       time = new Date() - start;
       raw.push(body);
-      return this.writeCache(url, options, Buffer.concat(raw));
+      if (response.status < 400) {
+        return this.writeCache(url, options, Buffer.concat(raw));
+      }
     }).then(() => {
       this.lastRequests.unshift({
         url,
