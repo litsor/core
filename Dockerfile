@@ -6,7 +6,7 @@ RUN apk update \
  && apk add nodejs-current nodejs-current-npm make gcc g++ python \
  && cd /app \
  && npm install --production \
- && apk del make gcc g++ python \
+ && apk del make gcc g++ python nodejs-current-npm \
  && rm -Rf ~/.npm \
  && cd /app/node_modules \
  && find . -type f | grep '/test/' | xargs rm \
