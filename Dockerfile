@@ -1,9 +1,9 @@
-FROM alpine:3.4
+FROM alpine:3.6
 
 ADD package.json /app/
 
 RUN apk update \
- && apk add nodejs make gcc g++ python \
+ && apk add nodejs-current nodejs-current-npm make gcc g++ python \
  && cd /app \
  && npm install --production \
  && apk del make gcc g++ python \
