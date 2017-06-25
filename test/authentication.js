@@ -7,20 +7,24 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const fetch = require('node-fetch');
 
-const Application = require('../classes/application');
+const Container = require('../classes/container');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('Authentication', () => {
-  let app;
+  let container;
   let accessToken;
   let userId;
 
   const uri = 'http://localhost:10023';
 
-  before(() => {
-    app = new Application({
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set('/', {
       port: 10023,
       authentication: {
         admins: {
@@ -47,11 +51,11 @@ describe('Authentication', () => {
         }
       }
     });
-    return app.ready();
+    await container.get('Application');
   });
 
-  after(() => {
-    return app.close();
+  after(async () => {
+    await container.shutdown();
   });
 
   it('cannot create User without authentication', () => {

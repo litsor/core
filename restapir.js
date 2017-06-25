@@ -1,12 +1,10 @@
 'use strict';
 
-const rc = require('rc');
-const Application = require('./classes/application');
+const Container = require('./classes/container');
 
-const config = rc('restapir', {});
-
-const app = new Application(config);
-
-app.ready().then(() => {
-  console.log('Listening on port: ' + config.port);
-});
+(async () => {
+  const container = new Container();
+  await container.startup();
+  await container.get('Application');
+  console.log('Restapir is running');
+})();

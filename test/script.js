@@ -8,8 +8,8 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const Bluebird = require('bluebird');
 
+const Container = require('../classes/container');
 const Script = require('../classes/script');
-const Application = require('../classes/application');
 const Context = require('../classes/context');
 
 const GoogleSearchMockup = require('./mockups/google-search');
@@ -89,6 +89,7 @@ const storage = {
  * step. The output of the last (top-level) step is the script output.
  */
 describe('Script', () => {
+  let container;
   let app;
   let query;
   let googleSearch;
@@ -97,8 +98,12 @@ describe('Script', () => {
   const cx = Crypto.randomBytes(8).toString('base64');
   const key = Crypto.randomBytes(8).toString('base64');
 
-  before(() => {
-    app = new Application({
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set('/', {
       port: 10023,
       storage: {
         modelsDir: 'test/script/models',
@@ -125,23 +130,18 @@ describe('Script', () => {
         }
       }
     });
+    app = await container.get('Application');
     googleSearch = new GoogleSearchMockup(key, cx);
     website = new WebsiteMockup();
-    return Promise.all([
-      app.ready(),
-      googleSearch.startup(),
-      website.startup()
-    ]).then(() => {
-      query = app.storage.query.bind(app.storage);
-    });
+    await googleSearch.startup();
+    await website.startup();
+    query = app.storage.query.bind(app.storage);
   });
 
-  after(() => {
-    return Promise.all([
-      app.close(),
-      googleSearch.shutdown(),
-      website.shutdown()
-    ]);
+  after(async () => {
+    await container.shutdown();
+    await googleSearch.shutdown();
+    await website.shutdown();
   });
 
   /**
@@ -1165,7 +1165,7 @@ describe('Script', () => {
   });
 
   it('will execute postprocessor scripts in model', () => {
-    return app.storage.query('{createPost(title:"test"){id title}}').then(result => {
+    return query('{createPost(title:"test"){id title}}').then(result => {
       expect(result.createPost.title).to.equal('TEST');
     });
   });
@@ -1189,7 +1189,7 @@ describe('Script', () => {
   });
 
   it('can read data with Script engine', () => {
-    return app.storage.query('{listWebsiteItem { id name }}').then(result => {
+    return query('{listWebsiteItem { id name }}').then(result => {
       expect(result.listWebsiteItem).to.have.length(10);
       expect(result.listWebsiteItem[0]).to.have.property('id');
       expect(result.listWebsiteItem[0]).to.have.property('name');

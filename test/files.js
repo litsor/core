@@ -8,19 +8,23 @@ const Needle = Bluebird.promisifyAll(require('needle'));
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
-const Application = require('../classes/application');
+const Container = require('../classes/container');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('Files', () => {
-  let app;
+  let container;
   let storage;
 
   const uri = 'http://localhost:10023';
 
-  before(() => {
-    app = new Application({
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set('/', {
       port: 10023,
       storage: {
         modelsDir: 'test/files/models',
@@ -38,12 +42,12 @@ describe('Files', () => {
         }
       }
     });
+    const app = await container.get('Application');
     storage = app.storage;
-    return app.ready();
   });
 
-  after(() => {
-    return app.close();
+  after(async () => {
+    await container.shutdown();
   });
 
   it('can create file', () => {

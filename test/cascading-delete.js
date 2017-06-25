@@ -5,7 +5,7 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const Faker = require('faker');
 
-const Application = require('../classes/application');
+const Container = require('../classes/container');
 
 chai.use(chaiAsPromised);
 
@@ -43,11 +43,15 @@ chai.use(chaiAsPromised);
  * delete post failed.
  */
 describe('Cascading deletes', () => {
-  let app;
+  let container;
   let query;
 
-  before(() => {
-    app = new Application({
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set('/', {
       port: 10023,
       storage: {
         modelsDir: 'test/cascading-delete/models',
@@ -67,13 +71,12 @@ describe('Cascading deletes', () => {
         }
       }
     });
-    return app.ready().then(() => {
-      query = app.storage.query.bind(app.storage);
-    });
+    const app = await container.get('Application');
+    query = app.storage.query.bind(app.storage);
   });
 
-  after(() => {
-    return app.close();
+  after(async () => {
+    await container.shutdown();
   });
 
   it('can delete referenced item', () => {

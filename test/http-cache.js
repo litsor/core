@@ -6,7 +6,7 @@ const chaiAsPromised = require('chai-as-promised');
 const Bluebird = require('bluebird');
 const fetch = require('node-fetch');
 
-const Application = require('../classes/application');
+const Container = require('../classes/container');
 
 const GoogleSearchMockup = require('./mockups/google-search');
 const WebsiteMockup = require('./mockups/website');
@@ -15,13 +15,17 @@ const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('Http Cache', () => {
-  let app;
+  let container;
   let httpCache;
   let googleSearch;
   let website;
 
-  before(() => {
-    app = new Application({
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set('/', {
       port: 10023,
       authentication: {
         admins: {
@@ -59,20 +63,19 @@ describe('Http Cache', () => {
         }
       }
     });
-    return app.ready().then(() => {
-      httpCache = app.instances.httpCache;
-      googleSearch = new GoogleSearchMockup('', '');
-      website = new WebsiteMockup();
-      return Promise.all([
-        googleSearch.startup(),
-        website.startup()
-      ]);
-    });
+    const app = await container.get('Application');
+    httpCache = app.instances.httpCache;
+    googleSearch = new GoogleSearchMockup('', '');
+    website = new WebsiteMockup();
+    return Promise.all([
+      googleSearch.startup(),
+      website.startup()
+    ]);
   });
 
-  after(() => {
-    return Promise.all([
-      app.close(),
+  after(async () => {
+    await container.shutdown();
+    await Promise.all([
       googleSearch.shutdown(),
       website.shutdown()
     ]);

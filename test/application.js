@@ -6,18 +6,21 @@ const chaiAsPromised = require('chai-as-promised');
 const fetch = require('node-fetch');
 const Lokka = require('lokka-transport-http').Transport;
 
-const Application = require('../classes/application');
+const Container = require('../classes/container');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('Application', () => {
-  let app;
-
+  let container;
   const uri = 'http://localhost:10023';
 
-  before(() => {
-    app = new Application({
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set('/', {
       port: 10023,
       authentication: {
         admins: {
@@ -44,11 +47,11 @@ describe('Application', () => {
         }
       }
     });
-    return app.ready();
+    await container.get('Application');
   });
 
-  after(() => {
-    return app.close();
+  after(async () => {
+    await container.shutdown();
   });
 
   it('has a GET /graphql endpoint', () => {
