@@ -5,37 +5,46 @@ const Promise = require('bluebird');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
-const Storage = require('../classes/storage');
+const Container = require('../classes/container');
 const Ids = require('../classes/ids');
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('Query', () => {
+  let container;
   let storage;
   let temporary = {};
 
-  before(() => {
-    storage = new Storage({
-      modelsDir: 'test/models',
-      databases: {
-        internal: {
-          engine: 'redis',
-          host: 'localhost',
-          port: 6379,
-          prefix: ''
-        },
-        rethink: {
-          engine: 'RethinkDB',
-          host: 'localhost',
-          port: 28015,
-          name: 'test'
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set({
+      storage: {
+        modelsDir: 'test/models',
+        databases: {
+          internal: {
+            engine: 'redis',
+            host: 'localhost',
+            port: 6379,
+            prefix: ''
+          },
+          rethink: {
+            engine: 'RethinkDB',
+            host: 'localhost',
+            port: 28015,
+            name: 'test'
+          }
         }
       }
     });
+    storage = await container.get('Storage');
   });
 
-  after(() => {
+  after(async () => {
+    await container.shutdown();
   });
 
   it('fails on misformatted queries', () => {

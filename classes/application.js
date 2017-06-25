@@ -4,7 +4,6 @@ const _ = require('lodash');
 const BlueGate = require('bluegate');
 const HttpError = require('http-errors');
 
-const Storage = require('./storage');
 const GraphqlApi = require('./graphql-api.js');
 const FilesApi = require('./files-api.js');
 const ScriptApi = require('./script-api.js');
@@ -12,8 +11,8 @@ const HttpCache = require('./http-cache.js');
 const Authentication = require('./authentication.js');
 
 class Application {
-  constructor({Config, Log}) {
-    const config = _.defaults(Config.get('/'), {
+  constructor({Config, Storage, Log}) {
+    const config = _.defaults(Config.get(), {
       port: 80,
       storage: {},
       authentication: {},
@@ -30,7 +29,7 @@ class Application {
     this.app = new BlueGate({log: false});
     this.log = Log;
 
-    this.storage = new Storage(config.storage);
+    this.storage = Storage;
 
     this.instances = {};
     this.instances.authentication = new Authentication(this.app, this.storage, config.authentication);
@@ -79,6 +78,6 @@ class Application {
 }
 
 Application.singleton = true;
-Application.require = ['Config', 'Log'];
+Application.require = ['Config', 'Storage', 'Log'];
 
 module.exports = Application;

@@ -15,11 +15,14 @@ class Config {
   }
 
   get(path) {
-    return JsonPointer.get(this.config, path);
+    if (path) {
+      return JsonPointer.get(this.config, path);
+    }
+    return this.config;
   }
 
-  set(path, value) {
-    JsonPointer.set(this.config, path, value);
+  set(value) {
+    this.config = JSON.parse(JSON.stringify(value));
   }
 }
 

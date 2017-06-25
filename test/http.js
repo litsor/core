@@ -7,7 +7,7 @@ const _ = require('lodash');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
-const Storage = require('../classes/storage');
+const Container = require('../classes/container');
 
 const GoogleSearchMockup = require('./mockups/google-search');
 const WebsiteMockup = require('./mockups/website');
@@ -17,51 +17,57 @@ chai.use(chaiAsPromised);
 
 describe('Http', () => {
   let storage;
+  let container;
   let googleSearch;
   let website;
 
   const cx = Crypto.randomBytes(8).toString('base64');
   const key = Crypto.randomBytes(8).toString('base64');
 
-  before(() => {
-    storage = new Storage({
-      modelsDir: 'test/http/models',
-      databases: {
-        internal: {
-          engine: 'redis',
-          host: 'localhost',
-          port: 6379,
-          prefix: ''
-        },
-        googlesearch: {
-          engine: 'Http',
-          parameters: {
-            baseUri: 'http://localhost:8371',
-            key,
-            cx
-          }
-        },
-        website: {
-          engine: 'Http',
-          parameters: {
-            baseUri: 'http://localhost:8372'
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set({
+      storage: {
+        modelsDir: 'test/http/models',
+        databases: {
+          internal: {
+            engine: 'redis',
+            host: 'localhost',
+            port: 6379,
+            prefix: ''
+          },
+          googlesearch: {
+            engine: 'Http',
+            parameters: {
+              baseUri: 'http://localhost:8371',
+              key,
+              cx
+            }
+          },
+          website: {
+            engine: 'Http',
+            parameters: {
+              baseUri: 'http://localhost:8372'
+            }
           }
         }
       }
     });
+    storage = await container.get('Storage');
+
     googleSearch = new GoogleSearchMockup(key, cx);
     website = new WebsiteMockup();
-    return Promise.all([
-      googleSearch.startup(),
-      website.startup()
-    ]);
+    await googleSearch.startup();
+    await website.startup();
   });
 
-  after(() => {
-    return Promise.all([
-      googleSearch.shutdown(),
-      website.shutdown()
-    ]);
+  after(async () => {
+    await googleSearch.shutdown();
+    await website.shutdown();
+    await container.shutdown();
   });
 
   it('can list results', () => {

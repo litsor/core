@@ -4,7 +4,7 @@
   "description": "RestAPI business storage",
   "main": "restapir.js",
   "scripts": {
-    "test": "sh shutdown.sh && sh startup.sh && mocha -b -t 5s test/*.js && xo && sh shutdown.sh",
+    "test": "sh shutdown.sh && sh startup.sh && mocha -b -t 10s test/*.js && xo && sh shutdown.sh",
     "watch": "node watch.js",
     "coverage": "sh shutdown.sh && sh startup.sh && istanbul cover node_modules/.bin/_mocha -- -u exports -R spec -t 5s test/* && sh shutdown.sh"
   },

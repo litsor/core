@@ -24,7 +24,7 @@ describe('Files', () => {
     await container.startup();
 
     const config = await container.get('Config');
-    config.set('/', {
+    config.set({
       port: 10023,
       storage: {
         modelsDir: 'test/files/models',

@@ -8,10 +8,11 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-const Storage = require('../classes/storage');
+const Container = require('../classes/container');
 const Context = require('../classes/context');
 
 describe('Context', () => {
+  let container;
   let storage;
   let temporary = {};
 
@@ -19,51 +20,52 @@ describe('Context', () => {
   let regularUser2;
   let adminUser;
 
-  before(() => {
-    storage = new Storage({
-      modelsDir: 'test/models',
-      databases: {
-        internal: {
-          engine: 'redis',
-          host: 'localhost',
-          port: 6379,
-          prefix: ''
-        },
-        rethink: {
-          engine: 'RethinkDB',
-          host: 'localhost',
-          port: 28015,
-          name: 'test'
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set({
+      storage: {
+        modelsDir: 'test/models',
+        databases: {
+          internal: {
+            engine: 'redis',
+            host: 'localhost',
+            port: 6379,
+            prefix: ''
+          },
+          rethink: {
+            engine: 'RethinkDB',
+            host: 'localhost',
+            port: 28015,
+            name: 'test'
+          }
         }
       }
     });
-    const promises = [];
+
+    storage = await container.get('Storage');
+
     let query;
-    let promise;
     query = `{user:createUser(name: "Alice", mail: "alice@example.com") { id }}`;
-    promise = storage.query(query).then(result => {
-      regularUser1 = result.user.id;
-    });
-    promises.push(promise);
+    regularUser1 = await storage.query(query);
+    regularUser1 = regularUser1.user.id;
+
     query = `{user:createUser(name: "Bob", mail: "bob@example.com") { id }}`;
-    promise = storage.query(query).then(result => {
-      regularUser2 = result.user.id;
-    });
-    promises.push(promise);
+    regularUser2 = await storage.query(query);
+    regularUser2 = regularUser2.user.id;
+
     query = `{user:createUser(name: "Chris", mail: "chris@example.com", admin: {}) { id }}`;
-    promise = storage.query(query).then(result => {
-      adminUser = result.user.id;
-    });
-    promises.push(promise);
-    return Promise.all(promises);
+    adminUser = await storage.query(query);
+    adminUser = adminUser.user.id;
   });
 
-  after(() => {
-    return Promise.all([
-      storage.query('{deleteUser(id:$id)}', {id: regularUser1}),
-      storage.query('{deleteUser(id:$id)}', {id: regularUser2}),
-      storage.query('{deleteUser(id:$id)}', {id: adminUser})
-    ]);
+  after(async () => {
+    await storage.query('{deleteUser(id:$id)}', {id: regularUser1});
+    await storage.query('{deleteUser(id:$id)}', {id: regularUser2});
+    await storage.query('{deleteUser(id:$id)}', {id: adminUser});
+    await container.shutdown();
   });
 
   it('can get current user profile', () => {

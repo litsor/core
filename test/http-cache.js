@@ -25,7 +25,7 @@ describe('Http Cache', () => {
     await container.startup();
 
     const config = await container.get('Config');
-    config.set('/', {
+    config.set({
       port: 10023,
       authentication: {
         admins: {

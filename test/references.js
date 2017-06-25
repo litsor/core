@@ -1,39 +1,47 @@
 /* eslint-env node, mocha */
 'use strict';
 
-const Promise = require('bluebird');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-const Storage = require('../classes/storage');
+const Container = require('../classes/container');
 
 describe('References', () => {
+  let container;
   let storage;
 
   let userId;
   let postId;
 
-  before(() => {
-    storage = new Storage({
-      modelsDir: 'test/models',
-      databases: {
-        internal: {
-          engine: 'redis',
-          host: 'localhost',
-          port: 6379,
-          prefix: ''
-        },
-        rethink: {
-          engine: 'RethinkDB',
-          host: 'localhost',
-          port: 28015,
-          name: 'test'
+  before(async () => {
+    container = new Container();
+    await container.startup();
+
+    const config = await container.get('Config');
+    config.set({
+      storage: {
+        modelsDir: 'test/models',
+        databases: {
+          internal: {
+            engine: 'redis',
+            host: 'localhost',
+            port: 6379,
+            prefix: ''
+          },
+          rethink: {
+            engine: 'RethinkDB',
+            host: 'localhost',
+            port: 28015,
+            name: 'test'
+          }
         }
       }
     });
+    storage = await container.get('Storage');
+
     let query;
     let args;
     query = `{user:createUser(name: "Alice", mail: "alice@example.com") { id }}`;
@@ -47,11 +55,10 @@ describe('References', () => {
     });
   });
 
-  after(() => {
-    return Promise.all([
-      storage.query('{deleteUser(id:$userId)}', {userId}),
-      storage.query('{deletePost(id:$postId)}', {postId})
-    ]);
+  after(async () => {
+    await storage.query('{deleteUser(id:$userId)}', {userId});
+    await storage.query('{deletePost(id:$postId)}', {postId});
+    await container.shutdown();
   });
 
   it('can get User via Post', () => {

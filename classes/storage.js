@@ -11,29 +11,26 @@ const Models = require('./models');
 const Query = require('./query');
 
 class Storage {
-  constructor(options) {
-    options = _.defaults(options, {
+  constructor({Config}) {
+    this.options = Config.get('/storage');
+    this.options = _.defaults(this.options, {
       databases: {},
       cacheDir: '/tmp/cache',
       modelsDir: 'models',
       scriptsDir: 'scripts'
     });
-    options.databases = _.defaults(options.databases, {
+    this.options.databases = _.defaults(this.options.databases, {
       internal: {}
     });
-    options.databases.internal = _.defaults(options.databases.internal, {
+    this.options.databases.internal = _.defaults(this.options.databases.internal, {
       engine: 'redis',
       host: 'redis',
       port: 6379,
       prefix: ''
     });
-
-    this.options = options;
-
-    this.generateModels();
   }
 
-  generateModels() {
+  startup() {
     Fs.ensureDirSync(this.options.cacheDir);
     const cached = Fs.readdirSync(this.options.cacheDir);
     const dir = this.options.modelsDir;
@@ -61,5 +58,8 @@ class Storage {
     return new Query(this.models, query, context, args).execute();
   }
 }
+
+Storage.singleton = true;
+Storage.require = ['Config'];
 
 module.exports = Storage;

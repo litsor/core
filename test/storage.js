@@ -7,36 +7,42 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-const Storage = require('../classes/storage');
+const Container = require('../classes/container');
 
 describe('Storage', () => {
+  let container;
   let storage;
   let temporary = {};
 
-  before(() => {
-  });
+  before(async () => {
+    container = new Container();
+    await container.startup();
 
-  after(() => {
-  });
-
-  it('can create new instance', () => {
-    storage = new Storage({
-      modelsDir: 'test/models',
-      databases: {
-        internal: {
-          engine: 'redis',
-          host: 'localhost',
-          port: 6379,
-          prefix: ''
-        },
-        rethink: {
-          engine: 'RethinkDB',
-          host: 'localhost',
-          port: 28015,
-          name: 'test'
+    const config = await container.get('Config');
+    config.set({
+      storage: {
+        modelsDir: 'test/models',
+        databases: {
+          internal: {
+            engine: 'redis',
+            host: 'localhost',
+            port: 6379,
+            prefix: ''
+          },
+          rethink: {
+            engine: 'RethinkDB',
+            host: 'localhost',
+            port: 28015,
+            name: 'test'
+          }
         }
       }
     });
+    storage = await container.get('Storage');
+  });
+
+  after(async () => {
+    await container.shutdown();
   });
 
   it('knows that is has a User model', () => {
