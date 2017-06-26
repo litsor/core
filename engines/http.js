@@ -162,7 +162,8 @@ class Http extends Model {
         let response;
         return fetch(uri).then(_response => {
           response = _response;
-          if (response.headers.get('Content-Type') === 'application/json') {
+          const mime = response.headers.get('Content-Type').replace(/;.+$/, '');
+          if (mime === 'application/json') {
             return response.json();
           }
           return response.text();
