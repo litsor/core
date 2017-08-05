@@ -110,6 +110,10 @@ describe('Files', () => {
       return Needle.getAsync(uri + '/file/File/' + id).then(response => {
         expect(response.statusCode).to.equal(200);
         expect(response.body.toString()).to.equal(body);
+        // And check that it automatically saved the filename and mimetype in
+        // the designated fields.
+        expect(response.headers['content-disposition']).to.equal('attachment; filename="test.txt"');
+        expect(response.headers['content-type']).to.equal('text/plain; charset=utf-8');
       });
     });
   });

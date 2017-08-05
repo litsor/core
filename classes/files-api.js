@@ -65,7 +65,9 @@ class FilesApi {
         directory = modelInstance.getDirectory(id);
         return this.processMultipart(id, directory, request.body, request.multipartBoundary);
       }).then(fields => {
-        return this.saveFields(id, modelInstance, fields);
+        return this.saveFields(id, modelInstance, fields, context);
+      }).then(() => {
+        return {id};
       }).catch(err => {
         if (err.message === 'Query error: Permission denied') {
           throw new HttpError(403);
@@ -76,22 +78,41 @@ class FilesApi {
 
     app.process('GET /file/<model:string>/<id:string>', (model, id, context, request) => {
       let modelInstance;
+      let localFilename;
       let filename;
-      const query = `{file:${model}(id:$id){id}}`;
-      return this.storage.query(query, context, {id}).then(result => {
+      let mime;
+      return this.storage.models.get(model).then(model => model.jsonSchema).then(schema => {
+        const fields = ['id'];
+        if (typeof schema.properties.filename !== 'undefined') {
+          fields.push('filename');
+        }
+        if (typeof schema.properties.mime !== 'undefined') {
+          fields.push('mime');
+        }
+        const query = `{file:${model}(id:$id){` + fields.join(',') + `}}`;
+        return this.storage.query(query, context, {id});
+      }).then(result => {
         if (result.file === null) {
           throw new HttpError(404);
         }
         id = result.file.id;
+        filename = result.file.filename;
+        mime = result.file.mime;
         return this.storage.models.get(model);
       }).then(_model => {
         modelInstance = _model;
         const directory = modelInstance.getDirectory(id);
-        filename = Path.join(directory, id + '.0');
-        return Fs.statAsync(filename);
+        localFilename = Path.join(directory, id + '.0');
+        return Fs.statAsync(localFilename);
       }).then(stat => {
         request.setHeader('Content-Length', String(stat.size));
-        return Fs.createReadStream(filename);
+        if (typeof filename === 'string') {
+          request.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        }
+        if (typeof mime === 'string') {
+          request.mime = mime;
+        }
+        return Fs.createReadStream(localFilename);
       }).catch(err => {
         if (err.message === 'Not found') {
           throw new HttpError(404);
@@ -104,11 +125,18 @@ class FilesApi {
     });
   }
 
-  saveFields(id, model, fields) {
+  saveFields(id, model, fields, context) {
     const data = _.clone(fields);
     data.id = id;
-    // @todo: Save data
-    return data;
+
+    const queryFields = Object.keys(fields).filter(name => {
+      return typeof model.jsonSchema.properties[name] !== 'undefined';
+    }).map(name => {
+      return `,${name}:$${name}`;
+    });
+    const query = `{update${model.name}(id:$id${queryFields}){id}}`;
+
+    return this.storage.query(query, context, data);
   }
 
   processUploadStream(id, directory, stream) {
@@ -136,6 +164,8 @@ class FilesApi {
       part.on('header', data => {
         info = this.parseMultipartHeaders(data);
         if (info.name === 'file') {
+          fields.filename = info.filename;
+          fields.mime = info.contentType;
           const file = Fs.createWriteStream(filename);
           part.pipe(file);
         } else {
