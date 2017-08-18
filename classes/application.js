@@ -52,7 +52,7 @@ class Application {
           if (request.error.errors instanceof Array) {
             errors = request.error.errors;
           } else {
-            errors = [request.error.message];
+            errors = [{message: request.error.message}];
           }
         } else {
           errors = ['An error occurred. Please try again later.'];

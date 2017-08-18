@@ -86,7 +86,8 @@ describe('Application', () => {
     }).then(body => {
       expect(body).to.have.property('errors');
       expect(body.errors).to.have.length(2);
-      expect(body.errors[0]).to.contain('wrong type');
+      expect(body.errors[0]).to.have.property('message');
+      expect(body.errors[0].message).to.contain('wrong type');
     });
   });
 

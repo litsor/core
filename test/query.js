@@ -313,8 +313,8 @@ describe('Query', () => {
       throw new Error('should be rejected');
     }).catch(err => {
       expect(err.errors).to.have.length(1);
-      expect(err.errors[0]).to.contain('title');
-      expect(err.errors[0]).to.contain('required');
+      expect(err.errors[0].message).to.contain('title');
+      expect(err.errors[0].message).to.contain('required');
     }).done();
   });
 
@@ -339,8 +339,8 @@ describe('Query', () => {
       throw new Error('should be rejected');
     }).catch(err => {
       expect(err.errors).to.have.length(2);
-      expect(err.errors.sort()[1]).to.contain('title');
-      expect(err.errors.sort()[1]).to.contain('wrong type');
+      expect(err.errors.sort()[1].message).to.contain('title');
+      expect(err.errors.sort()[1].message).to.contain('wrong type');
     }).done();
   });
 
@@ -352,8 +352,8 @@ describe('Query', () => {
       throw new Error('should be rejected');
     }).catch(err => {
       expect(err.errors).to.have.length(1);
-      expect(err.errors[0]).to.contain('id');
-      expect(err.errors[0]).to.contain('wrong type');
+      expect(err.errors[0].message).to.contain('id');
+      expect(err.errors[0].message).to.contain('wrong type');
     }).done();
   });
 
@@ -371,8 +371,8 @@ describe('Query', () => {
       throw new Error('should be rejected');
     }).catch(err => {
       expect(err.errors).to.have.length(1);
-      expect(err.errors[0]).to.contain('title');
-      expect(err.errors[0]).to.contain('wrong type');
+      expect(err.errors[0].message).to.contain('title');
+      expect(err.errors[0].message).to.contain('wrong type');
     }).done();
   });
 
@@ -384,8 +384,8 @@ describe('Query', () => {
       throw new Error('should be rejected');
     }).catch(err => {
       expect(err.errors).to.have.length(1);
-      expect(err.errors[0]).to.contain('id');
-      expect(err.errors[0]).to.contain('wrong type');
+      expect(err.errors[0].message).to.contain('id');
+      expect(err.errors[0].message).to.contain('wrong type');
     }).done();
   });
 

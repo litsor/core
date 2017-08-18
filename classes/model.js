@@ -94,7 +94,9 @@ class Model {
     Object.keys(data).forEach(key => {
       if (data[key] === null) {
         if (this.jsonSchema.required.indexOf(key) >= 0) {
-          errors.push(`Field "${key}" is required`);
+          errors.push({
+            message: `Field "${key}" is required`
+          });
         }
         delete validateData[key];
       }
@@ -151,7 +153,11 @@ class Model {
       if (error.message) {
         message += error.message;
       }
-      return message;
+      // @todo: The error object should include a path component.
+      // @see http://facebook.github.io/graphql/#sec-Data
+      return {
+        message
+      };
     });
   }
 }
