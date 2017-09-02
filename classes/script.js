@@ -433,18 +433,22 @@ class Script {
       throw new Error('Value of "object" functions must be an object');
     }
     let output = {};
-    let retainData = false;
+    let retainData = null;
     return Promise.all(Object.keys(options).map(key => {
       if (key === '...') {
-        retainData = true;
+        if (options[key] === '...') {
+          retainData = value;
+        } else {
+          retainData = JsonPointer.get(value, options[key]);
+        }
         return null;
       }
       return this.shorthand(value, options[key], `${key} property`).then(result => {
         output[key] = result;
       });
     })).then(() => {
-      if (retainData && typeof value === 'object' && value !== null) {
-        output = _.defaults(output, value);
+      if (typeof retainData === 'object' && retainData !== null) {
+        output = _.defaults(output, retainData);
       }
       return output;
     });

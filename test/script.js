@@ -1188,6 +1188,24 @@ describe('Script', () => {
     });
   });
 
+  it('can retain data from path in object transformation', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        object: {
+          foo: '/bar',
+          '...': '/input'
+        }
+      }]
+    }, storage);
+    return script.run({bar: 'baz', input: {baz: 'qux'}}).then(result => {
+      expect(result).to.deep.equal({
+        foo: 'baz',
+        baz: 'qux'
+      });
+    });
+  });
+
   it('can read data with Script engine', () => {
     return query('{listWebsiteItem { id name }}').then(result => {
       expect(result.listWebsiteItem).to.have.length(10);
