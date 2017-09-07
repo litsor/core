@@ -1,6 +1,7 @@
 'use strict';
 
 const Crypto = require('crypto');
+const QueryString = require('querystring');
 
 const _ = require('lodash');
 const $ = require('cheerio');
@@ -764,6 +765,17 @@ class Script {
 
   _toBase64(value) {
     return new Buffer(value).toString('base64');
+  }
+
+  _toFormData(value) {
+    return QueryString.stringify(value);
+  }
+
+  _fromFormData(value) {
+    if (typeof value === 'string') {
+      return QueryString.parse(value);
+    }
+    return {};
   }
 
   _fromXml(value) {

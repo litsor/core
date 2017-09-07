@@ -2,6 +2,7 @@
 'use strict';
 
 const Crypto = require('crypto');
+const QueryString = require('querystring');
 
 const _ = require('lodash');
 const chai = require('chai');
@@ -1342,6 +1343,36 @@ describe('Script', () => {
     }, app.storage);
     return script.run(new Buffer('test').toString('base64')).then(result => {
       expect(result).to.equal('test');
+    });
+  });
+
+  it('can convert text to form-data', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        toFormData: {}
+      }]
+    }, app.storage);
+    return script.run({name: 'John', age: 34}).then(result => {
+      expect(QueryString.parse(result)).to.deep.equal({
+        name: 'John',
+        age: '34'
+      });
+    });
+  });
+
+  it('can convert form-data from object', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        fromFormData: {}
+      }]
+    }, app.storage);
+    return script.run(QueryString.stringify({name: 'John', age: 34})).then(result => {
+      expect(result).to.deep.equal({
+        name: 'John',
+        age: '34'
+      });
     });
   });
 
