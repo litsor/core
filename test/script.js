@@ -8,6 +8,7 @@ const _ = require('lodash');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const Bluebird = require('bluebird');
+const SMTPServer = require('smtp-server').SMTPServer;
 
 const Container = require('../classes/container');
 const Script = require('../classes/script');
@@ -89,12 +90,14 @@ const storage = {
  * Scripts may have input as well, which is provided as input for the first
  * step. The output of the last (top-level) step is the script output.
  */
-describe('Script', () => {
+describe.only('Script', () => {
   let container;
   let app;
   let query;
   let googleSearch;
   let website;
+  let smtpServer;
+  let mails = [];
 
   const cx = Crypto.randomBytes(8).toString('base64');
   const key = Crypto.randomBytes(8).toString('base64');
@@ -137,12 +140,41 @@ describe('Script', () => {
     await googleSearch.startup();
     await website.startup();
     query = app.storage.query.bind(app.storage);
+
+    const options = {
+      secure: false,
+      authOptional: true,
+      allowInsecureAuth: true,
+      disableReverseLookup: true,
+      onData: (stream, session, callback) => {
+        const chunks = [];
+        stream.on('data', data => {
+          chunks.push(data);
+        });
+        stream.on('end', () => {
+          const body = Buffer.concat(chunks).toString();
+          const from = session.envelope.mailFrom.address;
+          const recipients = _.map(session.envelope.rcptTo, 'address');
+          mails.push({from, recipients, body});
+          callback();
+        });
+      }
+    };
+    smtpServer = new SMTPServer(options);
+    await new Promise(resolve => {
+      smtpServer.listen(10024, resolve);
+    });
   });
 
   after(async () => {
     await container.shutdown();
     await googleSearch.shutdown();
     await website.shutdown();
+    smtpServer.close();
+  });
+
+  afterEach(async () => {
+    mails = [];
   });
 
   /**
@@ -1689,6 +1721,33 @@ describe('Script', () => {
       return script.run('abc');
     }).then(result => {
       expect(result).to.equal(false);
+    });
+  });
+
+  it('can send mail', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        mail: {
+          host: 'localhost',
+          port: 10024,
+          secure: false,
+          server: 'smtp://localhost:10024',
+          from: 'sender@example.com',
+          to: 'recipient@example.com',
+          subject: 'Testmail',
+          html: '<p>This is a <strong>test</strong>.</p>'
+        }
+      }]
+    }, app.storage);
+    return script.run({}).then(() => {
+      return Bluebird.delay(100);
+    }).then(() => {
+      expect(mails).to.have.length(1);
+      expect(mails[0].from).to.equal('sender@example.com');
+      expect(mails[0].recipients).to.deep.equal(['recipient@example.com']);
+      expect(mails[0].body).to.contain('<p>This is a <strong>test</strong>.</p>');
+      expect(mails[0].body).to.contain('This is a test.');
     });
   });
 

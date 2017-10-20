@@ -16,6 +16,8 @@ const SwigExtra = require('swig-extras');
 const MathJS = require('mathjs');
 const moment = require('moment-timezone');
 const HttpError = require('http-errors');
+const NodeMailer = require('nodemailer');
+const NodeMailerHtmlToText = require('nodemailer-html-to-text');
 
 const Log = require('./log');
 
@@ -992,6 +994,45 @@ class Script {
         context: this.options.context
       });
       return script.run(value);
+    });
+  }
+
+  _mail(value, options) {
+    options = _.defaults(options, {
+      host: 'localhost',
+      port: null,
+      secure: true,
+      from: 'info@localhost',
+      to: 'info@localhost',
+      subject: '',
+      html: '',
+      headers: {}
+    });
+    const transporter = NodeMailer.createTransport({
+      host: options.host,
+      port: options.port,
+      secure: options.secure,
+      tls: {
+        rejectUnauthorized: options.secure
+      }
+    });
+    const htmlToText = NodeMailerHtmlToText.htmlToText;
+    transporter.use('compile', htmlToText());
+    return new Promise((resolve, reject) => {
+      transporter.sendMail({
+        from: options.from,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html,
+        headers: options.headers
+      }, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(value);
+        }
+      });
     });
   }
 }
