@@ -1006,15 +1006,22 @@ class Script {
       to: 'info@localhost',
       subject: '',
       html: '',
-      headers: {}
+      headers: {},
+      username: null,
+      password: null
     });
+    const auth = options.username === null ? null : {
+      username: options.username,
+      password: options.password
+    };
     const transporter = NodeMailer.createTransport({
       host: options.host,
       port: options.port,
       secure: options.secure,
       tls: {
         rejectUnauthorized: options.secure
-      }
+      },
+      auth
     });
     const htmlToText = NodeMailerHtmlToText.htmlToText;
     transporter.use('compile', htmlToText());

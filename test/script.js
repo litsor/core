@@ -90,7 +90,7 @@ const storage = {
  * Scripts may have input as well, which is provided as input for the first
  * step. The output of the last (top-level) step is the script output.
  */
-describe.only('Script', () => {
+describe('Script', () => {
   let container;
   let app;
   let query;
