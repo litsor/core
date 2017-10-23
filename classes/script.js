@@ -1011,8 +1011,8 @@ class Script {
       password: null
     });
     const auth = options.username === null ? null : {
-      username: options.username,
-      password: options.password
+      user: options.username,
+      pass: options.password
     };
     const transporter = NodeMailer.createTransport({
       host: options.host,
