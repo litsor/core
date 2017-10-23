@@ -1010,35 +1010,40 @@ class Script {
       username: null,
       password: null
     });
-    const auth = options.username === null ? null : {
-      user: options.username,
-      pass: options.password
-    };
-    const transporter = NodeMailer.createTransport({
-      host: options.host,
-      port: options.port,
-      secure: options.secure,
-      tls: {
-        rejectUnauthorized: options.secure
-      },
-      auth
+    options = _.defaults(options, {
+      arguments: {}
     });
-    const htmlToText = NodeMailerHtmlToText.htmlToText;
-    transporter.use('compile', htmlToText());
-    return new Promise((resolve, reject) => {
-      transporter.sendMail({
-        from: options.from,
-        to: options.to,
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
-        headers: options.headers
-      }, err => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(value);
-        }
+    return this.shorthand(value, [{object: options}], 'mail arguments').then(options => {
+      const auth = options.username === null ? null : {
+        user: options.username,
+        pass: options.password
+      };
+      const transporter = NodeMailer.createTransport({
+        host: options.host,
+        port: options.port,
+        secure: options.secure,
+        tls: {
+          rejectUnauthorized: options.secure
+        },
+        auth
+      });
+      const htmlToText = NodeMailerHtmlToText.htmlToText;
+      transporter.use('compile', htmlToText());
+      return new Promise((resolve, reject) => {
+        transporter.sendMail({
+          from: options.from,
+          to: options.to,
+          subject: options.subject,
+          text: options.text,
+          html: options.html,
+          headers: options.headers
+        }, err => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(value);
+          }
+        });
       });
     });
   }
