@@ -282,7 +282,8 @@ class Query {
     return Bluebird.resolve(preprocessors).each(plugin => {
       const result = plugin.preprocess(this.models, model, operation, method.params, this.context);
       return Bluebird.resolve(result).then(result => {
-        method.params = result;
+        // Json re-encode to remove undefined values.
+        method.params = JSON.parse(JSON.stringify(result));
       });
     }).then(() => {
       return method;

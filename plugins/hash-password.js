@@ -31,10 +31,14 @@ class HashPassword extends Plugin {
   preprocess(models, model, operation, data) {
     const fields = this.encodeFields[model.name];
     fields.forEach(field => {
-      // Hash password if value is a non-empty string.
-      // Empty strings will trigger an out-of-memory error in pbkdf2.
       if (typeof data[field] === 'string' && data[field].length > 0) {
+        // Hash password if value is a non-empty string.
         data[field] = this.password.hash(data[field]);
+      }
+      else {
+        // Remove the property. This is useful in updates where we do not want to change
+        // the password when the field is left empty.
+        data[field] = undefined;
       }
     });
     return data;
