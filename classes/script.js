@@ -528,20 +528,32 @@ class Script {
     if (!options.separator) {
       throw new Error('Missing separator for split transformation');
     }
-    if (typeof value !== 'string') {
-      return [];
+
+    let input = value;
+    let separator = this.shorthand(value, options.separator, 'separator');
+    if (options.separator === '/') {
+      // Exception. Just split on slash instead of value itself.
+      separator = '/';
     }
-    const maxItems = typeof options.maxItems === 'number' ? options.maxItems : false;
-    if (maxItems && options.addRemainder) {
-      const parts = value.split(options.separator);
-      const output = parts.slice(0, maxItems - 1);
-      output.push(parts.slice(maxItems - 1).join(options.separator));
-      return output;
+    if (options.input) {
+      input = this.shorthand(value, options.input, 'input');
     }
-    if (maxItems) {
-      return value.split(options.separator, maxItems);
-    }
-    return value.split(options.separator);
+    return Promise.all([input, separator]).then(([input, separator]) => {
+      if (typeof input !== 'string') {
+        return [];
+      }
+      const maxItems = typeof options.maxItems === 'number' ? options.maxItems : false;
+      if (maxItems && options.addRemainder) {
+        const parts = input.split(separator);
+        const output = parts.slice(0, maxItems - 1);
+        output.push(parts.slice(maxItems - 1).join(separator));
+        return output;
+      }
+      if (maxItems) {
+        return input.split(separator, maxItems);
+      }
+      return input.split(separator);
+    });
   }
 
   _filter(value, options) {

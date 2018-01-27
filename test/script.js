@@ -90,7 +90,7 @@ const storage = {
  * Scripts may have input as well, which is provided as input for the first
  * step. The output of the last (top-level) step is the script output.
  */
-describe('Script', () => {
+describe.only('Script', () => {
   let container;
   let app;
   let query;
@@ -1604,6 +1604,39 @@ describe('Script', () => {
     }, app.storage);
     return script.run('a/b/c').then(result => {
       expect(result).to.deep.equal(['a', 'b', 'c']);
+    });
+  });
+
+  /**
+   * @doc
+   *
+   * The ``input`` and ``separator`` options can be used with shorthands to
+   * split on dynamic input.
+   *
+   * ```
+   * - static:
+   *     text: 'a/b/c-d/e/f'
+   *     separator: '-'
+   * - split:
+   *     input: /text
+   *     separator: /separator
+   * ```
+   */
+  it('can split strings using shorthand for separator', () => {
+    const script = new Script({
+      name: 'Testscript',
+      steps: [{
+        split: {
+          input: '/text',
+          separator: '/sep'
+        }
+      }]
+    }, app.storage);
+    return script.run({
+      text: 'a/b/c-d/e/f',
+      sep: '-'
+    }).then(result => {
+      expect(result).to.deep.equal(['a/b/c', 'd/e/f']);
     });
   });
 
