@@ -14,9 +14,9 @@ class Config {
     });
   }
 
-  get(path) {
+  get(path, defaultValue) {
     if (path) {
-      return JsonPointer.get(this.config, path);
+      return JsonPointer.get(this.config, path) || defaultValue;
     }
     return this.config;
   }

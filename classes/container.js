@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 'use strict';
 
 const globby = require('globby');
@@ -5,12 +6,16 @@ const globby = require('globby');
 class Container {
   constructor() {
     this.filePatterns = [
-      'classes/**/*.js',
-      'engines/**/*.js',
-      'models/**/*.js',
-      'plugins/**/*.js'
+      'classes/**/*.js'
     ];
-    this.services = {};
+    this.services = {
+      Container: {
+        service: Container,
+        instance: this,
+        singleton: true,
+        require: []
+      }
+    };
   }
 
   async startup() {
@@ -19,7 +24,7 @@ class Container {
     files.forEach(file => {
       const service = include(process.cwd() + '/' + file);
       const name = service.prototype.constructor.name;
-      if (name) {
+      if (name && name !== 'Container') {
         this.services[name] = {
           service,
           instance: null,
@@ -52,7 +57,7 @@ class Container {
 
   async get(name) {
     if (typeof this.services[name] === 'undefined') {
-      throw new Error('Unknown service ' + name);
+      throw new TypeError('Unknown service ' + name);
     }
     const service = this.services[name];
     const Service = service.service;
@@ -77,7 +82,8 @@ class Container {
   set(name, instance) {
     this.services[name].instance = instance;
   }
-
 }
+
+Container.singleton = true;
 
 module.exports = Container;

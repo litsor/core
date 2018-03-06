@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM alpine:3.7
 
 ADD package.json /app/
 
@@ -14,10 +14,6 @@ RUN apk update \
  && find . -type f -iname changelog.md | xargs rm \
  && find . -type f -iname history.md | xargs rm \
  && find . -type f -iname license | xargs rm \
- && rm -Rf dicer/test \
- && rm -Rf dicer/bench \
- && rm -Rf bluebird/js/browser \
- && rm -Rf ~/.node-gyp \
  && rm /var/cache/apk/*
 
 ADD . /app
