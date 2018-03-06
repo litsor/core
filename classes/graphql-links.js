@@ -30,11 +30,27 @@ class GraphqlLinks extends ConfigFiles {
       Mutation: {}
     };
     const schema = Object.keys(this.items).map(id => {
-      const {context, field, script, params, variables, outputSchema, outputMultiple} = this.items[id];
+      const {field, script, params, variables, outputSchema, outputMultiple} = this.items[id];
+      let {context} = this.items[id];
+
+      if (context !== 'Query' && context !== 'Mutation') {
+        context += 'Object';
+      }
+
+      if (typeof resolvers[context] === 'undefined') {
+        resolvers[context] = {};
+      }
 
       resolvers[context][field] = (object, args, context, ast) => {
+        let parent = {model: null, id: null};
+        if (typeof object !== 'undefined' && object.id && ast.parentType) {
+          parent = {
+            model: String(ast.parentType).replace(/Object$/, ''),
+            id: String(object.id)
+          };
+        }
         const selections = ast.fieldNodes[0].selectionSet.selections.map(field => field.name.value);
-        return this.resolve(script, object, {selections, ...args, ...variables}, context);
+        return this.resolve(script, object, {selections, parent, ...args, ...variables}, context);
       };
 
       const paramSpecs = Object.keys(params).map(name => {
