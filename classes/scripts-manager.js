@@ -44,6 +44,7 @@ class ScriptsManager extends ConfigFiles {
   }
 }
 
+ScriptsManager.singleton = true;
 ScriptsManager.require = ['Container', ...ConfigFiles.require];
 
 module.exports = ScriptsManager;
