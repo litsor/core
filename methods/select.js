@@ -56,7 +56,7 @@ module.exports = {
     };
   },
 
-  requires: ['Database', 'Models'],
+  requires: ['Database', 'Models', 'ScriptsManager'],
 
   mockups: {
     Database: {
@@ -79,7 +79,7 @@ module.exports = {
     output: {count: 1, items: [{id: '1', name: 'Test A'}]}
   }],
 
-  execute: async ({filters, table, offset, limit, selections}, {Database, Models}) => {
+  execute: async ({filters, table, offset, limit, selections}, {Database, Models, ScriptsManager}) => {
     const where = Object.keys(filters || {}).reduce((prev, name) => {
       const match = name.match(/^(.+)_(ne|gt|gte|lt|lte|like|notLike|in|notIn)$/);
       let field = name;
@@ -112,22 +112,36 @@ module.exports = {
       }))[0].dataValues.count;
     }
 
-    // Expand referenced objects.
-    // @todo: It is not uncommon that multiple rows refer to the same object. We only need to load it once.
-    // @todo: Fetch referenced objects via joins.
-    const promises = [];
+    // Build a list of referenced objects.
     const model = await Models.get(table);
+    const references = {};
     output.items.forEach((item, index) => {
       Object.keys(item.dataValues).forEach(field => {
         if (typeof model.properties[field] === 'object' && model.properties[field].isReference) {
-          promises.push((async () => {
-            const refTable = model.properties[field].$ref.substring(14);
-            const db = Database.get(refTable);
-            output.items[index][field] = await db.findById(item[field]);
-          })());
+          const refTable = model.properties[field].$ref.substring(14);
+          const id = item[field];
+          if (typeof references[`${refTable}:${id}`] === 'undefined') {
+            references[`${refTable}:${id}`] = [];
+          }
+          references[`${refTable}:${id}`].push({index, field});
         }
       });
     });
+
+    // Fetch referenced objects.
+    const script = ScriptsManager.get('Get');
+    const promises = Object.keys(references).map(key => (async () => {
+      const [table, id] = key.split(':');
+      let result = null;
+      try {
+        result = (await script.run({table, id})).data;
+      } catch (err) {
+        console.log('Unable to fetch reference: ' + err.message);
+      }
+      references[key].forEach(({index, field}) => {
+        output.items[index][field] = result;
+      });
+    })());
     await Promise.all(promises);
 
     return output;

@@ -33,11 +33,11 @@ module.exports = {
     };
   },
 
-  requires: ['Database', 'Models'],
+  requires: ['Database', 'Models', 'ScriptsManager'],
 
   tests: [],
 
-  execute: async ({id, table}, {Database, Models}) => {
+  execute: async ({id, table}, {Database, Models, ScriptsManager}) => {
     const db = Database.get(table);
     const item = await db.findById(id);
     if (item === null) {
@@ -51,8 +51,17 @@ module.exports = {
       if (typeof model.properties[field] === 'object' && model.properties[field].isReference) {
         promises.push((async () => {
           const refTable = model.properties[field].$ref.substring(14);
-          const db = Database.get(refTable);
-          item[field] = await db.findById(item[field]);
+          try {
+            const script = ScriptsManager.get('Get');
+            const result = await script.run({
+              table: refTable,
+              id: item[field]
+            });
+            item[field] = result.data;
+          } catch (err) {
+            console.log('Unable to fetch reference: ' + err.message);
+            item[field] = null;
+          }
         })());
       }
     });
