@@ -24,6 +24,15 @@ class GraphqlLinks extends ConfigFiles {
     return output.data;
   }
 
+  astToSelectionTree(ast) {
+    return ((ast.selectionSet || {}).selections || []).reduce((prev, field) => {
+      return {
+        ...prev,
+        [field.name.value]: this.astToSelectionTree(field)
+      };
+    }, {});
+  }
+
   async publish() {
     const resolvers = {
       Query: {},
@@ -49,7 +58,7 @@ class GraphqlLinks extends ConfigFiles {
             id: String(object.id)
           };
         }
-        const selections = ast.fieldNodes[0].selectionSet.selections.map(field => field.name.value);
+        const selections = this.astToSelectionTree(ast.fieldNodes[0]);
         return this.resolve(script, object, {selections, parent, ...args, ...variables}, context);
       };
 

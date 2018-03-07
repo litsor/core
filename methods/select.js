@@ -1,5 +1,6 @@
 'use strict';
 
+const {union, intersection} = require('lodash');
 const {Op, fn, col} = require('sequelize');
 
 module.exports = {
@@ -30,11 +31,7 @@ module.exports = {
       },
       selections: {
         name: 'Selected fields',
-        type: 'array',
-        items: {
-          name: 'Fieldname',
-          type: 'string'
-        }
+        type: 'object'
       }
     },
     required: ['table'],
@@ -96,16 +93,21 @@ module.exports = {
       };
     }, {});
 
+    const model = await Models.get(table);
     const db = Database.get(table);
     const output = {};
 
+    // Get attributes that we need to fetch from the database.
+    const attributes = intersection(union(Object.keys(model.properties), ['id']), Object.keys(selections.items || {id: {}}));
+
     output.items = await db.findAll({
+      attributes,
       where,
       limit: limit || 10,
       offset: offset || 0
     });
 
-    if ((selections || []).indexOf('count') >= 0) {
+    if (Object.keys(selections || {}).indexOf('count') >= 0) {
       output.count = (await db.findAll({
         attributes: [[fn('COUNT', col('id')), 'count']],
         where
@@ -113,11 +115,10 @@ module.exports = {
     }
 
     // Build a list of referenced objects.
-    const model = await Models.get(table);
     const references = {};
     output.items.forEach((item, index) => {
-      Object.keys(item.dataValues).forEach(field => {
-        if (typeof model.properties[field] === 'object' && model.properties[field].isReference) {
+      attributes.forEach(field => {
+        if (item[field] && typeof model.properties[field] === 'object' && model.properties[field].isReference) {
           const refTable = model.properties[field].$ref.substring(14);
           const id = item[field];
           if (typeof references[`${refTable}:${id}`] === 'undefined') {
