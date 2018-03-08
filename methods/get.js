@@ -15,6 +15,10 @@ module.exports = {
       table: {
         name: 'Tablename',
         type: 'string'
+      },
+      nullOnError: {
+        name: 'Return null when item is not found',
+        type: 'boolean'
       }
     },
     required: ['id', 'table'],
@@ -37,10 +41,13 @@ module.exports = {
 
   tests: [],
 
-  execute: async ({id, table}, {Database, Models, ScriptsManager}) => {
+  execute: async ({id, table, nullOnError}, {Database, Models, ScriptsManager}) => {
     const db = Database.get(table);
     const item = await db.findById(id);
     if (item === null) {
+      if (nullOnError) {
+        return null;
+      }
       throw new Error(`${table} does not exist`);
     }
 
