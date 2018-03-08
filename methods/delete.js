@@ -35,7 +35,40 @@ module.exports = {
 
   requires: ['Database'],
 
-  tests: [],
+  mockups: {
+    Database: {
+      get() {
+        return {
+          findById(data) {
+            return {
+              dataValues: {id: '1', name: 'Test'},
+              destroy() {}
+            };
+          }
+        };
+      }
+    }
+  },
+
+  tests: [{
+    name: 'Delete object',
+    input: {id: '1', table: 'Item'},
+    output: {id: '1', name: 'Test'},
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string'
+        }
+      }
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        id: {type: 'string', minLength: 1}
+      }
+    }
+  }],
 
   execute: async ({id, table}, {Database}) => {
     const db = Database.get(table);

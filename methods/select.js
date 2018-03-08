@@ -40,13 +40,22 @@ module.exports = {
 
   outputSchema: () => {
     return {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: {
-            type: 'string',
-            minLength: 1
+      type: 'object',
+      properties: {
+        count: {
+          type: 'integer',
+          minimum: 0
+        },
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                minLength: 1
+              }
+            }
           }
         }
       }
@@ -56,13 +65,30 @@ module.exports = {
   requires: ['Database', 'Models', 'ScriptsManager'],
 
   mockups: {
+    Models: {
+      get() {
+        return {
+          properties: {
+            name: {type: 'string'}
+          }
+        }
+      }
+    },
     Database: {
       get() {
         return {
-          findAll() {
+          findAll({attributes}) {
+            if (Array.isArray(attributes[0])) {
+              return [{dataValues: {count: 1}}];
+            }
             return [{id: '1', name: 'Test A'}];
           }
         };
+      }
+    },
+    ScriptsManager: {
+      get() {
+        return {};
       }
     }
   },
@@ -71,7 +97,7 @@ module.exports = {
     name: 'Can select all results',
     input: {
       table: 'Post',
-      selections: ['count', 'items']
+      selections: {count: {}, items: {}}
     },
     output: {count: 1, items: [{id: '1', name: 'Test A'}]}
   }],

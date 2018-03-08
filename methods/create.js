@@ -22,7 +22,7 @@ module.exports = {
   },
 
   outputSchema: inputSchema => {
-    const data = inputSchema.properties.data;
+    const data = inputSchema.properties.data || {};
     return {
       ...data,
       properties: {
@@ -37,7 +37,41 @@ module.exports = {
 
   requires: ['Database'],
 
-  tests: [],
+  mockups: {
+    Database: {
+      get() {
+        return {
+          create(data) {
+            return {...data, id: '1'};
+          }
+        };
+      }
+    }
+  },
+
+  tests: [{
+    name: 'Create object',
+    input: {data: {name: 'Test'}, table: 'Item'},
+    output: {id: '1', name: 'Test'},
+    inputSchema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'object',
+          properties: {
+            name: {type: 'string'}
+          }
+        }
+      }
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        id: {type: 'string', minLength: 1},
+        name: {type: 'string'}
+      }
+    }
+  }],
 
   execute: async ({data, table}, {Database}) => {
     const db = Database.get(table);

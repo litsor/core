@@ -45,7 +45,38 @@ module.exports = {
 
   requires: ['Database', 'Models', 'ScriptsManager'],
 
-  tests: [],
+  mockups: {
+    Models: {
+      get() {
+        return {
+          properties: {
+            name: {type: 'string'}
+          }
+        }
+      }
+    },
+    Database: {
+      get() {
+        return {
+          findOne({where}) {
+            return {dataValues: {id: where.id, name: 'Test'}};
+          }
+        };
+      }
+    }
+  },
+
+  tests: [{
+    name: 'Get object',
+    input: {id: '1', table: 'Item'},
+    output: {id: '1', name: 'Test'},
+    outputSchema: {
+      type: 'object',
+      properties: {
+        id: {type: 'string', minLength: 1}
+      }
+    }
+  }],
 
   execute: async ({id, table, selections, nullOnError}, {Database, Models, ScriptsManager}) => {
     const model = await Models.get(table);

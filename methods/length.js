@@ -8,7 +8,9 @@ module.exports = {
   inputSchema: {
     type: 'object',
     properties: {
-      input: {}
+      input: {
+        name: 'Input'
+      }
     },
     required: ['input'],
     additionalProperties: false

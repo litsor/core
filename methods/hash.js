@@ -29,7 +29,7 @@ module.exports = {
     additionalProperties: false
   },
 
-  outputSchema: options => {
+  outputSchema: (_, {algorithm, encoding}) => {
     const lengths = {
       md4: 32,
       md5: 32,
@@ -38,8 +38,8 @@ module.exports = {
       sha256: 64,
       sha512: 128
     };
-    let length = lengths[options.algorithm];
-    if (options.encoding === 'base64') {
+    let length = lengths[algorithm];
+    if (encoding === 'base64') {
       // Calculate bitlength.
       length *= 4;
       // Base64 has 6 bits per character.

@@ -43,7 +43,44 @@ module.exports = {
 
   requires: ['Database'],
 
-  tests: [],
+  mockups: {
+    Database: {
+      get() {
+        return {
+          findById(data) {
+            return {};
+          },
+          update() {}
+        };
+      }
+    }
+  },
+
+  tests: [{
+    name: 'Update object',
+    input: {data: {name: 'Test'}, id: '1', table: 'Item'},
+    output: {id: '1', name: 'Test'},
+    inputSchema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'object',
+          properties: {
+            name: {type: 'string'}
+          }
+        },
+        id: {type: 'string'},
+        table: {type: 'string'}
+      }
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        id: {type: 'string', minLength: 1},
+        name: {type: 'string'}
+      }
+    }
+  }],
 
   execute: async ({id, data, table}, {Database}) => {
     const db = Database.get(table);
