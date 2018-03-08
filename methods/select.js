@@ -1,6 +1,6 @@
 'use strict';
 
-const {union, intersection} = require('lodash');
+const {get, union, intersection} = require('lodash');
 const {Op, fn, col} = require('sequelize');
 
 module.exports = {
@@ -98,7 +98,13 @@ module.exports = {
     const output = {};
 
     // Get attributes that we need to fetch from the database.
-    const attributes = intersection(union(Object.keys(model.properties), ['id']), Object.keys(selections.items || {id: {}}));
+    let attributes = union(Object.keys(model.properties), ['id']);
+    if (selections) {
+      // If a selections object was provided, select only fields that appear in both the
+      // model and the selections, but do always include "id".
+      const selectedFields = union(Object.keys(get(selections, 'items', {})), ['id']);
+      attributes = intersection(attributes, selectedFields);
+    }
 
     output.items = await db.findAll({
       attributes,
