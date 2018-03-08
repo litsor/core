@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 'use strict';
 
-const {cloneDeep, isEqual} = require('lodash');
+const {cloneDeep, isEqual, defaults} = require('lodash');
 const validator = require('is-my-json-valid');
 
 class MethodTester {
@@ -38,7 +38,7 @@ class MethodTester {
 
     let output;
     try {
-      output = await method.execute(input, method.mockups);
+      output = await method.execute({...(method.defaults || {}), ...input}, method.mockups);
     } catch (err) {
       console.error('Exception: ', err);
       return false;

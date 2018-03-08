@@ -143,8 +143,22 @@ class JsonSchema {
         required: ['type']
       }, {
         type: 'object',
+        properties: {
+          name: {
+            type: 'string'
+          },
+          $ref: {
+            type: 'string'
+          }
+        },
+        required: ['name'],
         additionalProperties: false
-      }]
+      }],
+      definitions: {
+        Script: {
+          type: 'array'
+        }
+      }
     };
 
     this.plainSchema = {

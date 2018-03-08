@@ -76,11 +76,10 @@ module.exports = {
           const refTable = model.properties[field].$ref.substring(14);
           try {
             const script = ScriptsManager.get('Get');
-            const result = await script.run({
+            item[field] = await script.run({
               table: refTable,
               id: item[field]
             });
-            item[field] = result.data;
           } catch (err) {
             console.log('Unable to fetch reference: ' + err.message);
             item[field] = null;

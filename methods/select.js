@@ -141,7 +141,7 @@ module.exports = {
       const [table, id] = key.split(':');
       let result = null;
       try {
-        result = (await script.run({table, id})).data;
+        result = await script.run({table, id});
       } catch (err) {
         console.log('Unable to fetch reference: ' + err.message);
       }

@@ -14,7 +14,7 @@ module.exports = {
     additionalProperties: false
   },
 
-  outputSchema: inputSchema => {
+  outputSchema: (_, {value}) => {
     const getSchema = value => {
       if (value === null) {
         return {type: 'null'};
@@ -50,7 +50,7 @@ module.exports = {
       }
       return {};
     };
-    return getSchema(inputSchema.properties.value);
+    return getSchema(value);
   },
 
   requires: [],
