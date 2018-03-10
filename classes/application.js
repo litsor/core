@@ -3,6 +3,6 @@
 class Application {}
 
 Application.singleton = true;
-Application.require = ['GraphqlLinks', 'Models'];
+Application.require = ['GraphqlLinks', 'Endpoints'];
 
 module.exports = Application;
