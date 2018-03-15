@@ -1,0 +1,15 @@
+id: Protected
+steps:
+
+- script:
+    _output: /user
+    script: LoadUser
+
+- script:
+    _output: null
+    script: RequireScope
+    scope: read
+
+- static:
+    _output: /data/body
+    value: '<h1>Protected page</h1>'

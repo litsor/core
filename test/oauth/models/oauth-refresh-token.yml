@@ -1,0 +1,18 @@
+id: OauthRefreshToken
+description: OAuth2 refresh token
+store: true
+properties:
+  client:
+    $ref: '#/definitions/OauthClient'
+  user:
+    $ref: '#/definitions/User'
+  scope:
+    type: string
+  lastUsed:
+    type: integer
+  created:
+    type: integer
+required:
+  - client
+  - user
+  - created

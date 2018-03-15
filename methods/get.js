@@ -1,6 +1,7 @@
 'use strict';
 
 const {union, intersection} = require('lodash');
+const {NotFound} = require('http-errors');
 
 module.exports = {
   name: 'Get',
@@ -52,7 +53,7 @@ module.exports = {
           properties: {
             name: {type: 'string'}
           }
-        }
+        };
       }
     },
     Database: {
@@ -96,7 +97,7 @@ module.exports = {
       if (nullOnError) {
         return null;
       }
-      throw new Error(`${table} does not exist`);
+      throw new NotFound(`${table} does not exist`);
     }
 
     // Expand referenced objects.

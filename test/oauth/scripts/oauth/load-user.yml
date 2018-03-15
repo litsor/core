@@ -1,0 +1,48 @@
+id: LoadUser
+steps:
+
+- if:
+    left: /headers/authorization
+    then:
+      - static:
+          _output: /filters
+          value: {}
+      - substring:
+          _output: /filters/token
+          input: /headers/authorization
+          start: 7
+      - date:
+          _output: /filters/expires_gt
+          format: X
+      - select:
+          _output: /tokens
+          table: OauthAccessToken
+          filters: /filters
+          limit: 1
+          selections:
+            items:
+              id:
+              client:
+                id:
+              expires:
+              user:
+                id:
+                name:
+                scope:
+              scope:
+      - if:
+          left: /tokens/items/0
+          then:
+            - object:
+                _output: /data
+                id: /tokens/items/0/user/id
+                name: /tokens/items/0/user/name
+                client: /tokens/items/0/token/client
+            - object:
+                _output: /data/token
+                id: /tokens/items/0/id
+                expires: /tokens/items/0/expires
+            - scope-intersection:
+                _output: /data/token/scope
+                left: /tokens/items/0/scope
+                right: /tokens/items/0/user/scope

@@ -1,5 +1,8 @@
 'use strict';
 
+const {createServer} = require('http');
+const {promisify} = require('util');
+const destroyable = require('server-destroy');
 const Koa = require('koa');
 const logger = require('koa-logger');
 const bodyParser = require('koa-bodyparser');
@@ -19,11 +22,15 @@ class Http {
   }
 
   async startup() {
-    await this.app.listen(this.port);
+    this.server = createServer(this.app.callback());
+    this.server.listen = promisify(this.server.listen);
+    await this.server.listen(this.port);
+    destroyable(this.server);
   }
 
   async shutdown() {
-    await this.app.close();
+    this.server.destroy = promisify(this.server.destroy);
+    await this.server.destroy();
   }
 }
 

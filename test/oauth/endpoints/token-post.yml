@@ -1,0 +1,49 @@
+id: OauthTokenPost
+path: /oauth/token
+method: POST
+script: OauthToken
+params:
+  grant_type:
+    name: Grant type
+    in: body
+    schema:
+      type: string
+      enum:
+        - authorization_code
+  client_id:
+    name: Client id
+    in: body
+    schema:
+      type: string
+  code:
+    name: Code
+    in: body
+    schema:
+      type: string
+  redirect_uri:
+    name: Redirect URI
+    in: body
+    schema:
+      type: string
+output:
+  mime: text/html
+  schema:
+    type: object
+    properties:
+      access_token:
+        type: string
+      token_type:
+        type: string
+        enum:
+          - bearer
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      uid:
+        type: string
+    required:
+      - access_token
+      - token_type
+      - expires_in
+      - uid

@@ -1,0 +1,6 @@
+id: Get
+steps:
+- get:
+    table: /table
+    id: /id
+    selections: /selections

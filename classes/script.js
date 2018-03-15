@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 'use strict';
 
-const {cloneDeep} = require('lodash');
+const {cloneDeep, defaults} = require('lodash');
 const {get, set} = require('jsonpointer');
 
 class Script {
@@ -20,16 +20,31 @@ class Script {
 
   async runStep(dataReference, index) {
     const step = this.definition.steps[index];
-    const methodName = Object.keys(step);
+    const methodName = Object.keys(step)[0];
     const method = await this.methods.get(methodName);
 
     const inputData = {};
-    Object.keys(step[methodName]).filter(value => value !== 'output').forEach(key => {
-
-      if (typeof step[methodName][key] === 'string' && step[methodName][key].startsWith('/')) {
-        inputData[key] = get(dataReference, step[methodName][key] === '/' ? '' : step[methodName][key]);
+    const defaults = method.defaults || {};
+    Object.keys({...defaults, ...step[methodName]}).filter(value => !value.startsWith('_')).forEach(key => {
+      const source = [
+        step[methodName][key],
+        defaults[key],
+        null
+      ].reduce((prev, curr) => typeof prev === 'undefined' ? curr : prev);
+      if (typeof source === 'string' && source.startsWith('/')) {
+        // The input is a path. Get the value via JSONPointer.
+        try {
+          inputData[key] = get(dataReference, source === '/' ? '' : source);
+        } catch (e) {
+          inputData[key] = null;
+        }
+      } else if (typeof source === 'object' && Object.keys(source).length === 1 && typeof source['='] !== 'undefined') {
+        // There is a special syntax to allow static strings starting with a slash. In YAML we write:
+        // {=: /oauth}
+        inputData[key] = source['='];
       } else {
-        inputData[key] = step[methodName][key];
+        // The input is a static value.
+        inputData[key] = source;
       }
     });
 
@@ -41,18 +56,37 @@ class Script {
       dependencies[method.requires[index]] = item;
     });
 
-    const outputData = await method.execute({...(method.defaults || {}), ...inputData}, dependencies);
+    const outputData = await method.execute(inputData, dependencies);
 
-    set(dataReference, step[methodName].output || '/data', outputData);
+    // Write output to the first of the following that is not undefined, or do not write
+    // output when null is provided.
+    const outputTarget = [
+      step[methodName]._output,
+      (method.defaults || {})._output,
+      '/data'
+    ].reduce((prev, curr) => typeof prev === 'undefined' ? curr : prev);
+    if (outputTarget !== null) {
+      if (outputTarget === '/') {
+        if (typeof outputData !== 'object' || outputData === null) {
+          return dataReference;
+        }
+        return outputData;
+      }
+      set(dataReference, outputTarget, outputData);
+    }
+    return dataReference;
   }
 
-  async run(input) {
+  async run(input, options) {
+    options = defaults(options, {
+      returnContext: false
+    });
     const length = this.definition.steps.length;
-    const data = cloneDeep(input || {});
+    let data = cloneDeep(input || {});
     for (let i = 0; i < length; ++i) {
-      await this.runStep(data, i);
+      data = await this.runStep(data, i);
     }
-    return typeof data.data === 'undefined' ? null : data.data;
+    return options.returnContext ? data : (typeof data.data === 'undefined' ? null : data.data);
   }
 }
 

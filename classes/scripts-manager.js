@@ -42,6 +42,22 @@ class ScriptsManager extends ConfigFiles {
       this.crons[id].stop();
     }
   }
+
+  publish() {
+    const recommended = [
+      'Create',
+      'Get',
+      'Update',
+      'Delete',
+      'Select'
+    ];
+    const missing = recommended.reduce((prev, item) => {
+      return typeof this.items[item] === 'undefined' ? [item, ...prev] : prev;
+    }, []);
+    if (missing.length > 0) {
+      console.log('Warning: The following scripts are missing: ' + missing.join(', '));
+    }
+  }
 }
 
 ScriptsManager.singleton = true;

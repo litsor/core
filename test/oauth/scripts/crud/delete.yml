@@ -1,0 +1,5 @@
+id: Delete
+steps:
+- delete:
+    table: /table
+    id: /id

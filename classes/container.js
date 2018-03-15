@@ -40,7 +40,7 @@ class Container {
     for (let i = 0; i < names.length; ++i) {
       const name = names[i];
       const instance = this.services[name].instance;
-      if (instance && typeof instance.shutdown === 'function') {
+      if (instance && typeof instance.shutdown === 'function' && name !== 'Container') {
         await instance.shutdown();
       }
     }

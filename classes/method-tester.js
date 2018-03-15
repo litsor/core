@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 'use strict';
 
-const {cloneDeep, isEqual, defaults} = require('lodash');
+const {cloneDeep, isEqual} = require('lodash');
 const validator = require('is-my-json-valid');
 
 class MethodTester {
@@ -44,7 +44,12 @@ class MethodTester {
       return false;
     }
 
-    if (!isEqual(output, test.output)) {
+    if (typeof test.output === 'function') {
+      if (!test.output(output)) {
+        console.log('Output is not valid in test: ', output);
+        return false;
+      }
+    } else if (!isEqual(output, test.output)) {
       console.log('Output does not match output given in test: ', output);
       return false;
     }

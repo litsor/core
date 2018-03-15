@@ -1,0 +1,104 @@
+id: OauthToken
+steps:
+
+- date:
+    _output: /now
+    format: X
+
+- static:
+    _output: /data/status
+    value: 400
+
+- if:
+    left: /grant_type
+    right: authorization_code
+    then:
+      - object:
+          _output: /filters
+          code: /code
+      - select:
+          _output: /codes
+          table: OauthAuthorizationCode
+          filters: /filters
+          selections:
+            items:
+              code:
+              scope:
+              user:
+                id:
+              client:
+                id:
+      - if:
+          left: /codes/items/0
+          then:
+
+            # Check if an access token already exists.
+            - object:
+                _output: /filters
+                client: /codes/items/0/client/id
+                user: /codes/items/0/user/id
+                scope: /codes/items/0/scope
+            # Only remember login when token is still valid for at least 15 minutes.
+            - math:
+                _output: /filters/expires_gt
+                formula: now + 900
+                now: /now
+            - select:
+                _output: /tokens
+                table: OauthAccessToken
+                filters: /filters
+                selections:
+                  items:
+                    id:
+                    token:
+                    expires:
+                    user:
+                      id:
+            - if:
+                left: /tokens/items/0/id
+                then:
+                  # We already have an access token. Reuse that one.
+                  - object:
+                      _output: /data/body
+                      access_token: /tokens/items/0/token
+                      token_type: bearer
+                      uid: /tokens/items/0/user/id
+                  - math:
+                      _output: /data/body/expires_in
+                      formula: 'expires - now'
+                      now: /now
+                      expires: /tokens/items/0/expires
+                else:
+                  # Create a new access token.
+                  - object:
+                      _output: /token
+                      client: /codes/items/0/client/id
+                      user: /codes/items/0/user/id
+                      scope: /codes/items/0/scope
+                      created: /now
+                  - math:
+                      _output: /token/expires
+                      formula: 'now + 86400'
+                      now: /now
+                  - secure-token:
+                      _output: /token/token
+                  - create:
+                      table: OauthAccessToken
+                      data: /token
+                  - object:
+                      _output: /data/body
+                      access_token: /token/token
+                      token_type: bearer
+                      expires_in: 86400
+                      uid: /token/user
+            - static:
+                _output: /data/status
+                value: 200
+
+# Set security related headers.
+- static:
+    _output: /data/headers/Cache-Control
+    value: no-store
+- static:
+    _output: /data/headers/Pragma
+    value: no-cache

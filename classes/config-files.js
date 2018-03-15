@@ -8,6 +8,8 @@ class ConfigFiles {
     this.yaml = Yaml;
     this.config = Config;
 
+    this.configDir = Config.get('/configDir', 'data');
+
     // Each implementation must set a proper configName.
     this.configName = null;
 
@@ -15,7 +17,7 @@ class ConfigFiles {
   }
 
   async readFiles() {
-    const files = await this.yaml.readFiles(`data/${this.configName}/**/*.yml`);
+    const files = await this.yaml.readFiles(`${this.configDir}/${this.configName}/**/*.yml`);
     for (let i = 0; i < Object.keys(files).length; ++i) {
       const filename = Object.keys(files)[i];
       const {id} = files[filename];
@@ -31,7 +33,7 @@ class ConfigFiles {
     await this.readFiles();
     if (this.config.get('/reload', false)) {
       let first = true;
-      Watch.watchTree(`data/${this.configName}`, () => {
+      Watch.watchTree(`${this.configDir}/${this.configName}`, () => {
         if (first) {
           first = false;
           return;
@@ -44,7 +46,7 @@ class ConfigFiles {
 
   async shutdown() {
     if (this.config.get('/reload', false)) {
-      Watch.unwatchTree(`data/${this.configName}`);
+      Watch.unwatchTree(`${this.configDir}/${this.configName}`);
     }
     const names = Object.keys(this.items);
     for (let i = 0; i < names.length; ++i) {

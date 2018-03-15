@@ -1,0 +1,22 @@
+id: OauthClient
+description: OAuth2 client
+store: true
+properties:
+  name:
+    type: string
+  type:
+    $ref: '#/definitions/OauthClientType'
+  trusted:
+    type: boolean
+  redirectUri:
+    type: string
+  lastUsed:
+    type: integer
+  created:
+    type: integer
+required:
+  - name
+  - type
+  - trusted
+  - redirectUri
+  - created

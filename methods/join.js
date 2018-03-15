@@ -21,6 +21,7 @@ module.exports = {
         }
       }
     },
+    required: ['input'],
     additionalProperties: false
   },
 

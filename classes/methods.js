@@ -6,9 +6,10 @@ const Watch = require('watch');
 const reload = require('require-reload')(require);
 
 class Methods {
-  constructor({Config, MethodTester}) {
+  constructor({Config, MethodTester, Container}) {
     this.config = Config;
     this.methodTester = MethodTester;
+    this.container = Container;
     this.methods = {};
   }
 
@@ -63,9 +64,21 @@ class Methods {
     }
     return this.methods[name];
   }
+
+  async execute(name, input) {
+    const method = await this.get(name);
+    const dependencies = {};
+    const promises = (method.requires || []).map(name => {
+      return this.container.get(name);
+    });
+    (await Promise.all(promises)).forEach((item, index) => {
+      dependencies[method.requires[index]] = item;
+    });
+    return method.execute({...(method.defaults || {}), ...input}, dependencies);
+  }
 }
 
 Methods.singleton = true;
-Methods.require = ['Config', 'MethodTester'];
+Methods.require = ['Config', 'MethodTester', 'Container'];
 
 module.exports = Methods;

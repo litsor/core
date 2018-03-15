@@ -39,7 +39,7 @@ module.exports = {
     Database: {
       get() {
         return {
-          findById(data) {
+          findById() {
             return {
               dataValues: {id: '1', name: 'Test'},
               destroy() {}

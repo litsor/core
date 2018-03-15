@@ -1,0 +1,14 @@
+id: UserSession
+description: User session token
+store: true
+properties:
+  token:
+    type: string
+  user:
+    $ref: '#/definitions/User'
+  created:
+    type: integer
+required:
+  - token
+  - user
+  - created

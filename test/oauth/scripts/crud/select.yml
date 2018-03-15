@@ -1,0 +1,8 @@
+id: Select
+steps:
+- select:
+    table: /table
+    filters: /filters
+    limit: /limit
+    offset: /offset
+    selections: /selections

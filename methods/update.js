@@ -47,7 +47,7 @@ module.exports = {
     Database: {
       get() {
         return {
-          findById(data) {
+          findById() {
             return {};
           },
           update() {}

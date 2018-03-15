@@ -1,0 +1,36 @@
+id: OauthAuthorize
+path: /oauth/authorize
+method: GET
+script: OauthAuthorize
+params:
+  response_type:
+    name: Response type
+    in: query
+    schema:
+      type: string
+      enum:
+        - code
+  client_id:
+    name: Client id
+    in: query
+    schema:
+      type: string
+  redirect_uri:
+    name: Redirect URI
+    in: query
+    schema:
+      type: string
+  scope:
+    name: Scope
+    in: query
+    schema:
+      type: string
+  state:
+    name: State
+    in: query
+    schema:
+      type: string
+output:
+  mime: text/html
+  schema:
+    type: string

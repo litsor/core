@@ -1,0 +1,19 @@
+id: Logout
+steps:
+
+- script:
+    _output: /user
+    script: LoadUser
+
+- if:
+    left: /user
+    then:
+      - delete:
+          table: OauthAccessToken
+          id: /user/token/id
+
+- object:
+    _output: /data
+    status: 302
+    body: 'Redirecting...'
+    redirect: /

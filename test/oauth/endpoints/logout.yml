@@ -1,0 +1,9 @@
+id: Logout
+path: /logout
+method: GET
+script: Logout
+params: {}
+output:
+  mime: text/html
+  schema:
+    type: string

@@ -1,0 +1,51 @@
+id: OauthAuthorizePost
+path: /oauth/authorize
+method: POST
+script: OauthAuthorize
+params:
+  response_type:
+    name: Response type
+    in: body
+    schema:
+      type: string
+      enum:
+        - code
+  client_id:
+    name: Client id
+    in: body
+    schema:
+      type: string
+  redirect_uri:
+    name: Redirect URI
+    in: body
+    schema:
+      type: string
+  scope:
+    name: Scope
+    in: body
+    schema:
+      type: string
+  state:
+    name: State
+    in: body
+    schema:
+      type: string
+  username:
+    name: Username
+    in: body
+    schema:
+      type: string
+  password:
+    name: Password
+    in: body
+    schema:
+      type: string
+  allow:
+    name: Allow
+    in: body
+    schema:
+      type: string
+output:
+  mime: text/html
+  schema:
+    type: string

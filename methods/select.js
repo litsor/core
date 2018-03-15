@@ -71,7 +71,7 @@ module.exports = {
           properties: {
             name: {type: 'string'}
           }
-        }
+        };
       }
     },
     Database: {
@@ -132,12 +132,12 @@ module.exports = {
       attributes = intersection(attributes, selectedFields);
     }
 
-    output.items = await db.findAll({
+    output.items = (await db.findAll({
       attributes,
       where,
       limit: limit || 10,
       offset: offset || 0
-    });
+    })).map(item => item.dataValues);
 
     if (Object.keys(selections || {}).indexOf('count') >= 0) {
       output.count = (await db.findAll({

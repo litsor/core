@@ -45,7 +45,7 @@ class Database {
       const type = this.getType(propertySchema);
       fields[field] = {
         type,
-        allowNull: (definition.required || []).indexOf(name) >= 0,
+        allowNull: (definition.required || []).indexOf(field) < 0,
         field: snakeCase(field)
       };
     });

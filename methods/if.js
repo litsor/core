@@ -20,11 +20,11 @@ module.exports = {
       right: {
         name: 'Right operand'
       },
-      thenScript: {
+      then: {
         name: 'Then',
         $ref: '#/definitions/Script'
       },
-      elseScript: {
+      else: {
         name: 'Else',
         $ref: '#/definitions/Script'
       },
@@ -40,11 +40,12 @@ module.exports = {
   defaults: {
     operator: '==',
     right: true,
-    input: {}
+    input: '/',
+    _output: '/'
   },
 
-  outputSchema: (_, {thenScript, elseScript}) => {
-    if (!thenScript && !elseScript) {
+  outputSchema: (_, options) => {
+    if (!options.then && !options.else) {
       return {type: 'boolean'};
     }
     return {};
@@ -83,7 +84,7 @@ module.exports = {
     name: 'Then-script provided, condition passed',
     input: {
       left: true,
-      thenScript: [{static: {value: 1}}]
+      then: [{static: {value: 1}}]
     },
     output: 1,
     outputSchema: {}
@@ -91,7 +92,7 @@ module.exports = {
     name: 'Then-script provided, condition failed',
     input: {
       left: false,
-      thenScript: [{static: {value: 1}}]
+      then: [{static: {value: 1}}]
     },
     output: false,
     outputSchema: {}
@@ -99,7 +100,7 @@ module.exports = {
     name: 'Else-script provided, condition passed',
     input: {
       left: true,
-      elseScript: [{static: {value: 1}}]
+      else: [{static: {value: 1}}]
     },
     output: true,
     outputSchema: {}
@@ -107,7 +108,7 @@ module.exports = {
     name: 'Else-script provided, condition failed',
     input: {
       left: false,
-      elseScript: [{static: {value: 1}}]
+      else: [{static: {value: 1}}]
     },
     output: 1,
     outputSchema: {}
@@ -115,8 +116,8 @@ module.exports = {
     name: 'Then and else provided, condition passed',
     input: {
       left: true,
-      thenScript: [{static: {value: 1}}],
-      elseScript: [{static: {value: 2}}]
+      then: [{static: {value: 1}}],
+      else: [{static: {value: 2}}]
     },
     output: 1,
     outputSchema: {}
@@ -124,14 +125,28 @@ module.exports = {
     name: 'Then and else provided, condition failed',
     input: {
       left: false,
-      thenScript: [{static: {value: 1}}],
-      elseScript: [{static: {value: 2}}]
+      then: [{static: {value: 1}}],
+      else: [{static: {value: 2}}]
     },
     output: 2,
     outputSchema: {}
+  }, {
+    name: 'Check if object exist',
+    input: {
+      left: {}
+    },
+    output: true,
+    outputSchema: {type: 'boolean'}
   }],
 
-  execute: async ({left, operator, right, thenScript, elseScript, input}, {Script}) => {
+  execute: async (options, {Script}) => {
+    const {operator, right, input} = options;
+
+    // It is more convenient to cast the left operand to a boolean first when it is compared
+    // to a boolean. This allows us to check if an object is present with only passing
+    // the left operand.
+    const left = typeof right === 'boolean' ? Boolean(options.left) : options.left;
+
     const passed = {
       '==': left == right,
       '===': left === right,
@@ -142,14 +157,14 @@ module.exports = {
       '>=': left >= right,
       '>': left > right
     }[operator];
-    if ((passed && !thenScript) || (!passed && !elseScript)) {
+    if ((passed && !options.then) || (!passed && !options.else)) {
       // There is no script to execute. Only pass back if the condition passed.
       return passed;
     }
     Script.load({
       name: passed ? 'Then' : 'Else',
-      steps: passed ? thenScript : elseScript
+      steps: passed ? options.then : options.else
     });
-    return Script.run(input);
+    return Script.run(input, {returnContext: true});
   }
 };

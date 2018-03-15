@@ -59,12 +59,31 @@ class Endpoints extends ConfigFiles {
     const script = this.scriptsManager.get(route.script);
     const params = this.getParams(route, ctx);
 
-    const result = (await script.run(params)) || {};
+    const headers = ctx.request.headers;
+    const cookies = (ctx.request.headers['set-cookie'] || []).map(value => {
+      return value.split(';').filter(str => str.match(/[^\s]/)).reduce((prev, curr) => {
+        const match = curr.match(/^([^=]+)=(.*)$/);
+        return match ? {...prev, [match[1]]: match[2]} : prev;
+      }, {});
+    }).reduce((prev, curr) => ({...prev, ...curr}), []);
+
+    const input = {headers, cookies, ...params};
+
+    const result = (await script.run(input)) || {};
+    ctx.response.body = result.body || null;
     if (typeof result.status === 'number' && result.status >= 100 && result.status <= 512) {
       ctx.response.status = result.status;
     }
+    if (typeof result.redirect === 'string') {
+      ctx.redirect(result.redirect);
+    }
     ctx.response.set(result.headers || {});
-    ctx.response.body = result.body || null;
+
+    Object.keys(result.cookies || {}).forEach(name => {
+      if (typeof result.cookies[name] === 'object') {
+        ctx.cookies.set(name, result.cookies[name].value);
+      }
+    });
   }
 }
 

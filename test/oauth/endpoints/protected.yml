@@ -1,0 +1,9 @@
+id: Protected
+path: /protected-resource
+method: GET
+script: Protected
+params: {}
+output:
+  mime: text/html
+  schema:
+    type: string
