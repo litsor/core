@@ -81,7 +81,7 @@ module.exports = {
             if (Array.isArray(attributes[0])) {
               return [{dataValues: {count: 1}}];
             }
-            return [{id: '1', name: 'Test A'}];
+            return [{dataValues: {id: '1', name: 'Test A'}}];
           }
         };
       }

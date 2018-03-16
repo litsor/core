@@ -32,7 +32,7 @@ class MethodTester {
     const outputSchema = method.outputSchema(test.inputSchema || defaultInputSchema, test.input);
     const outputSchemaValidation = this.jsonSchema.validate(outputSchema, false);
     if (outputSchemaValidation !== true) {
-      console.log('Invalid output schema: ' + inputSchemaValidation);
+      console.log('Invalid output schema: ' + outputSchemaValidation, outputSchema);
       return false;
     }
 
@@ -40,8 +40,16 @@ class MethodTester {
     try {
       output = await method.execute({...(method.defaults || {}), ...input}, method.mockups);
     } catch (err) {
-      console.error('Exception: ', err);
-      return false;
+      if (typeof test.error === 'function') {
+        // Exceptions must be validated by a callback.
+        if (!test.error(err)) {
+          console.error('Exception: ', err);
+          return false;
+        }
+      } else {
+        console.error('Exception: ', err);
+        return false;
+      }
     }
 
     if (typeof test.output === 'function') {
@@ -68,7 +76,7 @@ class MethodTester {
     return true;
   }
 
-  async test(method) {
+  async test(method, quiet) {
     let passed = 0;
     let failed = 0;
     const count = method.tests.length;
@@ -88,7 +96,10 @@ class MethodTester {
         ++failed;
       }
     }
-    console.log(`Test result for ${method.name}: ${passed} passed, ${failed} failed`);
+    if (!quiet) {
+      console.log(`Test result for ${method.name}: ${passed} passed, ${failed} failed`);
+    }
+    return failed === 0;
   }
 }
 

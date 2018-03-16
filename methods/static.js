@@ -26,7 +26,7 @@ module.exports = {
           return {type: 'string', minLength: value.length, maxLength: value.length, enum: [value]};
         }
         if (value.length < 128) {
-          return {type: 'string', minLenght: value.length, maxLength: value.length};
+          return {type: 'string', minLength: value.length, maxLength: value.length};
         }
         return {type: 'string'};
       }
@@ -47,10 +47,7 @@ module.exports = {
         });
         return {type: 'object', properties, required: Object.keys(value), additionalProperties: false};
       }
-      if (typeof value === 'boolean') {
-        return {type: 'boolean'};
-      }
-      return {};
+      return {type: 'boolean'};
     };
     return getSchema(value);
   },
@@ -95,6 +92,20 @@ module.exports = {
       foo: {type: 'string', minLength: 3, maxLength: 3, enum: ['bar']},
       bar: {type: 'string', minLength: 3, maxLength: 3, enum: ['baz']}
     }, required: ['foo', 'bar'], additionalProperties: false}
+  }, {
+    name: 'Does not set enum for strings > 32 chars',
+    input: {
+      value: new Array(51).join('.')
+    },
+    output: new Array(51).join('.'),
+    outputSchema: {type: 'string', minLength: 50, maxLength: 50}
+  }, {
+    name: 'Does not set length for strings > 128 chars',
+    input: {
+      value: new Array(130).join('.')
+    },
+    output: new Array(130).join('.'),
+    outputSchema: {type: 'string'}
   }],
 
   execute: ({value}) => {

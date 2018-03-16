@@ -26,7 +26,11 @@ module.exports = {
 
   requires: [],
 
-  tests: [],
+  tests: [{
+    input: {
+      input: 'test'
+    }
+  }],
 
   execute: ({input}) => {
     console.log(JSON.stringify(input, null, 2));

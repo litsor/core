@@ -76,7 +76,11 @@ module.exports = {
 
   requires: [],
 
-  tests: [],
+  tests: [{
+    name: 'Can raise error',
+    input: {type: 'BadRequest', message: 'bad'},
+    error: () => true
+  }],
 
   execute: ({type, message}) => {
     throw new createError[type](message);
