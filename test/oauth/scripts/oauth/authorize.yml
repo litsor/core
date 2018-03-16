@@ -70,10 +70,6 @@ steps:
                 _output: /data/cookies/session
                 value: /session/token
                 path: {=: /oauth}
-            - object:
-                _output: /data/cookies/session2
-                value: /session/token
-                path: {=: /oauth}
 
 - if:
     left: /user

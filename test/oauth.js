@@ -94,7 +94,8 @@ describe('OAuth', () => {
       body: stringify(values)
     });
     expect(result.status).to.equal(200);
-    temporary.cookies = result.headers.getAll('set-cookie').reduce((prev, curr) => prev + curr.split(';')[0] + ';', '');
+    const cookieHeaders = (result.headers.get('set-cookie') || []).split(/,[\s]*/).filter(str => str);
+    temporary.cookies = cookieHeaders.reduce((prev, curr) => prev + curr.split(';')[0] + ';', '');
     expect(result.headers.get('content-type')).to.equal('text/html; charset=utf-8');
     temporary.html = await result.text();
   });
@@ -297,7 +298,8 @@ describe('OAuth', () => {
       body: stringify(values)
     });
     expect(result.status).to.equal(200);
-    temporary.cookies = result.headers.getAll('set-cookie').reduce((prev, curr) => prev + curr.split(';')[0] + ';', '');
+    const cookieHeaders = (result.headers.get('set-cookie') || []).split(/,[\s]*/).filter(str => str);
+    temporary.cookies = cookieHeaders.reduce((prev, curr) => prev + curr.split(';')[0] + ';', '');
     expect(result.headers.get('content-type')).to.equal('text/html; charset=utf-8');
     temporary.html = await result.text();
   });
