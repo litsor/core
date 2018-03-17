@@ -75,30 +75,37 @@ steps:
     left: /user
     then:
 
-      # Check if authorization was already given by checking the existence of an access token.
-      - object:
-          _output: /filters
-          client: /client/id
-          user: /user/id
-          scope: /scope
-      # Only remember login when token is still valid for at least 15 minutes.
-      - math:
-          _output: /filters/expires_gt
-          formula: now + 900
-          now: /now
-      - select:
-          _output: /tokens
-          table: OauthAccessToken
-          filters: /filters
-          selections:
-            items:
-              id:
       - if:
-          left: /tokens/items/0/id
+          left: /client/trusted
           then:
             - static:
                 _output: /allow
                 value: "true"
+          else:
+            # Check if authorization was already given by checking the existence of an access token.
+            - object:
+                _output: /filters
+                client: /client/id
+                user: /user/id
+                scope: /scope
+            # Only remember login when token is still valid for at least 15 minutes.
+            - math:
+                _output: /filters/expires_gt
+                formula: now + 900
+                now: /now
+            - select:
+                _output: /tokens
+                table: OauthAccessToken
+                filters: /filters
+                selections:
+                  items:
+                    id:
+            - if:
+                left: /tokens/items/0/id
+                then:
+                  - static:
+                      _output: /allow
+                      value: "true"
 
       - if:
           left: /allow

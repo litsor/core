@@ -42,16 +42,36 @@ describe('OAuth', () => {
         scope: '*'
       }
     });
-    await create.run({
+    temporary.untrustedPublicClient = (await create.run({
       table: 'OauthClient',
       input: {
-        name: 'Client A',
+        name: 'Client A - Untrusted public client',
         type: 'public',
         trusted: false,
         redirectUri: 'https://example.com/callback',
         created: ~~(new Date() / 1e3)
       }
-    });
+    })).id;
+    temporary.trustedPublicCilent = (await create.run({
+      table: 'OauthClient',
+      input: {
+        name: 'Client B - Trusted public client',
+        type: 'public',
+        trusted: true,
+        redirectUri: 'https://example.com/callback',
+        created: ~~(new Date() / 1e3)
+      }
+    })).id;
+    temporary.untrustedPublicClient2 = (await create.run({
+      table: 'OauthClient',
+      input: {
+        name: 'Client C - Untrusted public client',
+        type: 'public',
+        trusted: false,
+        redirectUri: 'https://example.com/callback',
+        created: ~~(new Date() / 1e3)
+      }
+    })).id;
   });
 
   after(async () => {
@@ -62,7 +82,7 @@ describe('OAuth', () => {
   it('can access the authorization page', async () => {
     const query = stringify({
       response_type: 'code',
-      client_id: '1',
+      client_id: temporary.untrustedPublicClient,
       redirect_uri: 'http://example.com/',
       scope: 'read write',
       state: 'Teststate'
@@ -144,7 +164,7 @@ describe('OAuth', () => {
   it('can retrieve the access token with the autorization code', async () => {
     const body = {
       grant_type: 'authorization_code',
-      client_id: '1',
+      client_id: temporary.untrustedPublicClient,
       code: temporary.code,
       redirect_url: 'http://example.com/'
     };
@@ -193,7 +213,7 @@ describe('OAuth', () => {
   it('remembers the authorization', async () => {
     const query = stringify({
       response_type: 'code',
-      client_id: '1',
+      client_id: temporary.untrustedPublicClient,
       redirect_uri: 'http://example.com/',
       scope: 'read write',
       state: 'Teststate'
@@ -214,7 +234,7 @@ describe('OAuth', () => {
 
     const body = {
       grant_type: 'authorization_code',
-      client_id: '1',
+      client_id: temporary.untrustedPublicClient,
       code: url.query.code,
       redirect_url: 'http://example.com/'
     };
@@ -234,6 +254,41 @@ describe('OAuth', () => {
     expect(tokenResponse).to.have.property('expires_in');
     expect(tokenResponse.expires_in > 0).to.equal(true);
     expect(tokenResponse.expires_in >= 86400 - 10).to.equal(true);
+  });
+
+  it('does not require authorization for trusted clients', async () => {
+    const query = stringify({
+      response_type: 'code',
+      client_id: temporary.trustedPublicCilent,
+      redirect_uri: 'http://example.com/',
+      scope: 'read write',
+      state: 'Teststate'
+    });
+    const result = await fetch(testUrl + '/oauth/authorize?' + query, {
+      headers: {
+        'Set-Cookie': temporary.cookies
+      },
+      redirect: 'manual'
+    });
+    expect(result.status).to.equal(302);
+    expect(result.headers.has('location')).to.equal(true);
+  });
+
+  it('requires authorization for other non-trusted clients', async () => {
+    const query = stringify({
+      response_type: 'code',
+      client_id: temporary.untrustedPublicClient2,
+      redirect_uri: 'http://example.com/',
+      scope: 'read write',
+      state: 'Teststate'
+    });
+    const result = await fetch(testUrl + '/oauth/authorize?' + query, {
+      headers: {
+        'Set-Cookie': temporary.cookies
+      },
+      redirect: 'manual'
+    });
+    expect(await result.text()).to.contain('Client C');
   });
 
   it.skip('can use the refresh_token to obtain a new access token', async () => {

@@ -128,7 +128,7 @@ module.exports = {
     if (selections) {
       // If a selections object was provided, select only fields that appear in both the
       // model and the selections, but do always include "id".
-      const selectedFields = union(Object.keys(get(selections, 'items', {})), ['id']);
+      const selectedFields = union(Object.keys(get(selections, 'items', {}) || {}), ['id']);
       attributes = intersection(attributes, selectedFields);
     }
 
