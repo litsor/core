@@ -5,9 +5,9 @@ steps:
     _output: /now
     format: X
 
-- get:
+- read:
     _output: /client
-    table: OauthClient
+    model: OauthClient
     id: /client_id
 
 - normalize-scope:
@@ -22,7 +22,7 @@ steps:
           token: /cookies/session
       - select:
           _output: /sessions
-          table: UserSession
+          model: UserSession
           filters: /session-filters
           selections:
             items:
@@ -46,7 +46,7 @@ steps:
           name: /username
       - select:
           _output: /users
-          table: User
+          model: User
           filters: /filters
       - if:
           left: /password
@@ -64,7 +64,7 @@ steps:
                 _output: /session/token
             - create:
                 _output: /session
-                table: UserSession
+                model: UserSession
                 data: /session
             - object:
                 _output: /data/cookies/session
@@ -95,7 +95,7 @@ steps:
                 now: /now
             - select:
                 _output: /tokens
-                table: OauthAccessToken
+                model: OauthAccessToken
                 filters: /filters
                 selections:
                   items:
@@ -128,7 +128,7 @@ steps:
                   - secure-token:
                       _output: /authorization-code/code
                   - create:
-                      table: OauthAuthorizationCode
+                      model: OauthAuthorizationCode
                       data: /authorization-code
                   - handlebars:
                       _output: /redirect_uri
@@ -155,7 +155,7 @@ steps:
                   - secure-token:
                       _output: /token/token
                   - create:
-                      table: OauthAccessToken
+                      model: OauthAccessToken
                       data: /token
                   - handlebars:
                       _output: /redirect_uri

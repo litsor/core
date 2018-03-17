@@ -18,7 +18,7 @@ steps:
           code: /code
       - select:
           _output: /codes
-          table: OauthAuthorizationCode
+          model: OauthAuthorizationCode
           filters: /filters
           selections:
             items:
@@ -45,7 +45,7 @@ steps:
                 now: /now
             - select:
                 _output: /tokens
-                table: OauthAccessToken
+                model: OauthAccessToken
                 filters: /filters
                 selections:
                   items:
@@ -83,7 +83,7 @@ steps:
                   - secure-token:
                       _output: /token/token
                   - create:
-                      table: OauthAccessToken
+                      model: OauthAccessToken
                       data: /token
                   - object:
                       _output: /data/body

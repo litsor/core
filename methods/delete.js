@@ -12,12 +12,12 @@ module.exports = {
         name: 'Object id',
         type: 'string'
       },
-      table: {
-        name: 'Tablename',
+      model: {
+        name: 'Model name',
         type: 'string'
       }
     },
-    required: ['id', 'table'],
+    required: ['id', 'model'],
     additionalProperties: false
   },
 
@@ -52,7 +52,7 @@ module.exports = {
 
   tests: [{
     name: 'Delete object',
-    input: {id: '1', table: 'Item'},
+    input: {id: '1', model: 'Item'},
     output: {id: '1', name: 'Test'},
     inputSchema: {
       type: 'object',
@@ -70,11 +70,11 @@ module.exports = {
     }
   }],
 
-  execute: async ({id, table}, {Database}) => {
-    const db = Database.get(table);
+  execute: async ({id, model}, {Database}) => {
+    const db = Database.get(model);
     const item = await db.findById(id);
     if (item === null) {
-      throw new Error(`${table} does not exist`);
+      throw new Error(`${model} does not exist`);
     }
     const output = {...item.dataValues};
     await item.destroy();

@@ -16,7 +16,7 @@ steps:
           format: X
       - select:
           _output: /tokens
-          table: OauthAccessToken
+          model: OauthAccessToken
           filters: /filters
           limit: 1
           selections:

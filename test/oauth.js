@@ -35,7 +35,7 @@ describe('OAuth', () => {
     const scriptsManager = await container.get('ScriptsManager');
     const create = scriptsManager.get('Create');
     await create.run({
-      table: 'User',
+      model: 'User',
       input: {
         name: 'alice',
         password: 'Welcome01!!',
@@ -43,7 +43,7 @@ describe('OAuth', () => {
       }
     });
     temporary.untrustedPublicClient = (await create.run({
-      table: 'OauthClient',
+      model: 'OauthClient',
       input: {
         name: 'Client A - Untrusted public client',
         type: 'public',
@@ -53,7 +53,7 @@ describe('OAuth', () => {
       }
     })).id;
     temporary.trustedPublicCilent = (await create.run({
-      table: 'OauthClient',
+      model: 'OauthClient',
       input: {
         name: 'Client B - Trusted public client',
         type: 'public',
@@ -63,7 +63,7 @@ describe('OAuth', () => {
       }
     })).id;
     temporary.untrustedPublicClient2 = (await create.run({
-      table: 'OauthClient',
+      model: 'OauthClient',
       input: {
         name: 'Client C - Untrusted public client',
         type: 'public',

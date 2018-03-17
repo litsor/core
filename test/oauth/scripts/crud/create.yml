@@ -2,5 +2,5 @@ id: Create
 steps:
 - create:
     data: /input
-    table: /table
+    model: /model
 

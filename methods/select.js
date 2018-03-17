@@ -11,8 +11,8 @@ module.exports = {
   inputSchema: {
     type: 'object',
     properties: {
-      table: {
-        name: 'Tablename',
+      model: {
+        name: 'modelname',
         type: 'string'
       },
       filters: {
@@ -34,7 +34,7 @@ module.exports = {
         type: 'object'
       }
     },
-    required: ['table'],
+    required: ['model'],
     additionalProperties: false
   },
 
@@ -96,13 +96,13 @@ module.exports = {
   tests: [{
     name: 'Can select all results',
     input: {
-      table: 'Post',
+      model: 'Post',
       selections: {count: {}, items: {}}
     },
     output: {count: 1, items: [{id: '1', name: 'Test A'}]}
   }],
 
-  execute: async ({filters, table, offset, limit, selections}, {Database, Models, ScriptsManager}) => {
+  execute: async ({filters, model, offset, limit, selections}, {Database, Models, ScriptsManager}) => {
     const where = Object.keys(filters || {}).reduce((prev, name) => {
       const match = name.match(/^(.+)_(ne|gt|gte|lt|lte|like|notLike|in|notIn)$/);
       let field = name;
@@ -119,12 +119,12 @@ module.exports = {
       };
     }, {});
 
-    const model = await Models.get(table);
-    const db = Database.get(table);
+    const modelInstance = await Models.get(model);
+    const db = Database.get(model);
     const output = {};
 
     // Get attributes that we need to fetch from the database.
-    let attributes = union(Object.keys(model.properties), ['id']);
+    let attributes = union(Object.keys(modelInstance.properties), ['id']);
     if (selections) {
       // If a selections object was provided, select only fields that appear in both the
       // model and the selections, but do always include "id".
@@ -150,13 +150,13 @@ module.exports = {
     const references = {};
     output.items.forEach((item, index) => {
       attributes.forEach(field => {
-        if (item[field] && typeof model.properties[field] === 'object' && model.properties[field].isReference) {
-          const refTable = model.properties[field].$ref.substring(14);
+        if (item[field] && typeof modelInstance.properties[field] === 'object' && modelInstance.properties[field].isReference) {
+          const refmodel = modelInstance.properties[field].$ref.substring(14);
           const id = item[field];
-          if (typeof references[`${refTable}:${id}`] === 'undefined') {
-            references[`${refTable}:${id}`] = [];
+          if (typeof references[`${refmodel}:${id}`] === 'undefined') {
+            references[`${refmodel}:${id}`] = [];
           }
-          references[`${refTable}:${id}`].push({index, field});
+          references[`${refmodel}:${id}`].push({index, field});
         }
       });
     });
@@ -164,10 +164,10 @@ module.exports = {
     // Fetch referenced objects.
     const script = ScriptsManager.get('Get');
     const promises = Object.keys(references).map(key => (async () => {
-      const [table, id] = key.split(':');
+      const [model, id] = key.split(':');
       let result = null;
       try {
-        result = await script.run({table, id});
+        result = await script.run({model, id});
       } catch (err) {
         console.log('Unable to fetch reference: ' + err.message);
       }

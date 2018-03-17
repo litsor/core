@@ -1,6 +1,6 @@
 id: Get
 steps:
-- get:
-    table: /table
+- read:
+    model: /model
     id: /id
     selections: /selections

@@ -9,7 +9,7 @@ steps:
     left: /user
     then:
       - delete:
-          table: OauthAccessToken
+          model: OauthAccessToken
           id: /user/token/id
 
 - object:

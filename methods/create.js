@@ -12,12 +12,12 @@ module.exports = {
         name: 'Data',
         type: 'object'
       },
-      table: {
-        name: 'Tablename',
+      model: {
+        name: 'Model name',
         type: 'string'
       }
     },
-    required: ['data', 'table'],
+    required: ['data', 'model'],
     additionalProperties: false
   },
 
@@ -51,7 +51,7 @@ module.exports = {
 
   tests: [{
     name: 'Create object',
-    input: {data: {name: 'Test'}, table: 'Item'},
+    input: {data: {name: 'Test'}, model: 'Item'},
     output: {id: '1', name: 'Test'},
     inputSchema: {
       type: 'object',
@@ -73,8 +73,8 @@ module.exports = {
     }
   }],
 
-  execute: async ({data, table}, {Database}) => {
-    const db = Database.get(table);
+  execute: async ({data, model}, {Database}) => {
+    const db = Database.get(model);
     const item = await db.create(data);
     return {...data, id: item.id};
   }

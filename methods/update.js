@@ -18,12 +18,12 @@ module.exports = {
         name: 'Data',
         type: 'object'
       },
-      table: {
-        name: 'Tablename',
+      model: {
+        name: 'Model name',
         type: 'string'
       }
     },
-    required: ['id', 'data', 'table'],
+    required: ['id', 'data', 'model'],
     additionalProperties: false
   },
 
@@ -58,7 +58,7 @@ module.exports = {
 
   tests: [{
     name: 'Update object',
-    input: {data: {name: 'Test'}, id: '1', table: 'Item'},
+    input: {data: {name: 'Test'}, id: '1', model: 'Item'},
     output: {id: '1', name: 'Test'},
     inputSchema: {
       type: 'object',
@@ -70,7 +70,7 @@ module.exports = {
           }
         },
         id: {type: 'string'},
-        table: {type: 'string'}
+        model: {type: 'string'}
       }
     },
     outputSchema: {
@@ -82,11 +82,11 @@ module.exports = {
     }
   }],
 
-  execute: async ({id, data, table}, {Database}) => {
-    const db = Database.get(table);
+  execute: async ({id, data, model}, {Database}) => {
+    const db = Database.get(model);
     const item = await db.findById(id);
     if (item === null) {
-      throw new Error(`${table} does not exist`);
+      throw new Error(`${model} does not exist`);
     }
     await db.update(data, {
       where: {

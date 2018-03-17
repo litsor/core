@@ -4,7 +4,7 @@ const {union, intersection} = require('lodash');
 const {NotFound} = require('http-errors');
 
 module.exports = {
-  name: 'Get',
+  name: 'Read',
   description: 'Retrieve a single object from the database',
   cache: 0,
 
@@ -15,8 +15,8 @@ module.exports = {
         name: 'Object id',
         type: 'string'
       },
-      table: {
-        name: 'Tablename',
+      model: {
+        name: 'Model name',
         type: 'string'
       },
       selections: {
@@ -28,7 +28,7 @@ module.exports = {
         type: 'boolean'
       }
     },
-    required: ['id', 'table'],
+    required: ['id', 'model'],
     additionalProperties: false
   },
 
@@ -69,7 +69,7 @@ module.exports = {
 
   tests: [{
     name: 'Get object',
-    input: {id: '1', table: 'Item'},
+    input: {id: '1', model: 'Item'},
     output: {id: '1', name: 'Test'},
     outputSchema: {
       type: 'object',
@@ -79,12 +79,12 @@ module.exports = {
     }
   }],
 
-  execute: async ({id, table, selections, nullOnError}, {Database, Models, ScriptsManager}) => {
-    const model = await Models.get(table);
-    const db = Database.get(table);
+  execute: async ({id, model, selections, nullOnError}, {Database, Models, ScriptsManager}) => {
+    const modelInstance = await Models.get(model);
+    const db = Database.get(model);
 
     // Get attributes that we need to fetch from the database.
-    let attributes = union(Object.keys(model.properties), ['id']);
+    let attributes = union(Object.keys(modelInstance.properties), ['id']);
     if (selections) {
       // If a selections object was provided, select only fields that appear in both the
       // model and the selections, but do always include "id".
@@ -97,19 +97,19 @@ module.exports = {
       if (nullOnError) {
         return null;
       }
-      throw new NotFound(`${table} does not exist`);
+      throw new NotFound(`${model} does not exist`);
     }
 
     // Expand referenced objects.
     const promises = [];
     Object.keys(item.dataValues).forEach(field => {
-      if (typeof model.properties[field] === 'object' && model.properties[field].isReference) {
+      if (typeof modelInstance.properties[field] === 'object' && modelInstance.properties[field].isReference) {
         promises.push((async () => {
-          const refTable = model.properties[field].$ref.substring(14);
+          const refmodel = modelInstance.properties[field].$ref.substring(14);
           try {
             const script = ScriptsManager.get('Get');
             item[field] = await script.run({
-              table: refTable,
+              model: refmodel,
               id: item[field]
             });
           } catch (err) {

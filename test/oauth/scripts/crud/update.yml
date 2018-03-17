@@ -3,4 +3,4 @@ steps:
 - update:
     id: /id
     data: /input
-    table: /table
+    model: /model
