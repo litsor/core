@@ -25,6 +25,16 @@ params:
     in: body
     schema:
       type: string
+  refresh_token:
+    name: Refresh token
+    in: body
+    schema:
+      type: string
+  client_secret:
+    name: Client secret
+    in: body
+    schema:
+      type: string
 output:
   mime: text/html
   schema:

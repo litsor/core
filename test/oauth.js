@@ -42,36 +42,44 @@ describe('OAuth', () => {
         scope: '*'
       }
     });
-    temporary.untrustedPublicClient = (await create.run({
-      model: 'OauthClient',
-      input: {
-        name: 'Client A - Untrusted public client',
-        type: 'public',
-        trusted: false,
-        redirectUri: 'https://example.com/callback',
-        created: ~~(new Date() / 1e3)
-      }
-    })).id;
-    temporary.trustedPublicCilent = (await create.run({
-      model: 'OauthClient',
-      input: {
-        name: 'Client B - Trusted public client',
-        type: 'public',
-        trusted: true,
-        redirectUri: 'https://example.com/callback',
-        created: ~~(new Date() / 1e3)
-      }
-    })).id;
-    temporary.untrustedPublicClient2 = (await create.run({
-      model: 'OauthClient',
-      input: {
-        name: 'Client C - Untrusted public client',
-        type: 'public',
-        trusted: false,
-        redirectUri: 'https://example.com/callback',
-        created: ~~(new Date() / 1e3)
-      }
-    })).id;
+    const promises = [{
+      name: 'Client A - Untrusted public client',
+      type: 'public',
+      trusted: false,
+      secret: null
+    }, {
+      name: 'Client B - Trusted public client',
+      type: 'public',
+      trusted: true,
+      secret: null
+    }, {
+      name: 'Client C - Untrusted public client',
+      type: 'public',
+      trusted: false,
+      secret: null
+    }, {
+      name: 'Client D - Trusted confidential client',
+      type: 'confidential',
+      trusted: true,
+      secret: 'topsecret'
+    }].map(({name, type, trusted, secret}) => {
+      return create.run({
+        model: 'OauthClient',
+        input: {
+          name,
+          type,
+          trusted,
+          secret,
+          redirectUri: 'https://example.com/callback',
+          created: ~~(new Date() / 1e3)
+        }
+      });
+    });
+    const [untrustedPublicClient, trustedPublicCilent, untrustedPublicClient2, trustedConfidentialClient] = await Promise.all(promises);
+    temporary.untrustedPublicClient = untrustedPublicClient.id;
+    temporary.trustedPublicCilent = trustedPublicCilent.id;
+    temporary.untrustedPublicClient2 = untrustedPublicClient2.id;
+    temporary.trustedConfidentialClient = trustedConfidentialClient.id;
   });
 
   after(async () => {
@@ -184,9 +192,7 @@ describe('OAuth', () => {
     expect(response).to.have.property('access_token');
     expect(response).to.have.property('token_type', 'bearer');
     // Expires is not required by OAuth2, but we will follow the recommendation to always use it.
-    expect(response).to.have.property('expires_in', 86400);
-    // Also optional, but always set by our implementation.
-    // expect(response).to.have.property('refresh_token');
+    expect(response).to.have.property('expires_in', 43200);
 
     temporary.access_token = response.access_token;
   });
@@ -249,11 +255,11 @@ describe('OAuth', () => {
     // The access token is still valid and should be reused.
     expect(tokenResponse).to.have.property('access_token', temporary.access_token);
 
-    expect(tokenResponse).to.have.property('uid', 1);
+    expect(tokenResponse).to.have.property('user_id', 1);
     expect(tokenResponse).to.have.property('token_type', 'bearer');
     expect(tokenResponse).to.have.property('expires_in');
     expect(tokenResponse.expires_in > 0).to.equal(true);
-    expect(tokenResponse.expires_in >= 86400 - 10).to.equal(true);
+    expect(tokenResponse.expires_in >= 43200 - 10).to.equal(true);
   });
 
   it('does not require authorization for trusted clients', async () => {
@@ -291,39 +297,11 @@ describe('OAuth', () => {
     expect(await result.text()).to.contain('Client C');
   });
 
-  it.skip('can use the refresh_token to obtain a new access token', async () => {
-    const body = {
-      grant_type: 'refresh_token',
-      client_id: '1',
-      refresh_token: '...'
-    };
-    const result = await fetch('http://127.0.0.1:1234/oauth/token', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: stringify(body)
-    });
-    expect(result.status).to.equal(200);
-    expect(result.headers.get('content-type')).to.equal('application/json');
-
-    // @see https://tools.ietf.org/html/rfc6749#section-5.1
-    expect(result.headers.get('cache-control')).to.equal('no-store');
-    expect(result.headers.get('pragma')).to.equal('no-cache');
-
-    // @see https://tools.ietf.org/html/rfc6749#section-5.1
-    const response = await result.json();
-    expect(response).to.have.property('access_token');
-    expect(response).to.have.property('token_type', 'bearer');
-    // Expires is not required by OAuth2, but we will follow the recommendation to always use it.
-    expect(response).to.have.property('expires_in', 3600);
-    // The refresh_token should not be repeated in the response.
-    expect(response).to.not.have.property('refresh_token');
-  });
-
   // @see https://tools.ietf.org/html/rfc6749#section-1.3.2
   it('can use the implicit flow', async () => {
     const query = stringify({
       response_type: 'token',
-      client_id: '1',
+      client_id: temporary.untrustedPublicClient,
       redirect_uri: 'http://example.com/',
       scope: 'read',
       state: 'Teststate'
@@ -353,7 +331,7 @@ describe('OAuth', () => {
       body: stringify(values)
     });
     expect(result.status).to.equal(200);
-    const cookieHeaders = (result.headers.get('set-cookie') || []).split(/,[\s]*/).filter(str => str);
+    const cookieHeaders = (result.headers.get('set-cookie') || '').split(/,[\s]*/).filter(str => str);
     temporary.cookies = cookieHeaders.reduce((prev, curr) => prev + curr.split(';')[0] + ';', '');
     expect(result.headers.get('content-type')).to.equal('text/html; charset=utf-8');
     temporary.html = await result.text();
@@ -399,6 +377,115 @@ describe('OAuth', () => {
     expect(params).to.have.property('token');
     expect(params).to.have.property('state', 'Teststate');
     temporary.access_token = params.token;
+  });
+
+  it('returns a refresh_token for confidential clients', async () => {
+    const query = stringify({
+      response_type: 'code',
+      client_id: temporary.trustedConfidentialClient,
+      redirect_uri: 'http://example.com/',
+      scope: 'read write',
+      state: 'Teststate'
+    });
+    const result = await fetch(testUrl + '/oauth/authorize?' + query, {
+      headers: {
+        'Set-Cookie': temporary.cookies
+      },
+      redirect: 'manual'
+    });
+    expect(result.status).to.equal(302);
+    expect(result.headers.has('location')).to.equal(true);
+    const url = parse(result.headers.get('location'), true);
+    expect(url.query).to.have.property('code');
+
+    const body = {
+      grant_type: 'authorization_code',
+      client_id: temporary.trustedConfidentialClient,
+      code: url.query.code,
+      redirect_url: 'http://example.com/'
+    };
+    const tokenResult = await fetch('http://127.0.0.1:1234/oauth/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: stringify(body)
+    });
+    expect(tokenResult.status).to.equal(200);
+    const tokenResponse = await tokenResult.json();
+    expect(tokenResponse).to.have.property('refresh_token');
+    temporary.refresh_token = tokenResponse.refresh_token;
+  });
+
+  it('can use the refresh_token to obtain a new access token', async () => {
+    const body = {
+      grant_type: 'refresh_token',
+      client_id: temporary.trustedConfidentialClient,
+      refresh_token: temporary.refresh_token
+    };
+    const result = await fetch('http://127.0.0.1:1234/oauth/token', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Basic ' + Buffer.from(temporary.trustedConfidentialClient + ':topsecret').toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: stringify(body)
+    });
+    expect(result.status).to.equal(200);
+    expect(result.headers.get('content-type')).to.equal('application/json; charset=utf-8');
+
+    // @see https://tools.ietf.org/html/rfc6749#section-5.1
+    expect(result.headers.get('cache-control')).to.equal('no-store');
+    expect(result.headers.get('pragma')).to.equal('no-cache');
+
+    // @see https://tools.ietf.org/html/rfc6749#section-5.1
+    const response = await result.json();
+    expect(response).to.have.property('access_token');
+    expect(response).to.have.property('token_type', 'bearer');
+    // Expires is not required by OAuth2, but we will follow the recommendation to always use it.
+    expect(response).to.have.property('expires_in', 43200);
+    // We should get a new refresh token.
+    expect(response).to.have.property('refresh_token');
+    expect(response.refresh_token).to.not.equal(temporary.refresh_token);
+    temporary.refresh_token = response.refresh_token;
+
+    // An attempt to re-use the refresh_token should fail.
+    const result2 = await fetch('http://127.0.0.1:1234/oauth/token', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Basic ' + Buffer.from(temporary.trustedConfidentialClient + ':topsecret').toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: stringify(body)
+    });
+    expect(result2.status).to.equal(400);
+  });
+
+  it('cannot refresh token without client authentication', async () => {
+    const body = {
+      grant_type: 'refresh_token',
+      client_id: temporary.trustedConfidentialClient,
+      refresh_token: temporary.refresh_token
+    };
+    const result = await fetch('http://127.0.0.1:1234/oauth/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: stringify(body)
+    });
+    expect(result.status).to.equal(401);
+  });
+
+  it('can use client_secret to authenticate the client', async () => {
+    const body = {
+      grant_type: 'refresh_token',
+      client_id: temporary.trustedConfidentialClient,
+      refresh_token: temporary.refresh_token,
+      client_secret: 'topsecret'
+    };
+    const result = await fetch('http://127.0.0.1:1234/oauth/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: stringify(body)
+    });
+    expect(result.status).to.equal(200);
   });
 
   it('can destroy the token by calling /logout', async () => {

@@ -1,0 +1,73 @@
+id: OauthCreateToken
+steps:
+
+# Script parameters:
+# /client/id
+# /user/id
+# /scope
+# Output:
+# /token/token
+# /token/expires
+# /token/refresh_token
+
+- date:
+    _output: /now
+    format: X
+
+- object:
+    _output: /token
+    client: /client/id
+    user: /user/id
+    scope: /scope
+    created: /now
+- secure-token:
+    _output: /token/token
+- math:
+    _output: /token/expires
+    formula: 'now + 43200'
+    now: /now
+- create:
+    model: OauthAccessToken
+    data: /token
+
+# Always create the refresh token. We use it to remember the login.
+- object:
+    _output: /refresh-token
+    client: /client/id
+    user: /user/id
+    scope: /scope
+    created: /now
+- secure-token:
+    _output: /refresh-token/token
+
+# Remember login for 5 days.
+- math:
+    _output: /refresh-token/expires
+    formula: 'now + 432000'
+    now: /now
+
+# Confidential clients (often API integrations) must use the refresh token within 30 days.
+- if:
+    left: /client/type
+    right: confidential
+    then:
+      - math:
+          _output: /refresh-token/expires
+          formula: 'now + 2592000'
+          now: /now
+
+- create:
+    model: OauthRefreshToken
+    data: /refresh-token
+
+# Copy token to script output, and add refresh token for confidential clients.
+- copy:
+    _output: /data
+    input: /token
+- if:
+    left: /client/type
+    right: confidential
+    then:
+      - copy:
+          _output: /data/refresh_token
+          input: /refresh-token/token

@@ -3,6 +3,7 @@
 const Handlebars = require('handlebars');
 
 Handlebars.registerHelper('encode', encodeURIComponent);
+Handlebars.registerHelper('base64', str => Buffer.from(str).toString('base64'));
 
 module.exports = {
   name: 'Handlebars',

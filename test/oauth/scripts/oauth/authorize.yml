@@ -142,21 +142,9 @@ steps:
                       body: 'Redirecting...'
                       redirect: /redirect_uri
                 else:
-                  - object:
+                  - script:
                       _output: /token
-                      client: /client/id
-                      user: /user/id
-                      scope: /scope
-                      created: /now
-                  - math:
-                      _output: /token/expires
-                      formula: 'now + 84600'
-                      now: /now
-                  - secure-token:
-                      _output: /token/token
-                  - create:
-                      model: OauthAccessToken
-                      data: /token
+                      script: OauthCreateToken
                   - handlebars:
                       _output: /redirect_uri
                       template: '{{redirect_uri}}#token={{encode token}}&state={{encode state}}'

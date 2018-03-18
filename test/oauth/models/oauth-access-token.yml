@@ -19,4 +19,5 @@ required:
   - client
   - expires
   - user
+  - cope
   - created

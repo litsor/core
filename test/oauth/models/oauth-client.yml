@@ -10,8 +10,9 @@ properties:
     type: boolean
   redirectUri:
     type: string
-  lastUsed:
-    type: integer
+  # Secret is required for confidential clients and used to refresh the access token.
+  secret:
+    type: string
   created:
     type: integer
 required:
