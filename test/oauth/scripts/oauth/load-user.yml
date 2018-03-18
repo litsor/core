@@ -1,15 +1,25 @@
 id: LoadUser
 steps:
 
+# The Bearer token should be passed as Authorization header.
+# This can conflict with Basic auth often used on test environments.
+# For that reason we also allow X-Authorization which take precedence
+# over the regular Authorization header.
+- coalesce:
+    _output: /authorization
+    items:
+      - /headers/x-authorization
+      - /headers/authorization
+
 - if:
-    left: /headers/authorization
+    left: /authorization
     then:
       - static:
           _output: /filters
           value: {}
       - substring:
           _output: /filters/token
-          input: /headers/authorization
+          input: /authorization
           start: 7
       - date:
           _output: /filters/expires_gt

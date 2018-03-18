@@ -216,6 +216,13 @@ describe('OAuth', () => {
     expect(result.status).to.equal(401);
   });
 
+  it('can provide the access token via X-Authorization header', async () => {
+    const result = await fetch('http://127.0.0.1:1234/protected-resource', {
+      headers: {'X-Authorization': 'Bearer ' + temporary.access_token}
+    });
+    expect(result.status).to.equal(200);
+  });
+
   it('remembers the authorization', async () => {
     const query = stringify({
       response_type: 'code',
