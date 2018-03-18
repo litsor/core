@@ -45,6 +45,13 @@ params:
     in: body
     schema:
       type: string
+  remember:
+    name: Remember
+    in: body
+    schema:
+      type: string
+      enum:
+        - remember
 output:
   mime: text/html
   schema:

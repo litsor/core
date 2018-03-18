@@ -62,6 +62,18 @@ steps:
                 created: /now
             - secure-token:
                 _output: /session/token
+            - if:
+                left: /remember
+                then:
+                  - math:
+                      _output: /session/expires
+                      formula: now + 604800
+                      now: /now
+                else:
+                  - math:
+                      _output: /session/expires
+                      formula: now + 43200
+                      now: /now
             - create:
                 _output: /session
                 model: UserSession
@@ -70,6 +82,12 @@ steps:
                 _output: /data/cookies/session
                 value: /session/token
                 path: {=: /oauth}
+            - if:
+                left: /remember
+                then:
+                  - static:
+                      _output: /data/cookies/session/maxAge
+                      value: 604800
 
 - if:
     left: /user
@@ -212,6 +230,12 @@ steps:
                     <label>
                       Password
                       <input type="password" name="password">
+                    </label>
+                  </div>
+                  <div>
+                    <label>
+                      <input type="checkbox" name="remember" value="remember">
+                      Remember
                     </label>
                   </div>
                   <input type="submit" value="Login">

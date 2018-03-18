@@ -8,9 +8,23 @@ steps:
 - if:
     left: /user
     then:
-      - delete:
+      - object:
+          _output: /filters
+          client: /user/client/id
+          user: /user/id
+      - select:
+          _output: /tokens
           model: OauthAccessToken
-          id: /user/token/id
+          filters: /filters
+          selections:
+            items:
+              id:
+      - foreach:
+          input: /tokens/items
+          do:
+            - delete:
+                model: OauthAccessToken
+                id: /item/id
 
 - object:
     _output: /data

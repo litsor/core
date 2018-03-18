@@ -80,8 +80,12 @@ class Endpoints extends ConfigFiles {
     ctx.response.set(result.headers || {});
 
     Object.keys(result.cookies || {}).forEach(name => {
-      if (typeof result.cookies[name] === 'object') {
-        ctx.cookies.set(name, result.cookies[name].value);
+      if (typeof result.cookies[name] === 'object' && result.cookies[name] !== null) {
+        const options = {};
+        if (typeof result.cookies[name].maxAge === 'number') {
+          options.maxAge = result.cookies[name].maxAge * 1000;
+        }
+        ctx.cookies.set(name, result.cookies[name].value, options);
       }
     });
   }

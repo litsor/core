@@ -6,9 +6,12 @@ properties:
     type: string
   user:
     $ref: '#/definitions/User'
+  expires:
+    type: integer
   created:
     type: integer
 required:
   - token
   - user
+  - expires
   - created

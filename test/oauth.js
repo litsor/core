@@ -506,4 +506,51 @@ describe('OAuth', () => {
     });
     expect(resourceResult.status).to.equal(401);
   });
+
+  it('can remember login', async () => {
+    const authenticateRequest = async () => {
+      const query = stringify({
+        response_type: 'code',
+        client_id: temporary.untrustedPublicClient,
+        redirect_uri: 'http://example.com/',
+        scope: 'read write',
+        state: 'Teststate'
+      });
+      const result = await fetch(testUrl + '/oauth/authorize?' + query);
+      expect(result.status).to.equal(200);
+      expect(result.headers.get('content-type')).to.equal('text/html; charset=utf-8');
+      // @see https://tools.ietf.org/html/rfc6749#section-10.13
+      expect(result.headers.get('x-frame-options')).to.equal('DENY');
+      return result.text();
+    };
+
+    const login = async remember => {
+      const html = await authenticateRequest();
+      const dom = new JSDOM(html);
+      const form = dom.window.document.getElementsByTagName('form')[0];
+      expect(typeof form).to.equal('object', 'Page must contain a form');
+      const values = parseForm(form);
+      expect(values).to.have.property('username');
+      expect(values).to.have.property('password');
+      const action = resolve(testUrl, form.getAttribute('action'));
+      values.username = 'alice';
+      values.password = 'Welcome01!!';
+      if (remember) {
+        values.remember = 'remember';
+      }
+      return fetch(action, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: stringify(values)
+      });
+    };
+
+    const result = await login(false);
+    expect(result.headers.get('set-cookie')).to.not.contain('expires');
+
+    const result2 = await login(true);
+    expect(result2.headers.get('set-cookie')).to.contain('expires');
+  });
 });

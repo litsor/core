@@ -47,7 +47,7 @@ steps:
                 _output: /data
                 id: /tokens/items/0/user/id
                 name: /tokens/items/0/user/name
-                client: /tokens/items/0/token/client
+                client: /tokens/items/0/client
             - object:
                 _output: /data/token
                 id: /tokens/items/0/id
