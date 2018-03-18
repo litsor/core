@@ -409,7 +409,8 @@ describe('OAuth', () => {
       grant_type: 'authorization_code',
       client_id: temporary.trustedConfidentialClient,
       code: url.query.code,
-      redirect_url: 'http://example.com/'
+      redirect_url: 'http://example.com/',
+      client_secret: 'topsecret'
     };
     const tokenResult = await fetch('http://127.0.0.1:1234/oauth/token', {
       method: 'POST',

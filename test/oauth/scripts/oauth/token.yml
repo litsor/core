@@ -10,6 +10,49 @@ steps:
     model: OauthClient
     id: /client_id
 
+- if:
+    left: /client/type
+    right: confidential
+    then:
+      # Check the client authorization.
+      # This can be done via HTTP basic authentication or the client_secret field.
+      - static:
+          _output: /allow
+          value: false
+      - array:
+          _output: /client/authorization-header
+          items:
+            - /client/id
+            - ':'
+            - /client/secret
+      - join:
+          _output: /client/authorization-header
+          input: /client/authorization-header
+      - handlebars:
+          _output: /client/authorization-header
+          template: "Basic {{{base64 value}}}"
+          value: /client/authorization-header
+      - if:
+          left: /headers/authorization
+          right: /client/authorization-header
+          then:
+            - static:
+                _output: /allow
+                value: true
+      - if:
+          left: /client_secret
+          right: /client/secret
+          then:
+            - static:
+                _output: /allow
+                value: true
+      - if:
+          left: /allow
+          right: false
+          then:
+            - error:
+                type: Unauthorized
+
 - static:
     _output: /data/status
     value: 400
@@ -133,97 +176,57 @@ steps:
     left: /grant_type
     right: refresh_token
     then:
-
-      # Check the client authorization.
-      # This can be done via HTTP basic authentication or the client_secret field.
-      - static:
-          _output: /allow
-          value: false
-      - array:
-          _output: /client/authorization-header
-          items:
-            - /client/id
-            - ':'
-            - /client/secret
-      - join:
-          _output: /client/authorization-header
-          input: /client/authorization-header
-      - handlebars:
-          _output: /client/authorization-header
-          template: "Basic {{{base64 value}}}"
-          value: /client/authorization-header
+      - object:
+          _output: /filters
+          token: /refresh_token
+          client: /client/id
+      - math:
+          _output: /filters/expires_gte
+          formula: now
+          now: /now
+      - select:
+          _output: /refresh-tokens
+          model: OauthRefreshToken
+          filters: /filters
+          selections:
+            items:
+              id:
+              scope:
+              user:
+                id:
+              client:
+                id:
+                type:
       - if:
-          left: /headers/authorization
-          right: /client/authorization-header
+          left: /refresh-tokens/items/0
           then:
-            - static:
-                _output: /allow
-                value: true
-      - if:
-          left: /client_secret
-          right: /client/secret
-          then:
-            - static:
-                _output: /allow
-                value: true
-
-      - if:
-          left: /allow
-          then:
-            - object:
-                _output: /filters
-                token: /refresh_token
-                client: /client/id
-            - math:
-                _output: /filters/expires_gte
-                formula: now
-                now: /now
-            - select:
-                _output: /refresh-tokens
+            # Delete old refresh token.
+            - delete:
                 model: OauthRefreshToken
-                filters: /filters
-                selections:
-                  items:
-                    id:
-                    scope:
-                    user:
-                      id:
-                    client:
-                      id:
-                      type:
-            - if:
-                left: /refresh-tokens/items/0
-                then:
-                  # Delete old refresh token.
-                  - delete:
-                      model: OauthRefreshToken
-                      id: /refresh-tokens/items/0/id
-                  # Create a new access token.
-                  - script:
-                      _output: /token
-                      script: OauthCreateToken
-                      client: /client
-                      user: /refresh-tokens/items/0/user
-                      scope: /refresh-tokens/items/0/scope
-                  - object:
-                      _output: /data/body
-                      access_token: /token/token
-                      token_type: bearer
-                      user_id: /token/user
-                  - math:
-                      _output: /data/body/expires_in
-                      formula: 'expires - now'
-                      now: /now
-                      expires: /token/expires
-                  - copy:
-                      _output: /data/body/refresh_token
-                      input: /token/refresh_token
-                  - static:
-                      _output: /data/status
-                      value: 200
-          else:
-            - error:
-                type: Unauthorized
+                id: /refresh-tokens/items/0/id
+            # Create a new access token.
+            - script:
+                _output: /token
+                script: OauthCreateToken
+                client: /client
+                user: /refresh-tokens/items/0/user
+                scope: /refresh-tokens/items/0/scope
+            - object:
+                _output: /data/body
+                access_token: /token/token
+                token_type: bearer
+                user_id: /token/user
+            - math:
+                _output: /data/body/expires_in
+                formula: 'expires - now'
+                now: /now
+                expires: /token/expires
+            - copy:
+                _output: /data/body/refresh_token
+                input: /token/refresh_token
+            - static:
+                _output: /data/status
+                value: 200
 
 # Set security related headers.
 - static:
