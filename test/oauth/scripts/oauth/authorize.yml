@@ -104,6 +104,11 @@ steps:
                   - static:
                       _output: /data/cookies/session/maxAge
                       value: 604800
+          else:
+            # Set a marker to show the "Wrong username or password" message.
+            - static:
+                _output: /wrongCredentials
+                value: true
 
 - if:
     left: /user
@@ -218,6 +223,16 @@ steps:
                     </body>
                   </html>
     else:
+      - if:
+          left: /wrongCredentials
+          then:
+            - static:
+                _output: /message
+                value: Wrong username or password
+          else:
+            - static:
+                _output: /message
+                value: ''
       - handlebars:
           _output: /data/body
           client_id: /client_id
@@ -225,11 +240,17 @@ steps:
           redirect_uri: /redirect_uri
           scope: /scope
           state: /state
+          message: /message
           template: |
             <!doctype html>
             <html>
               <body>
                 <h1>Login</h1>
+                {{#if message }}
+                <div class="message">
+                  {{message}}
+                </div>
+                {{/if}}
                 <form action="/oauth/authorize" method="post">
                   <input type="hidden" name="client_id" value="{{client_id}}">
                   <input type="hidden" name="response_type" value="{{response_type}}">
