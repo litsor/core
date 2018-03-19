@@ -15,7 +15,7 @@ module.exports = {
       operator: {
         name: 'Operator',
         type: 'string',
-        enum: ['==', '===', '<', '<=', '=>', '>', '!=', '!==']
+        enum: ['==', '===', '<', '<=', '=>', '>', '!=', '!==', 'startsWith', 'endsWith', 'contains']
       },
       right: {
         name: 'Right operand'
@@ -137,6 +137,33 @@ module.exports = {
     },
     output: true,
     outputSchema: {type: 'boolean'}
+  }, {
+    name: 'String starts with',
+    input: {
+      left: 'test',
+      operator: 'startsWith',
+      right: 't'
+    },
+    output: true,
+    outputSchema: {type: 'boolean'}
+  }, {
+    name: 'String ends with',
+    input: {
+      left: 'test',
+      operator: 'endsWith',
+      right: 't'
+    },
+    output: true,
+    outputSchema: {type: 'boolean'}
+  }, {
+    name: 'String contains',
+    input: {
+      left: 'test',
+      operator: 'contains',
+      right: 'e'
+    },
+    output: true,
+    outputSchema: {type: 'boolean'}
   }],
 
   execute: async (options, {Script}) => {
@@ -155,7 +182,10 @@ module.exports = {
       '<': left < right,
       '<=': left <= right,
       '>=': left >= right,
-      '>': left > right
+      '>': left > right,
+      startsWith: String(left).startsWith(String(right)),
+      endsWith: String(left).endsWith(String(right)),
+      contains: String(left).indexOf(String(right)) >= 0
     }[operator];
     if ((passed && !options.then) || (!passed && !options.else)) {
       // There is no script to execute. Only pass back if the condition passed.

@@ -15,6 +15,22 @@ steps:
     scope: /scope
 
 - if:
+    left: /redirect_uri
+    then:
+      - if:
+          left: /redirect_uri
+          operator: startsWith
+          right: /client/redirectUri
+          then: []
+          else:
+            - error:
+                type: BadRequest
+    else:
+      - copy:
+          _output: /redirect_uri
+          input: /client/redirectUri
+
+- if:
     left: /cookies/session
     then:
       - object:

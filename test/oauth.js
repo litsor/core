@@ -91,7 +91,7 @@ describe('OAuth', () => {
     const query = stringify({
       response_type: 'code',
       client_id: temporary.untrustedPublicClient,
-      redirect_uri: 'http://example.com/',
+      redirect_uri: 'https://example.com/callback',
       scope: 'read write',
       state: 'Teststate'
     });
@@ -158,7 +158,7 @@ describe('OAuth', () => {
     expect(result.headers.get('pragma')).to.equal('no-cache');
 
     temporary.location = result.headers.get('location');
-    expect(temporary.location.startsWith('http://example.com')).to.equal(true);
+    expect(temporary.location.startsWith('https://example.com/callback')).to.equal(true);
   });
 
   it('will redirect to redirect_uri with code', async () => {
@@ -227,7 +227,6 @@ describe('OAuth', () => {
     const query = stringify({
       response_type: 'code',
       client_id: temporary.untrustedPublicClient,
-      redirect_uri: 'http://example.com/',
       scope: 'read write',
       state: 'Teststate'
     });
@@ -248,8 +247,7 @@ describe('OAuth', () => {
     const body = {
       grant_type: 'authorization_code',
       client_id: temporary.untrustedPublicClient,
-      code: url.query.code,
-      redirect_url: 'http://example.com/'
+      code: url.query.code
     };
     const tokenResult = await fetch('http://127.0.0.1:1234/oauth/token', {
       method: 'POST',
@@ -273,7 +271,6 @@ describe('OAuth', () => {
     const query = stringify({
       response_type: 'code',
       client_id: temporary.trustedPublicCilent,
-      redirect_uri: 'http://example.com/',
       scope: 'read write',
       state: 'Teststate'
     });
@@ -291,7 +288,6 @@ describe('OAuth', () => {
     const query = stringify({
       response_type: 'code',
       client_id: temporary.untrustedPublicClient2,
-      redirect_uri: 'http://example.com/',
       scope: 'read write',
       state: 'Teststate'
     });
@@ -309,7 +305,6 @@ describe('OAuth', () => {
     const query = stringify({
       response_type: 'token',
       client_id: temporary.untrustedPublicClient,
-      redirect_uri: 'http://example.com/',
       scope: 'read',
       state: 'Teststate'
     });
@@ -374,7 +369,7 @@ describe('OAuth', () => {
     expect(result.headers.get('pragma')).to.equal('no-cache');
 
     temporary.location = result.headers.get('location');
-    expect(temporary.location.startsWith('http://example.com')).to.equal(true);
+    expect(temporary.location.startsWith('https://example.com/callback')).to.equal(true);
   });
 
   it('will redirect to redirect_uri with token', async () => {
@@ -390,7 +385,6 @@ describe('OAuth', () => {
     const query = stringify({
       response_type: 'code',
       client_id: temporary.trustedConfidentialClient,
-      redirect_uri: 'http://example.com/',
       scope: 'read write',
       state: 'Teststate'
     });
@@ -513,7 +507,6 @@ describe('OAuth', () => {
       const query = stringify({
         response_type: 'code',
         client_id: temporary.untrustedPublicClient,
-        redirect_uri: 'http://example.com/',
         scope: 'read write',
         state: 'Teststate'
       });
