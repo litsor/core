@@ -16,6 +16,8 @@ describe('OAuth', () => {
   const temporary = {};
   let container;
   let testUrl;
+  let scriptsManager;
+  let db;
 
   before(async () => {
     container = new Container();
@@ -32,7 +34,9 @@ describe('OAuth', () => {
     testUrl = 'http://127.0.0.1:1234';
     await container.get('Endpoints');
 
-    const scriptsManager = await container.get('ScriptsManager');
+    db = await container.get('Database');
+
+    scriptsManager = await container.get('ScriptsManager');
     const create = scriptsManager.get('Create');
     await create.run({
       model: 'User',
@@ -86,9 +90,9 @@ describe('OAuth', () => {
     await container.shutdown();
   });
 
-  const authenticateRequest = async ({clientId}) => {
+  const authenticateRequest = async ({clientId, responseType}) => {
     const query = stringify({
-      response_type: 'code',
+      response_type: responseType || 'code',
       client_id: clientId || temporary.untrustedPublicClient,
       scope: 'read write',
       state: 'Teststate',
@@ -559,5 +563,42 @@ describe('OAuth', () => {
   it('rejects wrong password', async () => {
     const result = await login({password: 'unknown'});
     expect(await result.text()).to.contain('Wrong username or password');
+  });
+
+  it('will reject access with an expired token', async () => {
+    const result = await login({
+      clientId: temporary.trustedPublicCilent,
+      responseType: 'token'
+    });
+    const location = result.headers.get('location');
+    expect(location).to.contain('token=');
+    temporary.access_token = decodeURIComponent(location.match(/token=([^&]+)/)[1]);
+    const checkAccess = async access => {
+      const resourceResult = await fetch('http://127.0.0.1:1234/protected-resource', {
+        headers: {Authorization: 'Bearer ' + temporary.access_token}
+      });
+      expect(resourceResult.status).to.equal(access ? 200 : 401);
+    };
+    // We should have access now.
+    await checkAccess(true);
+    // We should still have access after 11 hours, since the token is valid for 12 hours.
+    await db.query('UPDATE oauth_access_token SET expires = expires - 39600');
+    await checkAccess(true);
+    // We should should not have access after another 2 hours.
+    await db.query('UPDATE oauth_access_token SET expires = expires - 7200');
+    await checkAccess(false);
+  });
+
+  it('will cleanup old tokens', async () => {
+    const checkExists = async exists => {
+      const records = await db.query('SELECT * FROM oauth_access_token WHERE token = :token', {
+        token: temporary.access_token
+      });
+      expect(records.length > 0).to.equal(true);
+    };
+
+    await checkExists(true);
+    await scriptsManager.get('OauthCleanup').run({});
+    await checkExists(false);
   });
 });

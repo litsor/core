@@ -1,0 +1,20 @@
+id: OauthCleanup
+cron: 0 30 5 * * *
+steps:
+
+- date:
+    _output: /parameters/now
+    format: X
+
+- query:
+    query: 'DELETE FROM oauth_access_token WHERE expires < :now'
+    parameters: /parameters
+- query:
+    query: 'DELETE FROM oauth_authorization_code WHERE expires < :now'
+    parameters: /parameters
+- query:
+    query: 'DELETE FROM oauth_refresh_token WHERE expires < :now'
+    parameters: /parameters
+- query:
+    query: 'DELETE FROM user_session WHERE expires < :now'
+    parameters: /parameters

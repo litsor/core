@@ -63,6 +63,10 @@ class Database {
     return this.databaseModels[name];
   }
 
+  async query(sql, replacements) {
+    return this.client.query(sql, {replacements});
+  }
+
   async startup() {
     this.client = new Sequelize(this.database, {
       define: {
