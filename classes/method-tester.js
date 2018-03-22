@@ -36,10 +36,12 @@ class MethodTester {
       return false;
     }
 
+    let raisedError = false;
     let output;
     try {
       output = await method.execute({...(method.defaults || {}), ...input}, method.mockups);
     } catch (err) {
+      raisedError = true;
       if (typeof test.error === 'function') {
         // Exceptions must be validated by a callback.
         if (!test.error(err)) {
@@ -52,20 +54,22 @@ class MethodTester {
       }
     }
 
-    if (typeof test.output === 'function') {
-      if (!test.output(output)) {
-        console.log('Output is not valid in test: ', output);
+    if (!raisedError) {
+      if (typeof test.output === 'function') {
+        if (!await test.output(output)) {
+          console.log('Output is not valid in test: ', output);
+          return false;
+        }
+      } else if (!isEqual(output, test.output)) {
+        console.log('Output does not match output given in test: ', output);
         return false;
       }
-    } else if (!isEqual(output, test.output)) {
-      console.log('Output does not match output given in test: ', output);
-      return false;
-    }
 
-    const validateOutput = validator(outputSchema);
-    if (!validateOutput(output)) {
-      console.log('Output does not match output schema: ' + validateOutput.error);
-      return false;
+      const validateOutput = validator(outputSchema);
+      if (!validateOutput(output)) {
+        console.log('Output does not match output schema: ' + validateOutput.error);
+        return false;
+      }
     }
 
     if (!isEqual(input, test.input)) {

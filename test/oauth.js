@@ -167,6 +167,7 @@ describe('OAuth', () => {
       body: stringify(values)
     });
     expect(result.status).to.equal(200);
+    expect(result.headers.has('set-cookie')).to.equal(true);
     const cookieHeaders = (result.headers.get('set-cookie') || []).split(/,[\s]*/).filter(str => str);
     temporary.cookies = cookieHeaders.reduce((prev, curr) => prev + curr.split(';')[0] + ';', '');
     expect(result.headers.get('content-type')).to.equal('text/html; charset=utf-8');
@@ -594,9 +595,8 @@ describe('OAuth', () => {
       const records = await db.query('SELECT * FROM oauth_access_token WHERE token = :token', {
         token: temporary.access_token
       });
-      expect(records.length > 0).to.equal(true);
+      expect(records[0].length > 0).to.equal(exists);
     };
-
     await checkExists(true);
     await scriptsManager.get('OauthCleanup').run({});
     await checkExists(false);

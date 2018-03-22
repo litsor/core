@@ -64,9 +64,12 @@ steps:
           _output: /users
           model: User
           filters: /filters
+      - validate-password:
+          _output: /valid-password
+          password: /password
+          hash: /users/items/0/password
       - if:
-          left: /password
-          right: /users/items/0/password
+          left: /valid-password
           then:
             - object:
                 _output: /user

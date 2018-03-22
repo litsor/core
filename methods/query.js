@@ -25,7 +25,7 @@ module.exports = {
     parameters: {}
   },
 
-  outputSchema: inputSchema => {
+  outputSchema: () => {
     return {
       type: 'array',
       items: {
@@ -39,7 +39,7 @@ module.exports = {
   mockups: {
     Database: {
       async query() {
-        return [];
+        return [[], []];
       }
     }
   },
@@ -66,6 +66,6 @@ module.exports = {
 
   execute: async ({query, parameters}, {Database}) => {
     const result = await Database.query(query, parameters);
-    return JSON.parse(JSON.stringify(result));
+    return JSON.parse(JSON.stringify(result[0]));
   }
 };
