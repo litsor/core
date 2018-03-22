@@ -1,4 +1,4 @@
-id: Get
+id: Read
 steps:
 - read:
     model: /model

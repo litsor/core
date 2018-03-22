@@ -68,7 +68,7 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Get object',
+    name: 'Read object',
     input: {id: '1', model: 'Item'},
     output: {id: '1', name: 'Test'},
     outputSchema: {
@@ -107,7 +107,7 @@ module.exports = {
         promises.push((async () => {
           const refmodel = modelInstance.properties[field].$ref.substring(14);
           try {
-            const script = ScriptsManager.get('Get');
+            const script = ScriptsManager.get('Read');
             item[field] = await script.run({
               model: refmodel,
               id: item[field]

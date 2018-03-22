@@ -46,7 +46,7 @@ class ScriptsManager extends ConfigFiles {
   publish() {
     const recommended = [
       'Create',
-      'Get',
+      'Read',
       'Update',
       'Delete',
       'Select'
