@@ -3,10 +3,10 @@ FROM alpine:3.7
 ADD package.json /app/
 
 RUN apk update \
- && apk add nodejs-current nodejs-current-npm make gcc g++ python \
+ && apk add nodejs nodejs-npm \
  && cd /app \
  && npm install --production \
- && apk del make gcc g++ python nodejs-current-npm \
+ && apk del nodejs-npm \
  && rm -Rf ~/.npm \
  && cd /app/node_modules \
  && find . -type f | grep '/test/' | xargs rm \
