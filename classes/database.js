@@ -14,10 +14,7 @@ class Database {
 
   getType(schema) {
     if (schema.type === 'string' && typeof schema.maxLength !== 'undefined' && schema.maxLength <= 255) {
-      if (schema.maxLength) {
-        return Sequelize.STRING(schema.maxLength);
-      }
-      return Sequelize.STRING;
+      return Sequelize.STRING(schema.maxLength);
     }
     if (schema.type === 'string') {
       return Sequelize.TEXT;

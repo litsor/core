@@ -4,11 +4,17 @@ store: true
 properties:
   name:
     type: string
+    maxLength: 64
   password:
     type: string
+    maxLength: 255
+  blocked:
+    type: boolean
   scope:
     type: string
+    maxLength: 255
 required:
   - name
   - password
+  - blocked
   - scope

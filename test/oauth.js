@@ -43,6 +43,7 @@ describe('OAuth', () => {
       input: {
         name: 'alice',
         password: 'Welcome01!!',
+        blocked: false,
         scope: '*'
       }
     });

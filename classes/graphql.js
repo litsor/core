@@ -49,7 +49,8 @@ class Graphql {
     });
     this.handler = graphqlKoa(ctx => {
       const context = {
-        ip: ctx.request.ip
+        ip: ctx.request.ip,
+        headers: ctx.request.headers
       };
       return {schema, context};
     });

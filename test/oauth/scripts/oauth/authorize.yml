@@ -60,6 +60,7 @@ steps:
       - object:
           _output: /filters
           name: /username
+          blocked: false
       - select:
           _output: /users
           model: User
