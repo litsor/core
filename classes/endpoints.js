@@ -9,10 +9,11 @@ class Endpoints extends ConfigFiles {
 
     this.configName = 'endpoints';
 
-    const {Http, ScriptsManager, Models} = dependencies;
+    const {Http, ScriptsManager, Models, Input} = dependencies;
 
     this.scriptsManager = ScriptsManager;
     this.models = Models;
+    this.input = Input;
 
     Http.use(async (ctx, next) => {
       await this.handleRequest(ctx, next);
@@ -67,7 +68,8 @@ class Endpoints extends ConfigFiles {
       }, {});
     }).reduce((prev, curr) => ({...prev, ...curr}), []);
 
-    const input = {headers, cookies, ...params};
+    let input = {headers, cookies, ...params};
+    input = {...input, ...this.input.get(input, route.variables || {})};
 
     const result = (await script.run(input)) || {};
     ctx.response.body = result.body || null;
@@ -92,6 +94,6 @@ class Endpoints extends ConfigFiles {
 }
 
 Endpoints.singleton = true;
-Endpoints.require = ['Http', 'ScriptsManager', 'Models', ...ConfigFiles.require];
+Endpoints.require = ['Http', 'ScriptsManager', 'Models', 'Input', ...ConfigFiles.require];
 
 module.exports = Endpoints;

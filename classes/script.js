@@ -5,9 +5,10 @@ const {cloneDeep, defaults} = require('lodash');
 const {get, set} = require('jsonpointer');
 
 class Script {
-  constructor({Container, Methods}) {
+  constructor({Container, Methods, Input}) {
     this.container = Container;
     this.methods = Methods;
+    this.input = Input;
   }
 
   load(definition) {
@@ -23,29 +24,9 @@ class Script {
     const methodName = Object.keys(step)[0];
     const method = await this.methods.get(methodName);
 
-    const inputData = {};
-    const defaults = method.defaults || {};
-    Object.keys({...defaults, ...step[methodName]}).filter(value => !value.startsWith('_')).forEach(key => {
-      const source = [
-        step[methodName][key],
-        defaults[key],
-        null
-      ].reduce((prev, curr) => typeof prev === 'undefined' ? curr : prev);
-      if (typeof source === 'string' && source.startsWith('/')) {
-        // The input is a path. Get the value via JSONPointer.
-        try {
-          inputData[key] = get(dataReference, source === '/' ? '' : source);
-        } catch (e) {
-          inputData[key] = null;
-        }
-      } else if (typeof source === 'object' && Object.keys(source).length === 1 && typeof source['='] !== 'undefined') {
-        // There is a special syntax to allow static strings starting with a slash. In YAML we write:
-        // {=: /oauth}
-        inputData[key] = source['='];
-      } else {
-        // The input is a static value.
-        inputData[key] = source;
-      }
+    const inputData = this.input.get(dataReference, {
+      ...(method.defaults || {}),
+      ...step[methodName]
     });
 
     const dependencies = {};
@@ -90,6 +71,6 @@ class Script {
   }
 }
 
-Script.require = ['Container', 'Methods'];
+Script.require = ['Container', 'Methods', 'Input'];
 
 module.exports = Script;
