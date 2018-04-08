@@ -3,7 +3,7 @@
 const moment = require('moment-timezone');
 
 module.exports = {
-  name: 'Date',
+  title: 'Date',
   description: 'Get current date',
   cache: 0,
 
@@ -11,12 +11,12 @@ module.exports = {
     type: 'object',
     properties: {
       format: {
-        name: 'Date format',
+        title: 'Date format',
         type: 'string',
         minLength: 1
       },
       timezone: {
-        name: 'Timezone',
+        title: 'Timezone',
         type: 'string',
         enum: moment.tz.names()
       }
@@ -38,13 +38,13 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Can get current date',
+    title: 'Can get current date',
     input: {},
     output: () => {
       return moment().format('YYYY-MM-DD');
     }
   }, {
-    name: 'Can get current time in UTC',
+    title: 'Can get current time in UTC',
     input: {
       format: 'HH:mm'
     },
@@ -52,7 +52,7 @@ module.exports = {
       return moment().tz('UTC').format('HH:mm');
     }
   }, {
-    name: 'Can get current time in Paris',
+    title: 'Can get current time in Paris',
     input: {
       format: 'HH:mm'
     },
@@ -60,7 +60,7 @@ module.exports = {
       return moment().tz('Europe/Paris').format('HH:mm');
     }
   }, {
-    name: 'Can get unix timestamp',
+    title: 'Can get unix timestamp',
     input: {
       format: 'X'
     },

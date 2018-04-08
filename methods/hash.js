@@ -3,7 +3,7 @@
 const Crypto = require('crypto');
 
 module.exports = {
-  name: 'hash',
+  title: 'hash',
   description: 'Hash input string',
   cache: Infinity,
 
@@ -11,17 +11,17 @@ module.exports = {
     type: 'object',
     properties: {
       algorithm: {
-        name: 'Algorithm',
+        title: 'Algorithm',
         type: 'string',
         enum: ['md4', 'md5', 'sha1', 'sha224', 'sha256', 'sha512']
       },
       encoding: {
-        name: 'Output encoding',
+        title: 'Output encoding',
         type: 'string',
         enum: ['hex', 'base64']
       },
       input: {
-        name: 'Input string',
+        title: 'Input string',
         type: 'string'
       }
     },
@@ -58,7 +58,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Calculate SHA1 in hex',
+    title: 'Calculate SHA1 in hex',
     input: {
       algorithm: 'sha1',
       encoding: 'hex',
@@ -79,7 +79,7 @@ module.exports = {
       maxLength: 40
     }
   }, {
-    name: 'Calculate SHA256 in base64',
+    title: 'Calculate SHA256 in base64',
     input: {
       algorithm: 'sha256',
       encoding: 'base64',

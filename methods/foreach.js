@@ -2,7 +2,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Foreach',
+  title: 'Foreach',
   description: 'Execute subscript for each element in array',
   cache: 0,
 
@@ -10,15 +10,15 @@ module.exports = {
     type: 'object',
     properties: {
       input: {
-        name: 'Script input',
+        title: 'Script input',
         type: 'array'
       },
       as: {
-        name: 'Item variable',
+        title: 'Item variable',
         type: 'string'
       },
       do: {
-        name: 'Script',
+        title: 'Script',
         $ref: '#/definitions/Script'
       }
     },
@@ -49,7 +49,7 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Minimal options',
+    title: 'Minimal options',
     input: {
       input: [1, 2, 3],
       do: [
@@ -62,7 +62,7 @@ module.exports = {
 
   execute: async (options, {Script}) => {
     Script.load({
-      name: 'Do',
+      title: 'Do',
       steps: options.do
     });
     const promises = options.input.map(item => {

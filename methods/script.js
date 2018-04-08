@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Script',
+  title: 'Script',
   description: 'Execute a script',
   cache: 0,
 
@@ -9,17 +9,17 @@ module.exports = {
     type: 'object',
     properties: {
       script: {
-        name: 'Script name',
+        title: 'Script name',
         type: 'string'
       },
       input: {
-        name: 'Script input',
+        title: 'Script input',
         type: 'object'
       }
     },
     required: ['script'],
     additionalProperties: {
-      name: 'Variable'
+      title: 'Variable'
     }
   },
 
@@ -46,7 +46,7 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Run script',
+    title: 'Run script',
     input: {
       script: 'Test',
       input: {}

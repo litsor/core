@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'static',
+  title: 'static',
   description: 'Static value',
   cache: Infinity,
 
@@ -9,7 +9,7 @@ module.exports = {
     type: 'object',
     properties: {
       value: {
-        name: 'Value'
+        title: 'Value'
       }
     },
     required: ['value'],
@@ -55,35 +55,35 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Null',
+    title: 'Null',
     input: {
       value: null
     },
     output: null,
     outputSchema: {type: 'null'}
   }, {
-    name: 'Integer',
+    title: 'Integer',
     input: {
       value: 12
     },
     output: 12,
     outputSchema: {type: 'integer', minimum: 12, maximum: 12}
   }, {
-    name: 'Number',
+    title: 'Number',
     input: {
       value: 1.2
     },
     output: 1.2,
     outputSchema: {type: 'number', minimum: 1.2, maximum: 1.2}
   }, {
-    name: 'Boolean',
+    title: 'Boolean',
     input: {
       value: true
     },
     output: true,
     outputSchema: {type: 'boolean'}
   }, {
-    name: 'Object',
+    title: 'Object',
     input: {
       value: {foo: 'bar', bar: 'baz'}
     },
@@ -93,14 +93,14 @@ module.exports = {
       bar: {type: 'string', minLength: 3, maxLength: 3, enum: ['baz']}
     }, required: ['foo', 'bar'], additionalProperties: false}
   }, {
-    name: 'Does not set enum for strings > 32 chars',
+    title: 'Does not set enum for strings > 32 chars',
     input: {
       value: new Array(51).join('.')
     },
     output: new Array(51).join('.'),
     outputSchema: {type: 'string', minLength: 50, maxLength: 50}
   }, {
-    name: 'Does not set length for strings > 128 chars',
+    title: 'Does not set length for strings > 128 chars',
     input: {
       value: new Array(130).join('.')
     },

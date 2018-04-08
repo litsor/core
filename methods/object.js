@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Object',
+  title: 'Object',
   description: 'Compose new object from provided properties',
   cache: Infinity,
 
@@ -9,7 +9,7 @@ module.exports = {
     type: 'object',
     properties: {},
     additionalProperties: {
-      name: 'Object properties'
+      title: 'Object properties'
     }
   },
 
@@ -22,7 +22,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Create new object',
+    title: 'Create new object',
     input: {
       foo: 'bar',
       bar: 'baz'

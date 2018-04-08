@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Scope intersection',
+  title: 'Scope intersection',
   description: 'Calculate the intersection of two scopes',
   cache: Infinity,
 
@@ -9,11 +9,11 @@ module.exports = {
     type: 'object',
     properties: {
       left: {
-        name: 'First scope',
+        title: 'First scope',
         type: 'string'
       },
       right: {
-        name: 'Second scope',
+        title: 'Second scope',
         type: 'string'
       }
     },
@@ -30,98 +30,98 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Will return all scopes if left and right are identical',
+    title: 'Will return all scopes if left and right are identical',
     input: {
       left: 'a b c',
       right: 'a b c'
     },
     output: 'a b c'
   }, {
-    name: 'Will not return any scopes if no common scopes found',
+    title: 'Will not return any scopes if no common scopes found',
     input: {
       left: 'a b c',
       right: 'd e f'
     },
     output: ''
   }, {
-    name: 'Will return all right scopes if left has a wildcard',
+    title: 'Will return all right scopes if left has a wildcard',
     input: {
       left: '*',
       right: 'a b c'
     },
     output: 'a b c'
   }, {
-    name: 'Will return all left scopes if right has a wildcard',
+    title: 'Will return all left scopes if right has a wildcard',
     input: {
       left: 'a b c',
       right: '*'
     },
     output: 'a b c'
   }, {
-    name: 'Does not return any scopes if left scope is empty',
+    title: 'Does not return any scopes if left scope is empty',
     input: {
       left: '',
       right: 'a b c'
     },
     output: ''
   }, {
-    name: 'Does not return any scopes if right scope is empty',
+    title: 'Does not return any scopes if right scope is empty',
     input: {
       left: 'a b c',
       right: ''
     },
     output: ''
   }, {
-    name: 'Returns more specific scope if calculating intersection with more generic scope (given on the right)',
+    title: 'Returns more specific scope if calculating intersection with more generic scope (given on the right)',
     input: {
       left: 'a:24 a:25',
       right: 'a'
     },
     output: 'a:24 a:25'
   }, {
-    name: 'Returns more specific scope if calculating intersection with more generic scope (given on the left)',
+    title: 'Returns more specific scope if calculating intersection with more generic scope (given on the left)',
     input: {
       left: 'a',
       right: 'a:24 a:25'
     },
     output: 'a:24 a:25'
   }, {
-    name: 'Evaluates wildcards in the left scope',
+    title: 'Evaluates wildcards in the left scope',
     input: {
       left: 'Post:*',
       right: 'Post:34'
     },
     output: 'Post:34'
   }, {
-    name: 'Evaluates wildcards in the right scope',
+    title: 'Evaluates wildcards in the right scope',
     input: {
       left: 'Post:34',
       right: 'Post:*'
     },
     output: 'Post:34'
   }, {
-    name: 'Will fill-in wildcards in the left scope when appropriate',
+    title: 'Will fill-in wildcards in the left scope when appropriate',
     input: {
       left: 'Post:*:read',
       right: 'Post:34'
     },
     output: 'Post:34:read'
   }, {
-    name: 'Will fill-in wildcards in the right scope when appropriate',
+    title: 'Will fill-in wildcards in the right scope when appropriate',
     input: {
       left: 'Post:34',
       right: 'Post:*:read'
     },
     output: 'Post:34:read'
   }, {
-    name: 'Will fill-in wildcards on both sides',
+    title: 'Will fill-in wildcards on both sides',
     input: {
       left: 'Post:34:*',
       right: '*:*:read'
     },
     output: 'Post:34:read'
   }, {
-    name: 'Will not fill-in wildcards if not all parts match',
+    title: 'Will not fill-in wildcards if not all parts match',
     input: {
       left: 'Post:*:write',
       right: '*:*:read'

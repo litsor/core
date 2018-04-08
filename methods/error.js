@@ -3,7 +3,7 @@
 const createError = require('http-errors');
 
 module.exports = {
-  name: 'Error',
+  title: 'Error',
   description: 'Break the script with an error',
   cache: 0,
 
@@ -11,11 +11,11 @@ module.exports = {
     type: 'object',
     properties: {
       message: {
-        name: 'Error message',
+        title: 'Error message',
         type: 'string'
       },
       type: {
-        name: 'Error code',
+        title: 'Error code',
         type: 'string',
         enum: [
           'BadRequest',
@@ -77,7 +77,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Can raise error',
+    title: 'Can raise error',
     input: {type: 'BadRequest', message: 'bad'},
     error: () => true
   }],

@@ -6,7 +6,7 @@ Handlebars.registerHelper('encode', encodeURIComponent);
 Handlebars.registerHelper('base64', str => Buffer.from(str).toString('base64'));
 
 module.exports = {
-  name: 'Handlebars',
+  title: 'Handlebars',
   description: 'Render handlebars HTML template',
   cache: Infinity,
 
@@ -14,13 +14,13 @@ module.exports = {
     type: 'object',
     properties: {
       template: {
-        name: 'Handlebars template',
+        title: 'Handlebars template',
         type: 'string'
       }
     },
     required: ['template'],
     additionalProperties: {
-      name: 'Render variables'
+      title: 'Render variables'
     }
   },
 
@@ -33,7 +33,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Render basic template',
+    title: 'Render basic template',
     input: {
       template: '<h1>{{title}}</h1>',
       title: 'Hello world'
@@ -41,7 +41,7 @@ module.exports = {
     outputSchema: {type: 'string'},
     output: '<h1>Hello world</h1>'
   }, {
-    name: 'Render URL',
+    title: 'Render URL',
     input: {
       template: 'http://example.com/?code={{encode code}}',
       code: 'Foo&bar'

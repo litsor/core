@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Match scope',
+  title: 'Match scope',
   description: 'Match scope with user scopes',
   cache: Infinity,
 
@@ -9,11 +9,11 @@ module.exports = {
     type: 'object',
     properties: {
       scope: {
-        name: 'Scope to check access for',
+        title: 'Scope to check access for',
         type: 'string'
       },
       userScopes: {
-        name: 'User scopes',
+        title: 'User scopes',
         type: 'string'
       }
     },
@@ -30,56 +30,56 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Returns true if exact scope was provided in userScopes',
+    title: 'Returns true if exact scope was provided in userScopes',
     input: {
       scope: 'a',
       userScopes: 'a b c'
     },
     output: true
   }, {
-    name: 'Returns false if scope was not provided',
+    title: 'Returns false if scope was not provided',
     input: {
       scope: 'd',
       userScopes: 'a b c'
     },
     output: false
   }, {
-    name: 'Returns true if scope matches a pattern',
+    title: 'Returns true if scope matches a pattern',
     input: {
       scope: 'user:34',
       userScopes: 'user:*'
     },
     output: true
   }, {
-    name: 'Returns true if wildcard is given in userScopes',
+    title: 'Returns true if wildcard is given in userScopes',
     input: {
       scope: 'user:34',
       userScopes: '*'
     },
     output: true
   }, {
-    name: 'Returns false if userScopes is empty',
+    title: 'Returns false if userScopes is empty',
     input: {
       scope: 'user:34',
       userScopes: ''
     },
     output: false
   }, {
-    name: 'Returns true if scope is empty',
+    title: 'Returns true if scope is empty',
     input: {
       scope: '',
       userScopes: 'a b c'
     },
     output: true
   }, {
-    name: 'Returns false if not all scopes matches',
+    title: 'Returns false if not all scopes matches',
     input: {
       scope: 'a d',
       userScopes: 'a b c'
     },
     output: false
   }, {
-    name: 'Returns true if all scopes matches',
+    title: 'Returns true if all scopes matches',
     input: {
       scope: 'a b',
       userScopes: 'a b c'

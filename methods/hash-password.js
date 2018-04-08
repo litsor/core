@@ -7,7 +7,7 @@ const pbkdf2 = promisify(Crypto.pbkdf2);
 const randomBytes = Crypto.randomBytes;
 
 module.exports = {
-  name: 'Hash password',
+  title: 'Hash password',
   description: 'Create a hash for storing passwords',
   cache: 0,
 
@@ -15,7 +15,7 @@ module.exports = {
     type: 'object',
     properties: {
       password: {
-        name: 'Plaintext password',
+        title: 'Plaintext password',
         type: 'string',
         minLength: 1
       }
@@ -35,7 +35,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Can generate hash',
+    title: 'Can generate hash',
     input: {
       password: 'Welcome01!!'
     },

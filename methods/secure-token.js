@@ -3,7 +3,7 @@
 const {randomBytes} = require('crypto');
 
 module.exports = {
-  name: 'Secure token',
+  title: 'Secure token',
   description: 'Generate a random security token',
   cache: 0,
 
@@ -11,13 +11,13 @@ module.exports = {
     type: 'object',
     properties: {
       size: {
-        name: 'Token size in bits',
+        title: 'Token size in bits',
         type: 'integer',
         minimum: 40,
         maximum: 1024
       },
       encoding: {
-        name: 'Encoding',
+        title: 'Encoding',
         type: 'string',
         enum: ['base64', 'hex']
       }
@@ -40,13 +40,13 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Can generate token in base64',
+    title: 'Can generate token in base64',
     input: {
       size: 100
     },
     output: str => str.length === 20
   }, {
-    name: 'Can generate token in hex',
+    title: 'Can generate token in hex',
     input: {
       encoding: 'hex'
     },

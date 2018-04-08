@@ -3,7 +3,7 @@
 const MathJS = require('mathjs');
 
 module.exports = {
-  name: 'Math',
+  title: 'Math',
   description: 'Calculate mathematical expression',
   cache: Infinity,
 
@@ -11,13 +11,13 @@ module.exports = {
     type: 'object',
     properties: {
       formula: {
-        name: 'Formula',
+        title: 'Formula',
         type: 'string'
       }
     },
     required: ['formula'],
     additionalProperties: {
-      name: 'Render variables'
+      title: 'Render variables'
     }
   },
 
@@ -30,14 +30,14 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Execute basic formula',
+    title: 'Execute basic formula',
     input: {
       formula: '1 + 1'
     },
     outputSchema: {type: 'number'},
     output: 2
   }, {
-    name: 'Use variable',
+    title: 'Use variable',
     input: {
       formula: '1 + a',
       a: 3
@@ -45,7 +45,7 @@ module.exports = {
     outputSchema: {type: 'number'},
     output: 4
   }, {
-    name: 'Use function',
+    title: 'Use function',
     input: {
       formula: '1 + sqrt(a)',
       a: 3

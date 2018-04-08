@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'split',
+  title: 'split',
   description: 'Split string on separator',
   cache: Infinity,
 
@@ -9,11 +9,11 @@ module.exports = {
     type: 'object',
     properties: {
       input: {
-        name: 'Input string',
+        title: 'Input string',
         type: 'string'
       },
       separator: {
-        name: 'Separator',
+        title: 'Separator',
         type: 'string'
       }
     },
@@ -33,7 +33,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Split string',
+    title: 'Split string',
     input: {
       input: 'first, second',
       separator: ', '

@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'query',
+  title: 'query',
   description: 'Execute SQL query',
   cache: 0,
 
@@ -9,11 +9,11 @@ module.exports = {
     type: 'object',
     properties: {
       query: {
-        name: 'SQL query',
+        title: 'SQL query',
         type: 'string'
       },
       parameters: {
-        name: 'Query parameters',
+        title: 'Query parameters',
         type: 'object'
       }
     },
@@ -45,7 +45,7 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Execute query',
+    title: 'Execute query',
     input: {query: 'SELECT * FROM tablename'},
     output: [],
     inputSchema: {

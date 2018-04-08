@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'create',
+  title: 'create',
   description: 'Create new object in the database',
   cache: 0,
 
@@ -9,11 +9,11 @@ module.exports = {
     type: 'object',
     properties: {
       data: {
-        name: 'Data',
+        title: 'Data',
         type: 'object'
       },
       model: {
-        name: 'Model name',
+        title: 'Model name',
         type: 'string'
       }
     },
@@ -50,16 +50,16 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Create object',
-    input: {data: {name: 'Test'}, model: 'Item'},
-    output: {id: '1', name: 'Test'},
+    title: 'Create object',
+    input: {data: {title: 'Test'}, model: 'Item'},
+    output: {id: '1', title: 'Test'},
     inputSchema: {
       type: 'object',
       properties: {
         data: {
           type: 'object',
           properties: {
-            name: {type: 'string'}
+            title: {type: 'string'}
           }
         }
       }
@@ -68,7 +68,7 @@ module.exports = {
       type: 'object',
       properties: {
         id: {type: 'string', minLength: 1},
-        name: {type: 'string'}
+        title: {type: 'string'}
       }
     }
   }],

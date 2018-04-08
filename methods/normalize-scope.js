@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Normalize scope',
+  title: 'Normalize scope',
   description: 'Normalize an OAuth scope string',
   cache: Infinity,
 
@@ -9,14 +9,14 @@ module.exports = {
     type: 'object',
     properties: {
       scope: {
-        name: 'Scope string',
+        title: 'Scope string',
         type: 'string'
       },
       patterns: {
-        name: 'Patterns',
+        title: 'Patterns',
         type: 'array',
         items: {
-          name: 'Pattern',
+          title: 'Pattern',
           type: 'string'
         }
       }
@@ -42,43 +42,43 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Will sort scopes',
+    title: 'Will sort scopes',
     input: {
       scope: 'a b d c'
     },
     output: 'a b c d'
   }, {
-    name: 'Will filter duplicates',
+    title: 'Will filter duplicates',
     input: {
       scope: 'a b c c'
     },
     output: 'a b c'
   }, {
-    name: 'Will filter specific scopes covered by more generic scope',
+    title: 'Will filter specific scopes covered by more generic scope',
     input: {
       scope: 'a b b:34'
     },
     output: 'a b'
   }, {
-    name: 'Will not combine different specific scopes',
+    title: 'Will not combine different specific scopes',
     input: {
       scope: 'b:3 b:4'
     },
     output: 'b:3 b:4'
   }, {
-    name: 'Will remove other scopes if "*" was provided',
+    title: 'Will remove other scopes if "*" was provided',
     input: {
       scope: 'a b *'
     },
     output: '*'
   }, {
-    name: 'Will not output any scopes when no input scopes are given',
+    title: 'Will not output any scopes when no input scopes are given',
     input: {
       scope: ''
     },
     output: ''
   }, {
-    name: 'Will filter scopes not matched by given patterns',
+    title: 'Will filter scopes not matched by given patterns',
     input: {
       scope: 'a b b:3 c:4',
       patterns: ['b', 'c:*']

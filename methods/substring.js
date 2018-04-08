@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'substring',
+  title: 'substring',
   description: 'Get a part of the string',
   cache: Infinity,
 
@@ -9,16 +9,16 @@ module.exports = {
     type: 'object',
     properties: {
       input: {
-        name: 'Input string',
+        title: 'Input string',
         type: 'string'
       },
       start: {
-        name: 'Start character',
+        title: 'Start character',
         type: 'integer',
         minimum: 0
       },
       length: {
-        name: 'Maximum length',
+        title: 'Maximum length',
         type: 'integer',
         minimum: 1
       }
@@ -46,27 +46,27 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Without options',
+    title: 'Without options',
     input: {
       input: 'Test'
     },
     output: 'Test'
   }, {
-    name: 'Only start',
+    title: 'Only start',
     input: {
       input: 'Test',
       start: 2
     },
     output: 'st'
   }, {
-    name: 'Only length',
+    title: 'Only length',
     input: {
       input: 'Test',
       length: 2
     },
     output: 'Te'
   }, {
-    name: 'Both start and length given',
+    title: 'Both start and length given',
     input: {
       input: 'Test',
       start: 2,
@@ -74,14 +74,14 @@ module.exports = {
     },
     output: 's'
   }, {
-    name: 'Start beyond length of input string',
+    title: 'Start beyond length of input string',
     input: {
       input: 'Test',
       start: 10
     },
     output: ''
   }, {
-    name: 'Can infer minimum and maximum length in output schema',
+    title: 'Can infer minimum and maximum length in output schema',
     input: {
       input: 'This is a test',
       start: 5,
@@ -103,7 +103,7 @@ module.exports = {
       maxLength: 10
     }
   }, {
-    name: 'Calculates maxLength correctly in output schema',
+    title: 'Calculates maxLength correctly in output schema',
     input: {
       input: 'This is a test',
       start: 5,

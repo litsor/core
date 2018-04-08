@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'length',
+  title: 'length',
   description: 'Get length of strings or arrays',
   cache: Infinity,
 
@@ -9,7 +9,7 @@ module.exports = {
     type: 'object',
     properties: {
       input: {
-        name: 'Input'
+        title: 'Input'
       }
     },
     required: ['input'],
@@ -47,15 +47,15 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'String length',
+    title: 'String length',
     input: {input: 'Test'},
     output: 4
   }, {
-    name: 'Array length',
+    title: 'Array length',
     input: {input: ['a', 'b', 'c']},
     output: 3
   }, {
-    name: 'Sets 0 as default minimum in output schema',
+    title: 'Sets 0 as default minimum in output schema',
     input: {input: 'Test'},
     inputSchema: {
       type: 'object',
@@ -71,7 +71,7 @@ module.exports = {
       minimum: 0
     }
   }, {
-    name: 'Outputs 0 for null',
+    title: 'Outputs 0 for null',
     input: {input: null},
     inputSchema: {
       type: 'object',
@@ -88,7 +88,7 @@ module.exports = {
       maximum: 0
     }
   }, {
-    name: 'Outputs 1 for other types',
+    title: 'Outputs 1 for other types',
     input: {
       input: true
     },
@@ -107,7 +107,7 @@ module.exports = {
       maximum: 1
     }
   }, {
-    name: 'Sets minimum and maximum for strings in output schema',
+    title: 'Sets minimum and maximum for strings in output schema',
     input: {
       input: 'Test'
     },
@@ -128,7 +128,7 @@ module.exports = {
       maximum: 20
     }
   }, {
-    name: 'Sets minimum and maximum for arrays in output schema',
+    title: 'Sets minimum and maximum for arrays in output schema',
     input: {
       input: ['a', 'b', 'c', 'd']
     },

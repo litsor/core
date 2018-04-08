@@ -3,7 +3,7 @@
 const {get} = require('jsonpointer');
 
 module.exports = {
-  name: 'Coalesce',
+  title: 'Coalesce',
   description: 'Returns the first non-empty item in the list',
   cache: Infinity,
 
@@ -11,14 +11,14 @@ module.exports = {
     type: 'object',
     properties: {
       items: {
-        name: 'Input items',
+        title: 'Input items',
         type: 'array',
         items: {
-          name: 'Item'
+          title: 'Item'
         }
       },
       input: {
-        name: 'Input for referenced items',
+        title: 'Input for referenced items',
         type: 'object'
       }
     },
@@ -36,13 +36,13 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Get first non-empty item',
+    title: 'Get first non-empty item',
     input: {
       items: [null, 2, 3]
     },
     output: 2
   }, {
-    name: 'Can use referenced items',
+    title: 'Can use referenced items',
     input: {
       items: ['/foo'],
       input: {
@@ -51,7 +51,7 @@ module.exports = {
     },
     output: 'bar'
   }, {
-    name: 'Does not return empty referenced items',
+    title: 'Does not return empty referenced items',
     input: {
       items: ['/foo', '/bar'],
       input: {
@@ -60,7 +60,7 @@ module.exports = {
     },
     output: 'baz'
   }, {
-    name: 'Can use the special {=: ...} syntax to pass static values',
+    title: 'Can use the special {=: ...} syntax to pass static values',
     input: {
       items: [{'=': '/foo'}],
       input: {

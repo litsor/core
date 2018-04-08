@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Delete',
+  title: 'Delete',
   description: 'Delete object from the database',
   cache: 0,
 
@@ -9,11 +9,11 @@ module.exports = {
     type: 'object',
     properties: {
       id: {
-        name: 'Object id',
+        title: 'Object id',
         type: 'string'
       },
       model: {
-        name: 'Model name',
+        title: 'Model name',
         type: 'string'
       }
     },
@@ -41,7 +41,7 @@ module.exports = {
         return {
           findById() {
             return {
-              dataValues: {id: '1', name: 'Test'},
+              dataValues: {id: '1', title: 'Test'},
               destroy() {}
             };
           }
@@ -51,9 +51,9 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Delete object',
+    title: 'Delete object',
     input: {id: '1', model: 'Item'},
-    output: {id: '1', name: 'Test'},
+    output: {id: '1', title: 'Test'},
     inputSchema: {
       type: 'object',
       properties: {

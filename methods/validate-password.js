@@ -6,7 +6,7 @@ const {promisify} = require('util');
 const pbkdf2 = promisify(Crypto.pbkdf2);
 
 module.exports = {
-  name: 'Validate password',
+  title: 'Validate password',
   description: 'Validate a password against the stored hash',
   cache: 0,
 
@@ -14,12 +14,12 @@ module.exports = {
     type: 'object',
     properties: {
       password: {
-        name: 'Plaintext password',
+        title: 'Plaintext password',
         type: 'string',
         minLength: 1
       },
       hash: {
-        name: 'Password hash',
+        title: 'Password hash',
         type: 'string',
         minLength: 108,
         maxLength: 108
@@ -38,21 +38,21 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Will validate correct hash',
+    title: 'Will validate correct hash',
     input: {
       password: 'Welcome',
       hash: 'Aalu9aa94uFSOaGm9hCBOTkTwBXOIFcNeLGM43ZCg4pplMlFdzbzoQN2TJI9s/8debmYw/TzrPDvYL1yA/NqBHvhZ1T/l7Y6jvql5NjOvIkC'
     },
     output: true
   }, {
-    name: 'Will reject incorrect hash',
+    title: 'Will reject incorrect hash',
     input: {
       password: 'Welcome!',
       hash: 'Aalu9aa94uFSOaGm9hCBOTkTwBXOIFcNeLGM43ZCg4pplMlFdzbzoQN2TJI9s/8debmYw/TzrPDvYL1yA/NqBHvhZ1T/l7Y6jvql5NjOvIkC'
     },
     output: false
   }, {
-    name: 'Will throw an error when with incorrect version',
+    title: 'Will throw an error when with incorrect version',
     input: {
       password: 'Welcome!',
       hash: 'Bblu9aa94uFSOaGm9hCBOTkTwBXOIFcNeLGM43ZCg4pplMlFdzbzoQN2TJI9s/8debmYw/TzrPDvYL1yA/NqBHvhZ1T/l7Y6jvql5NjOvIkC'

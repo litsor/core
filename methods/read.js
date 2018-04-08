@@ -4,7 +4,7 @@ const {union, intersection} = require('lodash');
 const {NotFound} = require('http-errors');
 
 module.exports = {
-  name: 'Read',
+  title: 'Read',
   description: 'Retrieve a single object from the database',
   cache: 0,
 
@@ -12,19 +12,19 @@ module.exports = {
     type: 'object',
     properties: {
       id: {
-        name: 'Object id',
+        title: 'Object id',
         type: 'string'
       },
       model: {
-        name: 'Model name',
+        title: 'Model name',
         type: 'string'
       },
       selections: {
-        name: 'Selected fields',
+        title: 'Selected fields',
         type: 'object'
       },
       nullOnError: {
-        name: 'Return null when item is not found',
+        title: 'Return null when item is not found',
         type: 'boolean'
       }
     },
@@ -51,7 +51,7 @@ module.exports = {
       get() {
         return {
           properties: {
-            name: {type: 'string'}
+            title: {type: 'string'}
           }
         };
       }
@@ -60,7 +60,7 @@ module.exports = {
       get() {
         return {
           findOne({where}) {
-            return {dataValues: {id: where.id, name: 'Test'}};
+            return {dataValues: {id: where.id, title: 'Test'}};
           }
         };
       }
@@ -68,9 +68,9 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Read object',
+    title: 'Read object',
     input: {id: '1', model: 'Item'},
-    output: {id: '1', name: 'Test'},
+    output: {id: '1', title: 'Test'},
     outputSchema: {
       type: 'object',
       properties: {

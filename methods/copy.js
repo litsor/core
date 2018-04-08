@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Copy',
+  title: 'Copy',
   description: 'Copy variable',
   cache: Infinity,
 
@@ -9,7 +9,7 @@ module.exports = {
     type: 'object',
     properties: {
       input: {
-        name: 'Input variable'
+        title: 'Input variable'
       }
     },
     required: ['input']
@@ -22,7 +22,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Copy variable',
+    title: 'Copy variable',
     input: {
       input: 'test'
     },

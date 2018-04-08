@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'join',
+  title: 'join',
   description: 'Join array parts into single string',
   cache: Infinity,
 
@@ -9,14 +9,14 @@ module.exports = {
     type: 'object',
     properties: {
       separator: {
-        name: 'Separator',
+        title: 'Separator',
         type: 'string'
       },
       input: {
-        name: 'Input array',
+        title: 'Input array',
         type: 'array',
         items: {
-          name: 'Element',
+          title: 'Element',
           type: 'string'
         }
       }
@@ -32,7 +32,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Without separator',
+    title: 'Without separator',
     input: {
       input: ['first', 'second']
     },
@@ -47,7 +47,7 @@ module.exports = {
       type: 'string'
     }
   }, {
-    name: 'With separator',
+    title: 'With separator',
     input: {
       input: ['first', 'second'],
       separator: ', '

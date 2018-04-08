@@ -3,7 +3,7 @@
 const {Op} = require('sequelize');
 
 module.exports = {
-  name: 'Update',
+  title: 'Update',
   description: 'Update object in the database',
   cache: 0,
 
@@ -11,15 +11,15 @@ module.exports = {
     type: 'object',
     properties: {
       id: {
-        name: 'Object id',
+        title: 'Object id',
         type: 'string'
       },
       data: {
-        name: 'Data',
+        title: 'Data',
         type: 'object'
       },
       model: {
-        name: 'Model name',
+        title: 'Model name',
         type: 'string'
       }
     },
@@ -57,16 +57,16 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Update object',
-    input: {data: {name: 'Test'}, id: '1', model: 'Item'},
-    output: {id: '1', name: 'Test'},
+    title: 'Update object',
+    input: {data: {title: 'Test'}, id: '1', model: 'Item'},
+    output: {id: '1', title: 'Test'},
     inputSchema: {
       type: 'object',
       properties: {
         data: {
           type: 'object',
           properties: {
-            name: {type: 'string'}
+            title: {type: 'string'}
           }
         },
         id: {type: 'string'},
@@ -77,7 +77,7 @@ module.exports = {
       type: 'object',
       properties: {
         id: {type: 'string', minLength: 1},
-        name: {type: 'string'}
+        title: {type: 'string'}
       }
     }
   }],

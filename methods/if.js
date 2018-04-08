@@ -2,7 +2,7 @@
 'use strict';
 
 module.exports = {
-  name: 'If',
+  title: 'If',
   description: 'Check condition and run if/else script',
   cache: 0,
 
@@ -10,26 +10,26 @@ module.exports = {
     type: 'object',
     properties: {
       left: {
-        name: 'Left operand'
+        title: 'Left operand'
       },
       operator: {
-        name: 'Operator',
+        title: 'Operator',
         type: 'string',
         enum: ['==', '===', '<', '<=', '=>', '>', '!=', '!==', 'startsWith', 'endsWith', 'contains']
       },
       right: {
-        name: 'Right operand'
+        title: 'Right operand'
       },
       then: {
-        name: 'Then',
+        title: 'Then',
         $ref: '#/definitions/Script'
       },
       else: {
-        name: 'Else',
+        title: 'Else',
         $ref: '#/definitions/Script'
       },
       input: {
-        name: 'Script input',
+        title: 'Script input',
         type: 'object'
       }
     },
@@ -65,14 +65,14 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Minimal options',
+    title: 'Minimal options',
     input: {
       left: true
     },
     output: true,
     outputSchema: {type: 'boolean'}
   }, {
-    name: 'Non-default operator',
+    title: 'Non-default operator',
     input: {
       left: 3,
       operator: '<',
@@ -81,7 +81,7 @@ module.exports = {
     output: false,
     outputSchema: {type: 'boolean'}
   }, {
-    name: 'Then-script provided, condition passed',
+    title: 'Then-script provided, condition passed',
     input: {
       left: true,
       then: [{static: {value: 1}}]
@@ -89,7 +89,7 @@ module.exports = {
     output: 1,
     outputSchema: {}
   }, {
-    name: 'Then-script provided, condition failed',
+    title: 'Then-script provided, condition failed',
     input: {
       left: false,
       then: [{static: {value: 1}}]
@@ -97,7 +97,7 @@ module.exports = {
     output: false,
     outputSchema: {}
   }, {
-    name: 'Else-script provided, condition passed',
+    title: 'Else-script provided, condition passed',
     input: {
       left: true,
       else: [{static: {value: 1}}]
@@ -105,7 +105,7 @@ module.exports = {
     output: true,
     outputSchema: {}
   }, {
-    name: 'Else-script provided, condition failed',
+    title: 'Else-script provided, condition failed',
     input: {
       left: false,
       else: [{static: {value: 1}}]
@@ -113,7 +113,7 @@ module.exports = {
     output: 1,
     outputSchema: {}
   }, {
-    name: 'Then and else provided, condition passed',
+    title: 'Then and else provided, condition passed',
     input: {
       left: true,
       then: [{static: {value: 1}}],
@@ -122,7 +122,7 @@ module.exports = {
     output: 1,
     outputSchema: {}
   }, {
-    name: 'Then and else provided, condition failed',
+    title: 'Then and else provided, condition failed',
     input: {
       left: false,
       then: [{static: {value: 1}}],
@@ -131,14 +131,14 @@ module.exports = {
     output: 2,
     outputSchema: {}
   }, {
-    name: 'Check if object exist',
+    title: 'Check if object exist',
     input: {
       left: {}
     },
     output: true,
     outputSchema: {type: 'boolean'}
   }, {
-    name: 'String starts with',
+    title: 'String starts with',
     input: {
       left: 'test',
       operator: 'startsWith',
@@ -147,7 +147,7 @@ module.exports = {
     output: true,
     outputSchema: {type: 'boolean'}
   }, {
-    name: 'String ends with',
+    title: 'String ends with',
     input: {
       left: 'test',
       operator: 'endsWith',
@@ -156,7 +156,7 @@ module.exports = {
     output: true,
     outputSchema: {type: 'boolean'}
   }, {
-    name: 'String contains',
+    title: 'String contains',
     input: {
       left: 'test',
       operator: 'contains',
@@ -192,7 +192,7 @@ module.exports = {
       return passed;
     }
     Script.load({
-      name: passed ? 'Then' : 'Else',
+      title: passed ? 'Then' : 'Else',
       steps: passed ? options.then : options.else
     });
     return Script.run(input, {returnContext: true});

@@ -53,7 +53,7 @@ class Methods {
     const schema = `
     type _method {
       id: ID!
-      name: String!
+      title: String!
       description: String
       inputSchema: JSON!
       outputSchema(inputSchema: JSON!, options: JSON!): JSON!
@@ -78,7 +78,7 @@ class Methods {
     };
     const toMethod = id => ({
       id,
-      name: this.methods[id].name,
+      title: this.methods[id].title,
       decription: this.methods[id].description,
       inputSchema: this.methods[id].inputSchema,
       defaults: this.methods[id].defaults || {},

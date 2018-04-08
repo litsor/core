@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Decrypt',
+  title: 'Decrypt',
   description: 'Decrypt data',
   cache: 0,
 
@@ -9,7 +9,7 @@ module.exports = {
     type: 'object',
     properties: {
       input: {
-        name: 'Input data',
+        title: 'Input data',
         type: 'string'
       }
     },
@@ -32,7 +32,7 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Can decrypt data',
+    title: 'Can decrypt data',
     input: {
       input: 'cipher'
     },

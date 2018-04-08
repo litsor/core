@@ -14,7 +14,7 @@ class JsonSchema {
             type: 'string',
             enum: ['string']
           },
-          name: {
+          title: {
             type: 'string'
           },
           minLength: {
@@ -39,7 +39,7 @@ class JsonSchema {
           }
         },
         additionalProperties: false,
-        required: ['name', 'type']
+        required: ['title', 'type']
       }, {
         // Number, integer.
         type: 'object',
@@ -48,7 +48,7 @@ class JsonSchema {
             type: 'string',
             enum: ['number', 'integer']
           },
-          name: {
+          title: {
             type: 'string'
           },
           minimum: {
@@ -59,7 +59,7 @@ class JsonSchema {
           }
         },
         additionalProperties: false,
-        required: ['type', 'name']
+        required: ['type', 'title']
       }, {
         // Boolean.
         type: 'object',
@@ -68,12 +68,12 @@ class JsonSchema {
             type: 'string',
             enum: ['boolean']
           },
-          name: {
+          title: {
             type: 'string'
           }
         },
         additionalProperties: false,
-        required: ['type', 'name']
+        required: ['type', 'title']
       }, {
         // Null.
         type: 'object',
@@ -93,7 +93,7 @@ class JsonSchema {
             type: 'string',
             enum: ['array']
           },
-          name: {
+          title: {
             type: 'string'
           },
           items: {
@@ -118,7 +118,7 @@ class JsonSchema {
             type: 'string',
             enum: ['object']
           },
-          name: {
+          title: {
             type: 'string'
           },
           properties: {
@@ -144,14 +144,14 @@ class JsonSchema {
       }, {
         type: 'object',
         properties: {
-          name: {
+          title: {
             type: 'string'
           },
           $ref: {
             type: 'string'
           }
         },
-        required: ['name'],
+        required: ['title'],
         additionalProperties: false
       }],
       definitions: {
@@ -165,7 +165,7 @@ class JsonSchema {
       oneOf: this.schemaSchema.oneOf.map(schema => {
         const newSchema = cloneDeep(schema);
         if (newSchema.required) {
-          newSchema.required = newSchema.required.filter(name => name !== 'name');
+          newSchema.required = newSchema.required.filter(name => name !== 'title');
         }
         return newSchema;
       })

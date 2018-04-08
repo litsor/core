@@ -4,7 +4,7 @@ const {get, union, intersection} = require('lodash');
 const {Op, fn, col} = require('sequelize');
 
 module.exports = {
-  name: 'Select',
+  title: 'Select',
   description: 'Select objects from the database',
   cache: 0,
 
@@ -12,25 +12,25 @@ module.exports = {
     type: 'object',
     properties: {
       model: {
-        name: 'modelname',
+        title: 'modelname',
         type: 'string'
       },
       filters: {
-        name: 'Selection criteria',
+        title: 'Selection criteria',
         type: 'object'
       },
       offset: {
-        name: 'Offset',
+        title: 'Offset',
         type: 'integer',
         minimum: 0
       },
       limit: {
-        name: 'Limit',
+        title: 'Limit',
         type: 'integer',
         minimum: 1
       },
       selections: {
-        name: 'Selected fields',
+        title: 'Selected fields',
         type: 'object'
       }
     },
@@ -69,7 +69,7 @@ module.exports = {
       get() {
         return {
           properties: {
-            name: {type: 'string'}
+            title: {type: 'string'}
           }
         };
       }
@@ -81,7 +81,7 @@ module.exports = {
             if (Array.isArray(attributes[0])) {
               return [{dataValues: {count: 1}}];
             }
-            return [{dataValues: {id: '1', name: 'Test A'}}];
+            return [{dataValues: {id: '1', title: 'Test A'}}];
           }
         };
       }
@@ -94,12 +94,12 @@ module.exports = {
   },
 
   tests: [{
-    name: 'Can select all results',
+    title: 'Can select all results',
     input: {
       model: 'Post',
       selections: {count: {}, items: {}}
     },
-    output: {count: 1, items: [{id: '1', name: 'Test A'}]}
+    output: {count: 1, items: [{id: '1', title: 'Test A'}]}
   }],
 
   execute: async ({filters, model, offset, limit, selections}, {Database, Models, ScriptsManager}) => {

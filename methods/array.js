@@ -3,7 +3,7 @@
 const {get} = require('jsonpointer');
 
 module.exports = {
-  name: 'Array',
+  title: 'Array',
   description: 'Create a new array',
   cache: Infinity,
 
@@ -11,14 +11,14 @@ module.exports = {
     type: 'object',
     properties: {
       items: {
-        name: 'Input items',
+        title: 'Input items',
         type: 'array',
         items: {
-          name: 'Item'
+          title: 'Item'
         }
       },
       input: {
-        name: 'Input for referenced items',
+        title: 'Input for referenced items',
         type: 'object'
       }
     },
@@ -36,7 +36,7 @@ module.exports = {
   requires: [],
 
   tests: [{
-    name: 'Create new array',
+    title: 'Create new array',
     input: {
       items: [1, 2, 3]
     },
@@ -49,7 +49,7 @@ module.exports = {
     outputSchema: {type: 'array'},
     output: [1, 2, 3]
   }, {
-    name: 'Can use referenced items',
+    title: 'Can use referenced items',
     input: {
       items: [1, 2, '/foo'],
       input: {
@@ -65,7 +65,7 @@ module.exports = {
     outputSchema: {type: 'array'},
     output: [1, 2, 'bar']
   }, {
-    name: 'Can use the special {=: ...} syntax to pass static values',
+    title: 'Can use the special {=: ...} syntax to pass static values',
     input: {
       items: [1, 2, {'=': '/foo'}],
       input: {
