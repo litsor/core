@@ -4,6 +4,7 @@ const Router = require('koa-router');
 const {graphqlKoa, graphiqlKoa} = require('apollo-server-koa');
 const {makeExecutableSchema} = require('graphql-tools');
 const {GraphQLScalarType} = require('graphql');
+const GraphQLJson = require('graphql-type-json');
 const {map, values} = require('lodash');
 const validator = require('is-my-json-valid');
 
@@ -33,13 +34,16 @@ class Graphql {
   async setupRoutes() {
     const resolvers = {
       Query: {},
-      Mutation: {}
+      Mutation: {},
+      JSON: GraphQLJson
     };
     const emptySchema = `
       "Any known object type"
       interface AnyObject {
         id: ID!
       }
+      "JSON value"
+      scalar JSON
       type Query {a: Int}
       type Mutation {a: Int}
     `;

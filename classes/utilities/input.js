@@ -14,7 +14,7 @@ class Input {
         } catch (e) {
           output[key] = null;
         }
-      } else if (typeof source === 'object' && Object.keys(source).length === 1 && typeof source['='] !== 'undefined') {
+      } else if (typeof source === 'object' && source !== null && Object.keys(source).length === 1 && typeof source['='] !== 'undefined') {
         // There is a special syntax to allow static strings starting with a slash. In YAML we write:
         // {=: /oauth}
         output[key] = source['='];

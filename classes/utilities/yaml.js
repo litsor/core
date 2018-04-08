@@ -6,6 +6,7 @@ const globby = require('globby');
 const JsYaml = require('js-yaml');
 
 const readFile = promisify(Fs.readFile);
+const writeFile = promisify(Fs.writeFile);
 
 class Yaml {
   async readFiles(pattern) {
@@ -23,6 +24,14 @@ class Yaml {
       }
     });
     return output;
+  }
+
+  async readFile(filename) {
+    return JsYaml.safeLoad((await readFile(filename)).toString());
+  }
+
+  async writeFile(filename, contents) {
+    await writeFile(filename, JsYaml.safeDump(contents));
   }
 }
 

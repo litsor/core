@@ -2,13 +2,9 @@
 
 const MathJS = require('mathjs');
 
-const Handlebars = require('handlebars');
-
-Handlebars.registerHelper('encode', encodeURIComponent);
-
 module.exports = {
-  name: 'Handlebars',
-  description: 'Render handlebars HTML template',
+  name: 'Math',
+  description: 'Calculate mathematical expression',
   cache: Infinity,
 
   inputSchema: {

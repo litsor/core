@@ -2,7 +2,7 @@
 'use strict';
 
 const {cloneDeep, defaults} = require('lodash');
-const {get, set} = require('jsonpointer');
+const {set} = require('jsonpointer');
 
 class Script {
   constructor({Container, Methods, Input}) {
