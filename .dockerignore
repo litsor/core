@@ -2,11 +2,13 @@
 .gitignore
 .dockerignore
 .eslintrc
+.nyc_output
 README.md
 LICENSE
-test
+core/test
+core/node_modules
+core/coverage
 node_modules
-coverage
-watch.js
 Dockerfile
-*.sh
+package.json
+package-lock.json
