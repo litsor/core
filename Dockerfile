@@ -1,14 +1,14 @@
 FROM alpine:3.7
 
-ADD package.json /app/
+ADD core/package.json /app/core/
 
 RUN apk update \
  && apk add nodejs nodejs-npm \
- && cd /app \
+ && cd /app/core \
  && npm install --production \
  && apk del nodejs-npm \
  && rm -Rf ~/.npm \
- && cd /app/node_modules \
+ && cd /app/core/node_modules \
  && find . -type f | grep '/test/' | xargs rm \
  && find . -type f -iname readme.md | xargs rm \
  && find . -type f -iname changelog.md | xargs rm \

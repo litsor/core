@@ -6,7 +6,7 @@ const globby = require('globby');
 class Container {
   constructor() {
     this.filePatterns = [
-      'classes/**/*.js'
+      'core/classes/**/*.js'
     ];
     this.services = {
       Container: {

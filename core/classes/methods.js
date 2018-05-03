@@ -17,7 +17,7 @@ class Methods {
   }
 
   async readFiles(changedFile) {
-    const files = await globby('methods/**/*.js');
+    const files = await globby(['methods/**/*.js', 'core/methods/**/*.js']);
     const output = {};
     const promises = [];
     files.forEach(file => {
@@ -40,14 +40,16 @@ class Methods {
     await this.readFiles();
     if (this.config.get('/reload', false)) {
       let first = true;
-      Watch.watchTree('methods', changedFile => {
+      const callback = changedFile => {
         if (first) {
           first = false;
           return;
         }
         console.log('Reloading methods');
         this.readFiles(changedFile);
-      });
+      };
+      Watch.watchTree('core/methods', callback);
+      Watch.watchTree('methods', callback);
     }
 
     const schema = `
@@ -98,6 +100,7 @@ class Methods {
 
   async shutdown() {
     if (this.config.get('/reload', false)) {
+      Watch.unwatchTree('core/methods');
       Watch.unwatchTree('methods');
     }
   }

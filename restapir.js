@@ -1,6 +1,6 @@
 'use strict';
 
-const Container = require('./classes/container');
+const Container = require('./core/classes/container');
 
 (async () => {
   const container = new Container();

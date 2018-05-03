@@ -26,7 +26,7 @@ describe('OAuth', () => {
     const config = await container.get('Config');
     config.set({
       port: 1234,
-      configDir: 'test/oauth',
+      configDir: 'core/test/oauth',
       database: 'mysql:root:password@127.0.0.1/restapir',
       'recreate-db': true,
       'secret-key': 'test'
