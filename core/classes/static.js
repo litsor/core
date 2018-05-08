@@ -13,10 +13,7 @@ class Static {
     const dataDir = this.config.get('/configDir', 'data');
     const path = resolve(dataDir, 'public');
     const handler = koaStatic(path, {});
-    this.http.use('static', 10, (ctx, next) => {
-      console.log('test');
-      return handler(ctx, next);
-    });
+    this.http.use('static', 10, (ctx, next) => handler(ctx, next));
   }
 
   shutdown() {
