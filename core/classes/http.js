@@ -15,10 +15,43 @@ class Http {
     this.app.use(logger());
     this.app.use(bodyParser());
     this.app.use(cors());
+    this.app.use((ctx, next) => this.handleRequest(ctx, next, this.firstMiddleware));
+
+    this.middleware = {};
+    this.firstMiddleware = null;
   }
 
-  use(callback) {
-    this.app.use(callback);
+  use(name, weight, callback) {
+    this.middleware[name] = {name, weight, callback};
+    this.update();
+  }
+
+  unuse(name) {
+    delete this.middleware[name];
+    this.update();
+  }
+
+  update() {
+    let last;
+    Object.keys(this.middleware).map(name => ({
+      name,
+      ...this.middleware[name]
+    })).sort((a, b) => a.weight - b.weight).map(({name}, idx, list) => {
+      if (last) {
+        last.next = this.middleware[name];
+      } else {
+        this.firstMiddleware = this.middleware[name];
+        this.firstMiddleware.next = null;
+      }
+      last = this.middleware[name];
+    });
+  }
+
+  async handleRequest(ctx, next, middleware) {
+    if (middleware) {
+      return middleware.callback(ctx, () => this.handleRequest(ctx, next, middleware.next));
+    }
+    return next();
   }
 
   async startup() {

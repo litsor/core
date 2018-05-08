@@ -14,12 +14,19 @@ class Endpoints extends ConfigFiles {
     this.scriptsManager = ScriptsManager;
     this.models = Models;
     this.input = Input;
-
-    Http.use(async (ctx, next) => {
-      await this.handleRequest(ctx, next);
-    });
+    this.http = Http;
 
     this.paths = {};
+  }
+
+  startup() {
+    super.startup();
+    this.http.use('endpoints', 1, (ctx, next) => this.handleRequest(ctx, next));
+  }
+
+  shutdown() {
+    super.shutdown();
+    this.http.unuse('endpoints');
   }
 
   async publish() {

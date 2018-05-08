@@ -10,6 +10,10 @@ const validator = require('is-my-json-valid');
 
 class Graphql {
   constructor({Http}) {
+    this.http = Http;
+  }
+
+  startup() {
     const router = new Router();
 
     this.published = {};
@@ -19,7 +23,11 @@ class Graphql {
 
     router.get('/graphiql', graphiqlKoa({endpointURL: '/graphql'}));
 
-    Http.use(router.routes());
+    this.http.use('graphql', 2, router.routes());
+  }
+
+  shutdown() {
+    this.http.unuse('graphql');
   }
 
   handleRequest(ctx, next) {
