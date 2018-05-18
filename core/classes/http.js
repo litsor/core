@@ -14,7 +14,21 @@ class Http {
     this.app = new Koa();
     this.app.use(logger());
     this.app.use(bodyParser());
-    this.app.use(cors());
+    this.app.use((ctx, next) => {
+      if (ctx.request.headers.origin) {
+        ctx.response.set({
+          'Access-Control-Allow-Origin': ctx.request.headers.origin,
+          'Access-Control-Allow-Methods': 'GET,HEAD,PUT,POST,DELETE,PATCH',
+          'Access-Control-Allow-Headers': 'authorization,content-type',
+          'Access-Control-Allow-Credentials': 'true'
+        });
+      }
+      if (ctx.request.method === 'OPTIONS') {
+        ctx.response.body = {};
+        return;
+      }
+      return next();
+    });
     this.app.use((ctx, next) => this.handleRequest(ctx, next, this.firstMiddleware));
 
     this.middleware = {};
