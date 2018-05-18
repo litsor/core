@@ -45,7 +45,13 @@ module.exports = {
       },
       body: {
         title: 'Request body',
-        type: 'string'
+        oneOf: [{
+          title: 'Raw input',
+          type: 'string'
+        }, {
+          title: 'JSON object',
+          type: 'object'
+        }]
       }
     },
     required: ['url'],

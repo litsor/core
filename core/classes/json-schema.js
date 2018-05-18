@@ -7,6 +7,23 @@ class JsonSchema {
   constructor() {
     this.schemaSchema = {
       oneOf: [{
+        // One of.
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string'
+          },
+          oneOf: {
+            type: 'array',
+            items: {
+              $ref: '#'
+            },
+            minItems: 1
+          },
+        },
+        additionalProperties: false,
+        required: ['title', 'oneOf']
+      }, {
         // String.
         type: 'object',
         properties: {
