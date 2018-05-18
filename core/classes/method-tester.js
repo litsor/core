@@ -39,8 +39,11 @@ class MethodTester {
     let raisedError = false;
     let output;
     try {
+      await (method.startupTest || (async () => {})).bind(method)();
       output = await method.execute({...(method.defaults || {}), ...input}, method.mockups);
+      await (method.shutdownTest || (async () => {})).bind(method)();
     } catch (err) {
+      await (method.shutdownTest || (async () => {})).bind(method)();
       raisedError = true;
       if (typeof test.error === 'function') {
         // Exceptions must be validated by a callback.
@@ -96,12 +99,12 @@ class MethodTester {
       if (result) {
         ++passed;
       } else {
-        console.log(`Failed: ${test.name}`);
+        console.log(`Failed: ${test.title}`);
         ++failed;
       }
     }
     if (!quiet) {
-      console.log(`Test result for ${method.name}: ${passed} passed, ${failed} failed`);
+      console.log(`Test result for ${method.title}: ${passed} passed, ${failed} failed`);
     }
     return failed === 0;
   }
