@@ -1,14 +1,15 @@
 'use strict';
 
 const {CronJob} = require('cron');
-const ConfigFiles = require('./config-files');
 const createValidator = require('is-my-json-valid');
+const ConfigFiles = require('./config-files');
 
 class ScriptsManager extends ConfigFiles {
   constructor(dependencies) {
     super(dependencies);
     this.container = dependencies.Container;
     this.methods = dependencies.Methods;
+    this.log = dependencies.Log;
 
     this.configName = 'scripts';
 
@@ -53,9 +54,12 @@ class ScriptsManager extends ConfigFiles {
       const promises = input.steps.map(async step => {
         const methodName = Object.keys(step)[0];
         const method = await this.methods.get(methodName);
-        const {_output, ...stepConfig} = step[methodName];
-        if (typeof _output !== 'undefined' && typeof _output !== 'string') {
-          throw new TypeError(`Value for _output in "${methodName}" must be a string`);
+        const {_output, _comment, ...stepConfig} = step[methodName];
+        if (typeof _output !== 'undefined' && typeof _output !== 'string' && _output !== null) {
+          throw new TypeError(`Value for _output in "${methodName}" must be a string or null`);
+        }
+        if (typeof _comment !== 'undefined' && typeof _comment !== 'string') {
+          throw new TypeError(`Value for _comment in "${methodName}" must be a string`);
         }
 
         Object.keys(stepConfig).forEach(propName => {
@@ -75,9 +79,9 @@ class ScriptsManager extends ConfigFiles {
             propConfig = propConfig['='];
           }
           const validator = createValidator(propSchema);
-          if (!validator(stepConfig)) {
+          if (!validator(stepConfig[propName])) {
             const errors = validator.errors.map(({field, message}) => `${field.substring(5)} ${message}`).join(', ');
-            throw new TypeError(`Invalid for "${propName}" in "${methodName}": ${errors}`);
+            throw new TypeError(`Invalid property "${propName}" in "${methodName}": ${errors}`);
           }
         });
 
@@ -99,10 +103,16 @@ class ScriptsManager extends ConfigFiles {
     const script = await this.container.get('Script');
     script.load(definition);
     const run = async () => {
+      const correlationId = this.log.generateCorrelationId();
       try {
-        await script.run({});
+        await script.run({}, {correlationId});
       } catch (err) {
-        console.log(err);
+        this.log.log({
+          severity: 'error',
+          message: err.message,
+          correlationId,
+          ...(err.properties || {})
+        });
       }
     };
     if (definition.runOnStartup) {
@@ -129,6 +139,6 @@ class ScriptsManager extends ConfigFiles {
 }
 
 ScriptsManager.singleton = true;
-ScriptsManager.require = ['Methods', 'Container', ...ConfigFiles.require];
+ScriptsManager.require = ['Methods', 'Container', 'Log', ...ConfigFiles.require];
 
 module.exports = ScriptsManager;

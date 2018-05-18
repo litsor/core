@@ -8,8 +8,14 @@ module.exports = {
   inputSchema: {
     type: 'object',
     properties: {
-      input: {
-        title: 'Input data'
+      severity: {
+        title: 'Severity',
+        type: 'string',
+        enum: ['debug', 'info', 'warning', 'error', 'critical']
+      },
+      message: {
+        title: 'Message',
+        type: 'string'
       }
     },
     additionalProperties: false
@@ -20,19 +26,25 @@ module.exports = {
   },
 
   defaults: {
-    input: '/',
     _output: null
   },
 
-  requires: [],
+  requires: ['Log'],
+
+  mockups: {
+    Log: {
+      log(_) {}
+    }
+  },
 
   tests: [{
     input: {
-      input: 'test'
+      severity: 'debug',
+      message: 'Test'
     }
   }],
 
-  execute: ({input}) => {
-    console.log(JSON.stringify(input, null, 2));
+  execute: ({severity, message}, {Log}, correlationId) => {
+    Log.log({severity, message, correlationId});
   }
 };

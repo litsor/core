@@ -199,7 +199,7 @@ module.exports = {
         cookies: getCookies(response, cookies)
       };
     }).catch(err => {
-      throw new Error(`Unable to connect to "${url}"`);
+      throw new Error(`Unable to connect to "${url}": ${err.message}`);
     });
   }
 };

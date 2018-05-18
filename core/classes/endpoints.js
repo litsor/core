@@ -41,7 +41,7 @@ class Endpoints extends ConfigFiles {
               },
               in: {
                 type: 'string',
-                enum: ['query', 'path']
+                enum: ['query', 'path', 'body']
               },
               schema: {
                 type: 'object'
@@ -50,7 +50,7 @@ class Endpoints extends ConfigFiles {
                 type: 'boolean'
               }
             },
-            required: ['name', 'in', 'schema', 'required']
+            required: ['name', 'in', 'schema']
           }
         },
         variables: {

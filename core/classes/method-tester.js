@@ -40,7 +40,7 @@ class MethodTester {
     let output;
     try {
       await (method.startupTest || (async () => {})).bind(method)();
-      output = await method.execute({...(method.defaults || {}), ...input}, method.mockups);
+      output = await method.execute({...(method.defaults || {}), ...input}, method.mockups, 'correlation id');
       await (method.shutdownTest || (async () => {})).bind(method)();
     } catch (err) {
       await (method.shutdownTest || (async () => {})).bind(method)();

@@ -11,11 +11,12 @@ const createValidator = require('is-my-json-valid');
 const unlink = promisify(Fs.unlink);
 
 class ConfigFiles {
-  constructor({Yaml, Config, Graphql, Encrypt}) {
+  constructor({Yaml, Config, Graphql, Encrypt, Log}) {
     this.yaml = Yaml;
     this.config = Config;
     this.graphql = Graphql;
     this.encrypt = Encrypt;
+    this.log = Log;
 
     this.configDir = Config.get('/configDir', 'data');
 
@@ -55,11 +56,11 @@ class ConfigFiles {
 
       const data = files[filename];
       if (typeof data !== 'object' || data === null) {
-        console.error(`Unable to load ${filename}: contents must be an object`);
+        this.log.error(`Unable to load ${filename}: contents must be an object`);
         break;
       }
       if (typeof data.id !== 'string') {
-        console.error(`Unable to load ${filename}: missing id or wrong type`);
+        this.log.error(`Unable to load ${filename}: missing id or wrong type`);
         break;
       }
 
@@ -67,7 +68,7 @@ class ConfigFiles {
       const error = await this.validationFunction(data);
       if (error !== true) {
         const errorMessage = typeof error === 'string' ? error : 'Invalid format';
-        console.error(`Unable to load ${id}: ${errorMessage}`);
+        this.log.error(`Unable to load ${id}: ${errorMessage}`);
         break;
       }
 
@@ -89,7 +90,7 @@ class ConfigFiles {
           first = false;
           return;
         }
-        console.log('Reloading ' + this.configName);
+        this.log.info('Reloading ' + this.configName);
         this.readFiles();
       });
     }
@@ -186,6 +187,6 @@ class ConfigFiles {
   }
 }
 
-ConfigFiles.require = ['Yaml', 'Config', 'Graphql', 'Encrypt'];
+ConfigFiles.require = ['Yaml', 'Config', 'Graphql', 'Encrypt', 'Log'];
 
 module.exports = ConfigFiles;

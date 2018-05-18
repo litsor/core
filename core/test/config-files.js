@@ -50,11 +50,11 @@ describe('Config Files', () => {
   });
 
   it('will load the testfile', async () => {
-    expect(scripts.getNames()).to.deep.equal(['Test']);
+    expect(scripts.getNames().indexOf('Test') >= 0).to.equal(true);
   });
 
   it('will reload files', async () => {
-    expect(scripts.getNames()).to.not.include('NewScript');
+    expect(scripts.getNames()).to.not.contain('NewScript');
 
     const testScript = {id: 'NewScript', steps: []};
     writeFileSync(dir + '/scripts/new.yml', Yaml.safeDump(testScript));
@@ -69,7 +69,7 @@ describe('Config Files', () => {
       }
     }
 
-    expect(scripts.getNames()).to.include('NewScript');
+    expect(scripts.getNames()).to.contain('NewScript');
   }).timeout(10000);
 
   it('cannot get unexisting items', async () => {

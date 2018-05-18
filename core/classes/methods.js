@@ -7,12 +7,13 @@ const {Unauthorized, Forbidden} = require('http-errors');
 const reload = require('require-reload')(require);
 
 class Methods {
-  constructor({Config, MethodTester, Container, Graphql, Encrypt}) {
+  constructor({Config, MethodTester, Container, Graphql, Encrypt, Log}) {
     this.config = Config;
     this.methodTester = MethodTester;
     this.container = Container;
     this.graphql = Graphql;
     this.encrypt = Encrypt;
+    this.log = Log;
     this.methods = {};
   }
 
@@ -29,7 +30,7 @@ class Methods {
           promises.push(this.methodTester.test(this.methods[name]));
         }
       } catch (err) {
-        console.log(`Unable to load ${name}: ${err.message}`);
+        this.log.error(`Unable to load ${name}: ${err.message}`);
       }
     });
     await Promise.all(promises);
@@ -45,7 +46,7 @@ class Methods {
           first = false;
           return;
         }
-        console.log('Reloading methods');
+        this.log.info('Reloading methods');
         this.readFiles(changedFile);
       };
       Watch.watchTree('core/methods', callback);
@@ -130,6 +131,6 @@ class Methods {
 }
 
 Methods.singleton = true;
-Methods.require = ['Config', 'MethodTester', 'Container', 'Graphql', 'Encrypt'];
+Methods.require = ['Config', 'MethodTester', 'Container', 'Graphql', 'Encrypt', 'Log'];
 
 module.exports = Methods;

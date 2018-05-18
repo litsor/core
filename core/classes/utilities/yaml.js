@@ -9,6 +9,10 @@ const readFile = promisify(Fs.readFile);
 const writeFile = promisify(Fs.writeFile);
 
 class Yaml {
+  constructor({Log}) {
+    this.log = Log;
+  }
+
   async readFiles(pattern) {
     const files = await globby(pattern);
     const output = {};
@@ -20,7 +24,7 @@ class Yaml {
       try {
         output[file] = JsYaml.safeLoad(contents);
       } catch (err) {
-        console.log(`Unable to parse file ${file}: ${err.message}`);
+        this.log.error(`Unable to parse file ${file}: ${err.message}`);
       }
     });
     return output;
@@ -36,5 +40,6 @@ class Yaml {
 }
 
 Yaml.singleton = true;
+Yaml.require = ['Log'];
 
 module.exports = Yaml;

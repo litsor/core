@@ -9,8 +9,9 @@ const {map, values} = require('lodash');
 const validator = require('is-my-json-valid');
 
 class Graphql {
-  constructor({Http}) {
+  constructor({Http, Log}) {
     this.http = Http;
+    this.log = Log;
   }
 
   startup() {
@@ -36,7 +37,11 @@ class Graphql {
 
   async publish(schema, resolvers, name) {
     this.published[name] = {schema, resolvers};
-    await this.setupRoutes();
+    try {
+      await this.setupRoutes();
+    } catch (err) {
+      this.log.critical('GraphQL error: ' + err.message);
+    }
   }
 
   async setupRoutes() {
@@ -62,7 +67,8 @@ class Graphql {
     this.handler = graphqlKoa(ctx => {
       const context = {
         ip: ctx.request.ip,
-        headers: ctx.request.headers
+        headers: ctx.request.headers,
+        correlationId: ctx.correlationId
       };
       return {schema, context};
     });
@@ -212,6 +218,6 @@ class Graphql {
 }
 
 Graphql.singleton = true;
-Graphql.require = ['Http'];
+Graphql.require = ['Http', 'Log'];
 
 module.exports = Graphql;

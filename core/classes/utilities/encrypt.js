@@ -4,8 +4,9 @@ const {readFileSync, writeFileSync} = require('fs');
 const {createHash, createCipher, createDecipher, randomBytes} = require('crypto');
 
 class Encrypt {
-  constructor({Config}) {
+  constructor({Config, Log}) {
     this.key = Config.get('/secret-key', null);
+    this.log = Log;
     const configDir = Config.get('/configDir', 'data');
     if (!this.key) {
       try {
@@ -20,7 +21,7 @@ class Encrypt {
         try {
           writeFileSync(`${configDir}/secret.key`, this.key);
         } catch (err) {
-          console.log('No secret key found and unable to write new key');
+          this.log.error('No secret key found and unable to write new key');
         }
       }
     }
@@ -66,6 +67,6 @@ class Encrypt {
 }
 
 Encrypt.singleton = true;
-Encrypt.require = ['Config'];
+Encrypt.require = ['Config', 'Log'];
 
 module.exports = Encrypt;

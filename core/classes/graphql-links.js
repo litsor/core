@@ -97,10 +97,7 @@ class GraphqlLinks extends ConfigFiles {
 
   async resolve(scriptName, object, args, context) {
     const script = this.scriptsManager.get(scriptName);
-    return script.run({
-      ip: context.ip,
-      ...args
-    });
+    return script.run({...context, ...args});
   }
 
   astToSelectionTree(ast) {
