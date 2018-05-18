@@ -32,7 +32,8 @@ class Endpoints extends ConfigFiles {
   async publish() {
     this.paths = Object.keys(this.items).reduce((prev, id) => {
       const {method, path} = this.items[id];
-      const pattern = new RegExp('^' + path.split(/\{[^}]+\}/).map(escapeRegex).join('[^/]+') + '$');
+      const paths = Array.isArray(path) ? path : [path];
+      const pattern = new RegExp('^(' + paths.map(path => path.split(/\{[^}]+\}/).map(escapeRegex).join('[^/]+')).join('|') + ')$');
       prev[method] = prev[method] || [];
       prev[method].push({pattern, id});
       return prev;
@@ -43,6 +44,7 @@ class Endpoints extends ConfigFiles {
     const params = Object.keys(route.params).reduce((prev, name) => {
       const item = route.params[name];
       let value;
+      // @todo: Add values from path.
       if (item.in === 'query') {
         value = ctx.request.query[name];
       }
@@ -75,7 +77,7 @@ class Endpoints extends ConfigFiles {
       }, {});
     }).reduce((prev, curr) => ({...prev, ...curr}), []);
 
-    let input = {headers, cookies, ...params};
+    let input = {path, headers, cookies, ...params};
     input = {...input, ...this.input.get(input, route.variables || {})};
 
     const result = (await script.run(input)) || {};
