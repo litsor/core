@@ -1,0 +1,6 @@
+id: Update
+steps:
+- update:
+    id: /id
+    data: /input
+    model: /model

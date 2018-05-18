@@ -46,7 +46,10 @@ class ConfigFiles {
   }
 
   async readFiles() {
-    const files = await this.yaml.readFiles(`${this.configDir}/${this.configName}/**/*.yml`);
+    const files = {
+      ...(await this.yaml.readFiles(`core/config/${this.configName}/**/*.yml`)),
+      ...(await this.yaml.readFiles(`${this.configDir}/${this.configName}/**/*.yml`))
+    };
     for (let i = 0; i < Object.keys(files).length; ++i) {
       const filename = Object.keys(files)[i];
 

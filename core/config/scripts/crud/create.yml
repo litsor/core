@@ -1,0 +1,5 @@
+id: Create
+steps:
+- create:
+    data: /input
+    model: /model

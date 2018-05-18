@@ -1,0 +1,5 @@
+id: Delete
+steps:
+- delete:
+    model: /model
+    id: /id
