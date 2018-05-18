@@ -19,7 +19,7 @@ class JsonSchema {
               $ref: '#'
             },
             minItems: 1
-          },
+          }
         },
         additionalProperties: false,
         required: ['title', 'oneOf']

@@ -35,7 +35,7 @@ describe('Methods', () => {
     await container.shutdown();
   });
 
-  globby.sync('methods/**/*.js').forEach(filename => {
+  globby.sync('core/methods/**/*.js').forEach(filename => {
     const name = filename.match(/\/([^/]+)\.js$/)[1];
     it(name, async () => {
       const method = await Methods.get(name);

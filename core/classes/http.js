@@ -6,7 +6,6 @@ const destroyable = require('server-destroy');
 const Koa = require('koa');
 const logger = require('koa-logger');
 const bodyParser = require('koa-bodyparser');
-const cors = require('@koa/cors');
 
 class Http {
   constructor({Config}) {
@@ -50,7 +49,7 @@ class Http {
     Object.keys(this.middleware).map(name => ({
       name,
       ...this.middleware[name]
-    })).sort((a, b) => a.weight - b.weight).map(({name}, idx, list) => {
+    })).sort((a, b) => a.weight - b.weight).forEach(({name}) => {
       if (last) {
         last.next = this.middleware[name];
       } else {

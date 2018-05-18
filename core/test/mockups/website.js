@@ -1,5 +1,5 @@
+'use strict';
 
-const _ = require('lodash');
 const Faker = require('faker');
 const BlueGate = require('bluegate');
 

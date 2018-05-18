@@ -3,7 +3,7 @@
 const {clone} = require('lodash');
 const fetch = require('node-fetch');
 const {expect} = require('chai');
-const websiteMockup = require('../test/mockups/website');
+const WebsiteMockup = require('../test/mockups/website');
 
 module.exports = {
   title: 'HTTP request',
@@ -76,7 +76,7 @@ module.exports = {
   },
 
   async startupTest() {
-    this.websiteMockup = new websiteMockup();
+    this.websiteMockup = new WebsiteMockup();
     await this.websiteMockup.startup();
   },
 
@@ -89,7 +89,7 @@ module.exports = {
     input: {
       url: 'http://localhost:8372/list-pages'
     },
-    output: (output) => {
+    output: output => {
       expect(output).to.have.property('headers');
       expect(output).to.have.property('body');
       expect(output.body).to.be.a('string');
@@ -101,8 +101,8 @@ module.exports = {
     input: {
       url: 'http://localhost:8372/feed.json'
     },
-    output: (output) => {
-      expect(output.body instanceof Array).to.equal(true);
+    output: output => {
+      expect(Array.isArray(output.body)).to.equal(true);
       return true;
     }
   }, {
@@ -110,7 +110,7 @@ module.exports = {
     input: {
       url: 'http://localhost:8372/cookie/a'
     },
-    output: (output) => {
+    output: output => {
       expect(output.cookies).to.have.property('sessId');
       return true;
     }
@@ -122,7 +122,7 @@ module.exports = {
         testcookie: '123'
       }
     },
-    output: (output) => {
+    output: output => {
       expect(output.cookies).to.have.property('testcookie');
       return true;
     }
@@ -136,7 +136,7 @@ module.exports = {
       },
       body: 'Lorem ipsum'
     },
-    output: (output) => {
+    output: output => {
       expect(output.headers['content-type'][0]).to.equal('text/plain; charset=utf-8');
       expect(output.body).to.equal('Lorem ipsum');
       return true;
@@ -199,7 +199,6 @@ module.exports = {
         cookies: getCookies(response, cookies)
       };
     }).catch(err => {
-      console.log(err);
       throw new Error(`Unable to connect to "${url}"`);
     });
   }
