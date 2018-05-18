@@ -8,6 +8,86 @@ class GraphqlLinks extends ConfigFiles {
 
     this.configName = 'links';
 
+    this.validationSchema = {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string'
+        },
+        context: {
+          type: 'string'
+        },
+        field: {
+          type: 'string',
+          pattern: '^[a-zA-Z][a-zA-Z0-9]+$'
+        },
+        script: {
+          type: 'string'
+        },
+        params: {
+          type: 'object',
+          additionalProperties: {
+            type: 'object',
+            properties: {
+              schema: {
+                oneOf: [{
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string'
+                    }
+                  },
+                  required: ['type']
+                }, {
+                  type: 'object',
+                  properties: {
+                    $ref: {
+                      type: 'string'
+                    }
+                  },
+                  required: ['$ref']
+                }]
+              },
+              required: {
+                type: 'boolean'
+              },
+              multiple: {
+                type: 'boolean'
+              }
+            },
+            required: ['schema', 'required', 'multiple']
+          }
+        },
+        variables: {
+          type: 'object'
+        },
+        outputSchema: {
+          oneOf: [{
+            type: 'object',
+            properties: {
+              type: {
+                type: 'string'
+              }
+            },
+            required: ['type']
+          }, {
+            type: 'object',
+            properties: {
+              $ref: {
+                type: 'string'
+              }
+            },
+            required: ['$ref']
+          }]
+        },
+        outputMultiple: {
+          type: 'boolean'
+        }
+      },
+      required: ['id', 'context', 'field', 'script', 'params', 'outputSchema', 'outputMultiple'],
+      additionalProperties: false
+    };
+
     const {Graphql, ScriptsManager, Models} = dependencies;
 
     this.graphql = Graphql;

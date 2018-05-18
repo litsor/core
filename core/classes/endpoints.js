@@ -9,6 +9,70 @@ class Endpoints extends ConfigFiles {
 
     this.configName = 'endpoints';
 
+    this.validationSchema = {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string'
+        },
+        path: {
+          oneOf: [{
+            type: 'string'
+          }, {
+            type: 'array',
+            items: {type: 'string'},
+            minItems: 1
+          }]
+        },
+        method: {
+          type: 'string',
+          enum: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']
+        },
+        script: {
+          type: 'string'
+        },
+        params: {
+          type: 'object',
+          additionalProperties: {
+            type: 'object',
+            properties: {
+              name: {
+                type: 'string'
+              },
+              in: {
+                type: 'string',
+                enum: ['query', 'path']
+              },
+              schema: {
+                type: 'object'
+              },
+              required: {
+                type: 'boolean'
+              }
+            },
+            required: ['name', 'in', 'schema', 'required']
+          }
+        },
+        variables: {
+          type: 'object'
+        },
+        output: {
+          type: 'object',
+          properties: {
+            mime: {
+              type: 'string'
+            },
+            schema: {
+              type: 'object'
+            }
+          },
+          required: ['mime', 'schema']
+        }
+      },
+      required: ['id', 'path', 'method', 'script', 'params', 'output'],
+      additionalProperties: false
+    };
+
     const {Http, ScriptsManager, Models, Input} = dependencies;
 
     this.scriptsManager = ScriptsManager;

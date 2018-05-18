@@ -6,6 +6,7 @@ const {promisify} = require('util');
 const {kebabCase} = require('lodash');
 const Watch = require('watch');
 const {Unauthorized, Forbidden} = require('http-errors');
+const createValidator = require('is-my-json-valid');
 
 const unlink = promisify(Fs.unlink);
 
@@ -21,15 +22,52 @@ class ConfigFiles {
     // Each implementation must set a proper configName.
     this.configName = null;
 
+    // Implementation can specify a validation schema or override validationFunction.
+    this.validationSchema = {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string'
+        }
+      },
+      required: ['id']
+    };
+
     this.filenames = {};
     this.items = {};
+  }
+
+  async validationFunction(input) {
+    const validator = createValidator(this.validationSchema);
+    if (!validator(input)) {
+      return validator.errors.map(({field, message}) => `${field.substring(5)} ${message}`).join(', ');
+    }
+    return true;
   }
 
   async readFiles() {
     const files = await this.yaml.readFiles(`${this.configDir}/${this.configName}/**/*.yml`);
     for (let i = 0; i < Object.keys(files).length; ++i) {
       const filename = Object.keys(files)[i];
-      const {id} = files[filename];
+
+      const data = files[filename];
+      if (typeof data !== 'object' || data === null) {
+        console.error(`Unable to load ${filename}: contents must be an object`);
+        break;
+      }
+      if (typeof data.id !== 'string') {
+        console.error(`Unable to load ${filename}: missing id or wrong type`);
+        break;
+      }
+
+      const {id} = data;
+      const error = await this.validationFunction(data);
+      if (error !== true) {
+        const errorMessage = typeof error === 'string' ? error : 'Invalid format';
+        console.error(`Unable to load ${id}: ${errorMessage}`);
+        break;
+      }
+
       if (typeof this.items[id] !== 'undefined') {
         await this.destroy(this.items[id]);
       }

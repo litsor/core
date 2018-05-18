@@ -10,6 +10,49 @@ class Models extends ConfigFiles {
     this.database = dependencies.Database;
 
     this.configName = 'models';
+
+    this.validationSchema = {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string'
+        },
+        description: {
+          type: 'string'
+        },
+        store: {
+          type: 'boolean'
+        },
+        properties: {
+          type: 'object',
+          additionalProperties: {
+            oneOf: [{
+              type: 'object',
+              properties: {
+                type: {
+                  type: 'string'
+                }
+              },
+              required: ['type']
+            }, {
+              type: 'object',
+              properties: {
+                $ref: {
+                  type: 'string'
+                }
+              },
+              required: ['$ref']
+            }]
+          }
+        },
+        required: {
+          type: 'array',
+          items: {type: 'string'}
+        }
+      },
+      required: ['id', 'description'],
+      additionalProperties: true
+    };
   }
 
   create(definition) {
