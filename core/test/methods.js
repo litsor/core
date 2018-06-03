@@ -8,7 +8,7 @@ const Container = require('../classes/container');
 
 const expect = chai.expect;
 
-describe('Methods', () => {
+describe.skip('Methods', () => {
   let container;
   let Methods;
   let MethodTester;

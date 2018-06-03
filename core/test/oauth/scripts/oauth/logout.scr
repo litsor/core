@@ -1,0 +1,24 @@
+# Logout
+
+/user = / script "LoadUser"
+
+/ = /user then {{
+  /tokens = select {
+    model: "OauthAccessToken",
+    filters: {
+      client: /user/client/id,
+      user: /user/id
+    },
+    selections: {items: {id: {}}}
+  }
+  /tokens/items map delete {
+    model: "OauthAccessToken",
+    id: /id
+  }
+}}
+
+/ = {
+  status: 302,
+  body: "Redirecting...",
+  redirect: "/"
+}

@@ -416,6 +416,7 @@ describe('OAuth', () => {
     expect(result.headers.get('pragma')).to.equal('no-cache');
 
     temporary.location = result.headers.get('location');
+    console.log(temporary.location);
     expect(temporary.location.startsWith('https://example.com/callback')).to.equal(true);
   });
 

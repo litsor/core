@@ -1,0 +1,6 @@
+# Protected
+
+/user = / script "LoadUser"
+{.../, scope: "read"} script "RequireScope"
+
+/body = "<h1>Protected page</h1>"

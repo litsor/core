@@ -12,6 +12,8 @@ class ScriptsManager extends ConfigFiles {
     this.log = dependencies.Log;
 
     this.configName = 'scripts';
+    this.extension = '.scr';
+    this.plain = true;
 
     this.validationSchema = {
       type: 'object',
@@ -45,63 +47,16 @@ class ScriptsManager extends ConfigFiles {
   }
 
   async validationFunction(input) {
-    const basicValidation = await super.validationFunction(input);
-    if (basicValidation !== true) {
-      return basicValidation;
-    }
 
-    try {
-      const promises = input.steps.map(async step => {
-        const methodName = Object.keys(step)[0];
-        const method = await this.methods.get(methodName);
-        const {_output, _comment, ...stepConfig} = step[methodName];
-        if (typeof _output !== 'undefined' && typeof _output !== 'string' && _output !== null) {
-          throw new TypeError(`Value for _output in "${methodName}" must be a string or null`);
-        }
-        if (typeof _comment !== 'undefined' && typeof _comment !== 'string') {
-          throw new TypeError(`Value for _comment in "${methodName}" must be a string`);
-        }
-
-        Object.keys(stepConfig).forEach(propName => {
-          let propConfig = stepConfig[propName];
-          const propSchema = method.inputSchema.properties[propName] || method.inputSchema.additionalProperties;
-          if (propSchema === true) {
-            // All types allowed by additional properties.
-            return;
-          }
-          if (!propSchema) {
-            throw new TypeError(`Unknown property "${propName}" in config for "${methodName}"`);
-          }
-          if (typeof propConfig === 'string' && propConfig.startsWith('/')) {
-            return;
-          }
-          if (typeof propConfig === 'object' && propConfig !== null && Object.keys(propConfig).length === 1 && Object.keys(propConfig)[0] === '=') {
-            propConfig = propConfig['='];
-          }
-          const validator = createValidator(propSchema);
-          if (!validator(stepConfig[propName])) {
-            const errors = validator.errors.map(({field, message}) => `${field.substring(5)} ${message}`).join(', ');
-            throw new TypeError(`Invalid property "${propName}" in "${methodName}": ${errors}`);
-          }
-        });
-
-        (method.inputSchema.required || []).forEach(propName => {
-          if (typeof stepConfig[propName] === 'undefined') {
-            throw new TypeError(`Missing "${propName}" in config for "${methodName}"`);
-          }
-        });
-      });
-      await Promise.all(promises);
-    } catch (err) {
-      return err.message;
-    }
 
     return true;
   }
 
-  async create(definition) {
+  async create(definition, id) {
     const script = await this.container.get('Script');
     script.load(definition);
+    script.setId(id);
+
     const run = async () => {
       const correlationId = this.log.generateCorrelationId();
       try {
@@ -118,6 +73,7 @@ class ScriptsManager extends ConfigFiles {
     if (definition.runOnStartup) {
       run();
     }
+
     if (definition.cron) {
       this.crons[definition.id] = new CronJob({
         cronTime: definition.cron,
@@ -130,7 +86,7 @@ class ScriptsManager extends ConfigFiles {
   }
 
   async destroy(script) {
-    const {id} = script.getDefinition();
+    const id = script.getId();
     if (typeof this.crons[id] !== 'undefined') {
       // Stop the old cronjob, if any.
       this.crons[id].stop();

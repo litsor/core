@@ -4,10 +4,12 @@
 const Fs = require('fs');
 const {promisify} = require('util');
 const {kebabCase} = require('lodash');
+const globby = require('globby');
 const Watch = require('watch');
 const {Unauthorized, Forbidden} = require('http-errors');
 const createValidator = require('is-my-json-valid');
 
+const readFile = promisify(Fs.readFile);
 const unlink = promisify(Fs.unlink);
 
 class ConfigFiles {
@@ -19,6 +21,7 @@ class ConfigFiles {
     this.log = Log;
 
     this.configDir = Config.get('/configDir', 'data');
+    this.extension = '.yml';
 
     // Each implementation must set a proper configName.
     this.configName = null;
@@ -46,25 +49,49 @@ class ConfigFiles {
     return true;
   }
 
+  async readPlainFiles(pattern) {
+    const files = await globby(pattern);
+    const output = {};
+    const promises = files.map(file => {
+      return readFile(file);
+    });
+    (await Promise.all(promises)).forEach((contents, index) => {
+      const file = files[index];
+      output[file] = contents.toString();
+    });
+    return output;
+  }
+
   async readFiles() {
+    const loader = this.plain ? this.readPlainFiles : this.yaml.readFiles;
     const files = {
-      ...(await this.yaml.readFiles(`core/config/${this.configName}/**/*.yml`)),
-      ...(await this.yaml.readFiles(`${this.configDir}/${this.configName}/**/*.yml`))
+      ...(await loader(`core/config/${this.configName}/**/*${this.extension}`)),
+      ...(await loader(`${this.configDir}/${this.configName}/**/*${this.extension}`))
     };
     for (let i = 0; i < Object.keys(files).length; ++i) {
       const filename = Object.keys(files)[i];
 
       const data = files[filename];
-      if (typeof data !== 'object' || data === null) {
-        this.log.error(`Unable to load ${filename}: contents must be an object`);
-        break;
+      let id;
+      if (this.plain) {
+        const firstLine = data.split('\n')[0];
+        const idComment = firstLine.match(/#[\s]*([a-z_][a-z0-9_-]*)[\s]*$/i);
+        if (!idComment) {
+          this.log.error(`Unable to load ${filename}: no comment with id found`);
+          break;
+        }
+        id = idComment[1];
+      } else {
+        if (this.plain && (typeof data !== 'object' || data === null)) {
+          this.log.error(`Unable to load ${filename}: contents must be an object`);
+          break;
+        }
+        if (typeof data.id !== 'string') {
+          this.log.error(`Unable to load ${filename}: missing id or wrong type`);
+          break;
+        }
+        id = data.id;
       }
-      if (typeof data.id !== 'string') {
-        this.log.error(`Unable to load ${filename}: missing id or wrong type`);
-        break;
-      }
-
-      const {id} = data;
       const error = await this.validationFunction(data);
       if (error !== true) {
         const errorMessage = typeof error === 'string' ? error : 'Invalid format';
@@ -76,7 +103,7 @@ class ConfigFiles {
         await this.destroy(this.items[id]);
       }
       this.filenames[id] = filename;
-      this.items[id] = await this.create(files[filename]);
+      this.items[id] = await this.create(files[filename], id);
     }
     await this.publish();
   }

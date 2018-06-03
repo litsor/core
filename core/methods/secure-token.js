@@ -3,8 +3,10 @@
 const {randomBytes} = require('crypto');
 
 module.exports = {
+  id: 'secureToken',
   title: 'Secure token',
   description: 'Generate a random security token',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -53,7 +55,7 @@ module.exports = {
     output: str => str.length === 64
   }],
 
-  execute: async ({size, encoding}) => {
-    return randomBytes(Math.ceil(size / 8)).toString(encoding);
+  unary: async (size) => {
+    return randomBytes(Math.ceil(size / 8)).toString('base64');
   }
 };

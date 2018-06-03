@@ -1,0 +1,151 @@
+# OauthAuthorize
+
+/now = parseInt date "X"
+
+/client = read {
+  model: "OauthClient",
+  id: /client_id
+}
+
+/scope = normalizeScope /scope
+
+(/redirect_uri and !(/redirect_uri startsWith /client/redirectUri)) then error {type: "BadRequest"}
+
+/ = (!/redirect_uri) then {{
+  /redirect_uri = /client/redirectUri
+}}
+
+/ = /cookies/session then {{
+  /sessions = select {
+    model: "UserSession",
+    filters: {token: /cookies/session},
+    selections: {items: {user: {id: {}, name: {}}}},
+    limit: 1
+  }
+  / = /sessions/items/0/user then {{
+    /user = {
+      id: /sessions/items/0/user/id,
+      name: /sessions/items/0/user/name
+    }
+  }}
+}}
+
+# If we have posted the login form.
+/ = /username then {{
+  /users = select {
+    model: "User",
+    filters: {name: /username, blocked: false}
+  }
+  /validPassword = /users/items/0/password validatePassword /password
+  / = /validPassword then {{
+    /user = {
+      id: /users/items/0/id,
+      name: /users/items/0/name
+    }
+    /session = {
+      user: /user/id,
+      created: /now,
+      token: secureToken 256,
+      expires: /now + {{
+        / = 43200
+        / = //remember then 604800
+      }}
+    }
+    /session = create {model: "UserSession", data: /session}
+    /data/cookies/session = {
+      value: /session/token,
+      path: "/oauth"
+    }
+    / = /remember then {{
+      /data/cookies/session/maxAge = 604800
+    }}
+  }}
+  / = (!/validPassword) then {{
+    /wrongCredentials = true
+  }}
+}}
+
+# If there is a valid user (either from session or after validating login).
+/ = /user then {{
+  / = /client/trusted then {{
+    /allow = "true"
+  }}
+  / = (!/client/trusted) then {{
+    # Check if authorization was already given by checking the existence of an access token.
+    /tokens = select {
+      model: "OauthAccessToken",
+      filters: {
+        client: /client/id,
+        user: /user/id,
+        scope: /scope,
+        expires_gt: /now + 900
+      },
+      selections: {items: {id: {}}}
+    }
+    / = /tokens/items/0/id then {{
+      /allow = "true"
+    }}
+  }}
+
+  / = (/allow == "true") then {{
+    / = (/response_type == "code") then {{
+      /authorizationCode = create {
+        model: "OauthAuthorizationCode",
+        data: {
+          client: /client/id,
+          user: /user/id,
+          scope: /scope,
+          created: /now,
+          expires: /now + 60,
+          code: secureToken 256
+        }
+      }
+      /redirect_uri = /redirect_uri + "?code=" + (urlencode /authorizationCode/code) + "&state=" + (urlencode /state)
+    }}
+    / = (/response_type == "token") then {{
+      /token = / script "OauthCreateToken"
+      /redirect_uri = /redirect_uri + "#token=" + (urlencode /token/token) + "&state=" + (urlencode /state)
+    }}
+    /data = {
+      status: 302,
+      body: "Redirecting...",
+      redirect: /redirect_uri
+    }
+  }}
+
+  / = (/allow != "true") then {{
+    /template = "<!doctype html>\n<html>\n<body>\n    <h1>Authorize</h1>\n    <p>Do you allow {{client}} access to your account?</p>\n    <form action=\"/oauth/authorize\" method=\"post\">\n    <input type=\"hidden\" name=\"allow\" value=\"true\">\n    <input type=\"hidden\" name=\"client_id\" value=\"{{client_id}}\">\n    <input type=\"hidden\" name=\"response_type\" value=\"{{response_type}}\">\n    <input type=\"hidden\" name=\"redirect_uri\" value=\"{{redirect_uri}}\">\n    <input type=\"hidden\" name=\"scope\" value=\"{{scope}}\">\n    <input type=\"hidden\" name=\"state\" value=\"{{state}}\">\n    <input type=\"submit\" value=\"Allow\">\n    <a href=\"{{redirect_uri}}\">Deny</a>\n    </form>\n</body>\n</html>"
+    /data/body = {
+      client: /client/name,
+      client_id: /client_id,
+      response_type: /response_type,
+      redirect_uri: /redirect_uri,
+      scope: /scope,
+      state: /state
+    } handlebars /template
+  }}
+}}
+
+/ = (!/user) then {{
+  /message = ""
+  / = /wrongCredentials then {{
+    /message = "Wrong username or password"
+  }}
+  /template = "<!doctype html>\n<html>\n    <body>\n    <h1>Login</h1>\n    {{#if message }}\n    <div class=\"message\">\n        {{message}}\n    </div>\n    {{/if}}\n    <form action=\"/oauth/authorize\" method=\"post\">\n        <input type=\"hidden\" name=\"client_id\" value=\"{{client_id}}\">\n        <input type=\"hidden\" name=\"response_type\" value=\"{{response_type}}\">\n        <input type=\"hidden\" name=\"redirect_uri\" value=\"{{redirect_uri}}\">\n        <input type=\"hidden\" name=\"scope\" value=\"{{scope}}\">\n        <input type=\"hidden\" name=\"state\" value=\"{{state}}\">\n        <div>\n        <label>\n            Username\n            <input type=\"text\" name=\"username\">\n        </label>\n        </div>\n        <div>\n        <label>\n            Password\n            <input type=\"password\" name=\"password\">\n        </label>\n        </div>\n        <div>\n        <label>\n            <input type=\"checkbox\" name=\"remember\" value=\"remember\">\n            Remember\n        </label>\n        </div>\n        <input type=\"submit\" value=\"Login\">\n    </form>\n    </body>\n</html>"
+  /data/body = {
+      client: /client/name,
+      client_id: /client_id,
+      response_type: /response_type,
+      redirect_uri: /redirect_uri,
+      scope: /scope,
+      state: /state,
+      message: /message
+    } handlebars /template
+}}
+
+# Set security related headers.
+/"data/headers/X-Frame-Options" = "DENY"
+/"data/headers/Cache-Control" = "no-store"
+/"data/headers/Pragma" = "no-cache"
+
+/ = /data

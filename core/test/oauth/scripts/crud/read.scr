@@ -1,0 +1,7 @@
+# Read
+
+/ = read {
+  model: /model,
+  id: /id,
+  selections: /selections
+}

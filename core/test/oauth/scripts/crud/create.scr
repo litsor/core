@@ -1,0 +1,10 @@
+# Create
+
+/ = if ((/model == "User") and /input/password) {{
+  /input/password = hashPassword /input/password
+}} else /
+
+/ = create {
+  data: /input,
+  model: /model
+}

@@ -6,6 +6,7 @@ const {NotFound} = require('http-errors');
 module.exports = {
   title: 'Read',
   description: 'Retrieve a single object from the database',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -79,7 +80,7 @@ module.exports = {
     }
   }],
 
-  execute: async ({id, model, selections, nullOnError}, {Database, Models, ScriptsManager}) => {
+  unary: async ({id, model, selections, nullOnError}, {Database, Models, ScriptsManager}) => {
     const modelInstance = await Models.get(model);
     const db = Database.get(model);
 

@@ -3,6 +3,7 @@
 module.exports = {
   title: 'Script',
   description: 'Execute a script',
+  isBinary: true,
   cache: 0,
 
   inputSchema: {
@@ -54,7 +55,7 @@ module.exports = {
     output: 'test'
   }],
 
-  execute: async ({script, input, ...variables}, {ScriptsManager}) => {
-    return ScriptsManager.get(script).run({...input, ...variables});
+  binary: async (input, script, {ScriptsManager}) => {
+    return ScriptsManager.get(script).run(input);
   }
 };

@@ -3,6 +3,7 @@
 module.exports = {
   title: 'Delete',
   description: 'Delete object from the database',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -70,7 +71,7 @@ module.exports = {
     }
   }],
 
-  execute: async ({id, model}, {Database}) => {
+  unary: async ({id, model}, {Database}) => {
     const db = Database.get(model);
     const item = await db.findById(id);
     if (item === null) {

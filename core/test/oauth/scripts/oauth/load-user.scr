@@ -1,0 +1,30 @@
+# LoadUser
+
+/authorization ~ /"headers/x-authorization"
+/authorization ~ /headers/authorization
+
+/ = /authorization then {{
+  /tokens = select {
+    model: "OauthAccessToken",
+    filters: {
+      token: /authorization from 7,
+      expires_gt: round parseInt date "X"
+    },
+    limit: 1,
+    selections: {items: {id: {}, client: {id: {}}, expires: {}, user: {id: {}, name: {}, scope: {}}, scope: {}}}
+  }
+  / = /tokens/items/0 then {{
+    /data = {
+      id: /tokens/items/0/user/id,
+      name: /tokens/items/0/user/name,
+      client: /tokens/items/0/client,
+      token: {
+        id: /tokens/items/0/id,
+        expires: /tokens/items/0/expires,
+        scope: /tokens/items/0/scope scopeIntersection /tokens/items/0/user/scope
+      }
+    }
+  }}
+}}
+
+/ = /data

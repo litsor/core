@@ -1,0 +1,52 @@
+# OauthCreateToken
+
+# Script parameters:
+# /client/id
+# /user/id
+# /scope
+# Output:
+# /token/token
+# /token/expires
+# /token/refresh_token
+
+/now = round parseInt date "X"
+
+/token = {
+  client: /client/id,
+  user: /user/id,
+  scope: /scope,
+  created: /now,
+  token: secureToken 256,
+  expires: /now + 43200
+}
+create {
+  model: "OauthAccessToken",
+  data: /token
+}
+
+# Always create the refresh token. We use it to remember the login.
+/refresh_token = {
+  client: /client/id,
+  user: /user/id,
+  scope: /scope,
+  created: /now,
+  token: secureToken 256,
+  expires: /now + 432000
+}
+
+# Confidential clients (often API integrations) must use the refresh token within 30 days.
+/ = (/client/type == "confidential") then {{
+  /refresh_token/expires = /now + 2592000
+}}
+
+create {
+  model: "OauthRefreshToken",
+  data: /refresh_token
+}
+
+# Add refresh token for confidential clients.
+/ = (/client/type == "confidential") then {{
+  /token/refresh_token = /refresh_token/token
+}}
+
+/ = /token

@@ -1,8 +1,10 @@
 'use strict';
 
 module.exports = {
+  id: 'scopeIntersection',
   title: 'Scope intersection',
   description: 'Calculate the intersection of two scopes',
+  isBinary: true,
   cache: Infinity,
 
   inputSchema: {
@@ -129,7 +131,7 @@ module.exports = {
     output: ''
   }],
 
-  execute: async ({left, right}) => {
+  binary: async (left, right) => {
     const leftScope = left.split(' ').filter(item => item);
     const rightScope = right.split(' ').filter(item => item);
 

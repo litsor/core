@@ -1,8 +1,9 @@
 'use strict';
 
 module.exports = {
-  title: 'query',
+  title: 'SQL query',
   description: 'Execute SQL query',
+  isBinary: true,
   cache: 0,
 
   inputSchema: {
@@ -64,7 +65,7 @@ module.exports = {
     }
   }],
 
-  execute: async ({query, parameters}, {Database}) => {
+  binary: async (parameters, query, {Database}) => {
     const result = await Database.query(query, parameters);
     return JSON.parse(JSON.stringify(result[0]));
   }

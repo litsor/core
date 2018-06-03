@@ -1,0 +1,7 @@
+# RequireScope
+
+/ = /user/token/scope then {{
+  /access = /scope matchScope /user/token/scope
+  (!/access) then error {type: "Forbidden"}
+}}
+(!/user/token/scope) then error {type: "Unauthorized"}
