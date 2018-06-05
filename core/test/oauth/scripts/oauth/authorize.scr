@@ -17,7 +17,7 @@
 
 / = /cookies/session then {{
   /sessions = query {
-    sessions: listUserSession (filters: UserSessionFilterSet {token: /cookies/session}, limit: 1) {
+    sessions: listUserSession (filters: {token: /cookies/session}, limit: 1) {
       items {
         user { id name }
       }

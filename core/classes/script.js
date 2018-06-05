@@ -153,7 +153,7 @@ class Script {
     return false;
   }
 
-  async getSelections(selections, params, variables, context) {
+  async getSelections(selections, params, variables, graphqlType, context) {
     const fields = [];
     for (let i = 0; i < selections.length; ++i) {
       const selection = selections[i].children[0];
@@ -162,13 +162,15 @@ class Script {
       if (type === 'query_field') {
         const alias = field.field_alias ? field.field_alias[0].text + ':' : '';
         let definition = alias + field.name;
+        const outputType = this.graphql.getFieldType(graphqlType, field.name);
         if (field.param) {
           const paramDefs = [];
           for (let i = 0; i < field.param.length; ++i) {
-            const {name, graphql_type, ...expression} = this.unpackAst({children: field.param[i]});
-            if (graphql_type) {
+            const {name, paramType, ...expression} = this.unpackAst({children: field.param[i]});
+            if (expression.value) {
+              const paramType = this.graphql.getParamType(graphqlType, field.name, name);
               const num = Object.keys(variables).length + 1;
-              params.push(`$var${num}:${graphql_type}`);
+              params.push(`$var${num}:${paramType}`);
               variables['var' + num] = await this.getValue(expression.value[0], context);
               paramDefs.push(`${name}:$var${num}`);
             } else {
@@ -181,13 +183,13 @@ class Script {
           definition += ' (' + paramDefs.join(',') + ')';
         }
         if (field.selections) {
-          definition += ' ' + (await this.getSelections(field.selections, params, variables, context)).fields;
+          definition += ' ' + (await this.getSelections(field.selections, params, variables, outputType, context)).fields;
         }
         fields.push(definition);
       }
       if (type === 'query_fragment') {
         const name = selection.children[0].text;
-        const subfields = (await this.getSelections(selection.children[1].children, params, variables, context)).fields;
+        const subfields = (await this.getSelections(selection.children[1].children, params, variables, name, context)).fields;
         fields.push('...on ' + name + subfields);
       }
     }
@@ -195,7 +197,8 @@ class Script {
   }
 
   async runQuery(type, selections, context) {
-    const {fields, params, variables} = await this.getSelections(selections, [], {}, context);
+    const graphqlType = type === 'query' ? 'Query' : 'Mutation';
+    const {fields, params, variables} = await this.getSelections(selections, [], {}, graphqlType, context);
     const query = `${type}${params.length > 0 ? ' (' + params.join(',') + ')' : ''} ${fields}`;
     return type === 'query' ? this.graphql.query({query, variables}) : this.graphql.mutate({mutation: query, variables});
   }

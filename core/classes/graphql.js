@@ -84,6 +84,44 @@ class Graphql {
       };
       return {schema: this.schema, context};
     });
+    this.updateTypeMap();
+  }
+
+  updateTypeMap() {
+    const output = {};
+    const types = this.schema.getTypeMap();
+    Object.keys(types).forEach(type => {
+      if (typeof types[type].getFields !== 'function') {
+        // Is a scalar type.
+        return;
+      }
+      output[type] = {};
+      const fields = types[type].getFields();
+      Object.keys(fields).forEach(field => {
+        const outputType = fields[field].type.toString().replace(/[^\w_]/g, '');
+        output[type][field] = {type: outputType, args: {}};
+        (fields[field].args || []).forEach(arg => {
+          output[type][field].args[arg.name] = arg.type.toString().replace(/[^\w_]/g, '');
+        });
+      });
+    });
+    this.typeMap = output;
+  }
+
+  getFieldType(type, field) {
+    try {
+      return this.typeMap[type][field].type;
+    } catch (err) {
+      throw new Error(`Type ${type} does not have a field ${field}`);
+    }
+  }
+
+  getParamType(type, field, param) {
+    try {
+      return this.typeMap[type][field].args[param];
+    } catch (err) {
+      throw new Error(`Field ${field} does not have a parameter ${param}`);
+    }
   }
 
   isScalar(definition) {
