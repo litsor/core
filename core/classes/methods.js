@@ -1,6 +1,7 @@
 'use strict';
 
 const {resolve} = require('path');
+const {camelCase} = require('lodash');
 const globby = require('globby');
 const Watch = require('watch');
 const {Unauthorized, Forbidden} = require('http-errors');
@@ -26,7 +27,7 @@ class Methods {
       const name = filename.match(/\/([^/]+)\.js$/)[1];
       try {
         const loaded = reload(filename);
-        this.methods[loaded.id || name] = loaded;
+        this.methods[loaded.id || camelCase(name)] = loaded;
         if (file === changedFile) {
           promises.push(this.methodTester.test(this.methods[name]));
         }
@@ -123,7 +124,7 @@ class Methods {
     if (typeof method === 'undefined') {
       throw new TypeError(`No method found with name "${name}"`);
     }
-    if (!method.isBinary) {
+    if (typeof method.binary !== 'function') {
       throw new TypeError(`Method "${name}" cannot be used as binary operator`);
     }
     const callback = async (left, right, context) => {
@@ -139,7 +140,7 @@ class Methods {
     if (typeof method === 'undefined') {
       throw new TypeError(`No method found with name "${name}"`);
     }
-    if (!method.isUnary) {
+    if (typeof method.unary !== 'function') {
       throw new TypeError(`Method "${name}" cannot be used as unary operator`);
     }
     const callback = async (operand, context) => {

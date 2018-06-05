@@ -9,10 +9,6 @@ module.exports = {
 
   inputSchema: {},
 
-  outputSchema: () => {
-    return {};
-  },
-
   requires: [],
 
   tests: [],

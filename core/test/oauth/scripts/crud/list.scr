@@ -1,0 +1,9 @@
+# List
+
+/ = select {
+  model: /model,
+  filters: /filters,
+  offset: /offset,
+  limit: /limit,
+  selections: /selections
+}

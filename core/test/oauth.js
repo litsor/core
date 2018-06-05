@@ -12,7 +12,7 @@ const Container = require('../classes/container');
 
 const expect = chai.expect;
 
-describe('OAuth', () => {
+describe.only('OAuth', () => {
   const temporary = {};
   let container;
   let testUrl;
@@ -33,6 +33,7 @@ describe('OAuth', () => {
     });
     testUrl = 'http://127.0.0.1:1234';
     await container.get('Endpoints');
+    await container.get('GraphqlLinks');
 
     db = await container.get('Database');
 

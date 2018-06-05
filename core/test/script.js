@@ -54,6 +54,7 @@ const Methods = {
     }
   }
 };
+
 const GraphQL = {
   query({query, variables}) {
     if (query === 'query {foo}') {

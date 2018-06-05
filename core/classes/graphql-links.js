@@ -109,14 +109,47 @@ class GraphqlLinks extends ConfigFiles {
     }, {});
   }
 
+  getDefaultLinks() {
+    const links = {};
+
+    this.models.getNames().map(name => {
+      return this.models.get(name);
+    }).filter(model => model.store).forEach(model => {
+      links['List' + model.id] = {
+        id: 'List' + model.id,
+        context: 'Query',
+        field: 'list' + model.id,
+        script: 'List',
+        params: {
+          filters: {
+            schema: {$ref: '#/definitions/' + model.id + 'FilterSet'},
+            required: false,
+            multiple: false
+          },
+          limit: {
+            schema: {type: 'integer', minimum: 1}
+          }
+        },
+        variables: {
+          model: model.id
+        },
+        outputSchema: {$ref: '#/definitions/' + model.id + 'Connection'},
+        outputMultiple: false
+      };
+
+    });
+    return links;
+  }
+
   async publish() {
+    const defaultLinks = this.getDefaultLinks();
     const resolvers = {
       Query: {},
       Mutation: {}
     };
-    const schema = Object.keys(this.items).map(id => {
-      const {field, script, params, variables, outputSchema, outputMultiple} = this.items[id];
-      let {context} = this.items[id];
+    const schema = Object.keys({...this.items, ...defaultLinks}).map(id => {
+      const {field, script, params, variables, outputSchema, outputMultiple} = this.items[id] || defaultLinks[id];
+      let {context} = this.items[id] || defaultLinks[id];
 
       if (context !== 'Query' && context !== 'Mutation') {
         context += 'Object';

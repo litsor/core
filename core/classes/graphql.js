@@ -3,7 +3,7 @@
 const Router = require('koa-router');
 const {graphqlKoa, graphiqlKoa} = require('apollo-server-koa');
 const {makeExecutableSchema} = require('graphql-tools');
-const {GraphQLScalarType} = require('graphql');
+const {graphql, GraphQLScalarType} = require('graphql');
 const GraphQLJson = require('graphql-type-json');
 const {map, values} = require('lodash');
 const validator = require('is-my-json-valid');
@@ -18,6 +18,7 @@ class Graphql {
     const router = new Router();
 
     this.published = {};
+    this.schema = null;
 
     router.post('/graphql', this.handleRequest.bind(this));
     router.get('/graphql', this.handleRequest.bind(this));
@@ -29,6 +30,17 @@ class Graphql {
 
   shutdown() {
     this.http.unuse('graphql');
+  }
+
+  async query(query) {
+    if (!this.schema) {
+      throw new Error('Schema is not initialized');
+    }
+    const result = await graphql(this.schema, query.query, {}, {}, query.variables);
+    if (result.errors && result.errors.length > 0) {
+      throw new Error(result.errors[0].message);
+    }
+    return result.data;
   }
 
   handleRequest(ctx, next) {
@@ -60,7 +72,7 @@ class Graphql {
       type Query {a: Int}
       type Mutation {a: Int}
     `;
-    const schema = makeExecutableSchema({
+    this.schema = makeExecutableSchema({
       typeDefs: [emptySchema, ...map(values(this.published), 'schema')],
       resolvers: [resolvers, ...map(values(this.published), 'resolvers')]
     });
@@ -70,7 +82,7 @@ class Graphql {
         headers: ctx.request.headers,
         correlationId: ctx.correlationId
       };
-      return {schema, context};
+      return {schema: this.schema, context};
     });
   }
 

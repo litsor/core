@@ -17,9 +17,9 @@ class Context {
 }
 
 class Script {
-  constructor({Methods, GraphQL, Log}) {
+  constructor({Methods, Graphql, Log}) {
     this.methods = Methods;
-    this.graphql = GraphQL;
+    this.graphql = Graphql;
     this.log = Log;
 
     this.ast = [];
@@ -31,9 +31,10 @@ class Script {
       this.ast = script;
     }
 
-    const cleanup = ({type, text, children}) => children.length > 0 ? {
-      type, children: children.map(cleanup)
-    } : {type, text};
+    const line = position => script.substring(0, position).split('\n').length;
+    const cleanup = ({type, text, children, start}) => children.length > 0 ? {
+      type, children: children.map(cleanup), line: line(start)
+    } : {type, text, line: line(start)};
     this.ast = parser.getAST(script).children.map(cleanup);
   }
 
@@ -200,26 +201,34 @@ class Script {
   }
 
   async runExpression({type, children}, context) {
-    switch (type) {
-      case 'value':
-        return this.getValue(children[0], context);
-      case 'unary_expression':
-        return this.runUnaryExpression(children[0], children[1], context);
-      case 'binary_expression':
-        return this.runBinaryExpression(children[0], children[1], children[2], context);
-      case 'expression':
-      case 'expression_nb':
-        return this.runExpression(children[0], context);
-      case 'if_statement':
-        return this.runIf(children[0], children[1], children.length > 2 ? children[2] : false, context);
-      case 'script':
-        let subcontext = new Context(context.data, context.root, context.path + '/???');
-        for (let i = 0; i < children.length; ++i) {
-          subcontext = await this.runCommand(children[i], subcontext);
-        }
-        return subcontext.data;
-      case 'query_statement':
-        return this.runQuery(children[0].text, children[1].children, context);
+    try {
+      switch (type) {
+        case 'value':
+          return this.getValue(children[0], context);
+        case 'unary_expression':
+          return this.runUnaryExpression(children[0], children[1], context);
+        case 'binary_expression':
+          return this.runBinaryExpression(children[0], children[1], children[2], context);
+        case 'expression':
+        case 'expression_nb':
+          return this.runExpression(children[0], context);
+        case 'if_statement':
+          return this.runIf(children[0], children[1], children.length > 2 ? children[2] : false, context);
+        case 'script':
+          let subcontext = new Context(context.data, context.root, context.path + '/???');
+          for (let i = 0; i < children.length; ++i) {
+            subcontext = await this.runCommand(children[i], subcontext);
+          }
+          return subcontext.data;
+        case 'query_statement':
+          return this.runQuery(children[0].text, children[1].children, context);
+      }
+    } catch (e) {
+      if (e.statusCode) {
+        // Throw HttpErrors as-is.
+        throw e;
+      }
+      throw new Error(this.id + ' line ' + children[0].line + ': ' + e.message);
     }
   }
 
@@ -287,6 +296,6 @@ class Script {
   }
 }
 
-Script.require = ['Container', 'Methods', 'Input', 'Log'];
+Script.require = ['Container', 'Methods', 'Input', 'Log', 'Graphql'];
 
 module.exports = Script;

@@ -16,16 +16,17 @@
 }}
 
 / = /cookies/session then {{
-  /sessions = select {
-    model: "UserSession",
-    filters: {token: /cookies/session},
-    selections: {items: {user: {id: {}, name: {}}}},
-    limit: 1
-  }
-  / = /sessions/items/0/user then {{
+  /sessions = query {
+    sessions: listUserSession (filters: UserSessionFilterSet {token: /cookies/session}, limit: 1) {
+      items {
+        user { id name }
+      }
+    }
+  } pick /sessions/items
+  / = /sessions/0 then {{
     /user = {
-      id: /sessions/items/0/user/id,
-      name: /sessions/items/0/user/name
+      id: /sessions/0/user/id,
+      name: /sessions/0/user/name
     }
   }}
 }}
