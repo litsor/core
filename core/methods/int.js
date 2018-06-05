@@ -1,7 +1,6 @@
 'use strict';
 
 module.exports = {
-  id: 'parseInt',
   title: 'Parse int',
   description: 'Convert string to integer',
   isUnary: true,

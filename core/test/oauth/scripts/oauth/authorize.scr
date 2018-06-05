@@ -1,6 +1,6 @@
 # OauthAuthorize
 
-/now = parseInt date "X"
+/now = int date "X"
 
 /client = read {
   model: "OauthClient",

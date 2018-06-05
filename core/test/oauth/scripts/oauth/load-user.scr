@@ -8,7 +8,7 @@
     model: "OauthAccessToken",
     filters: {
       token: /authorization from 7,
-      expires_gt: round parseInt date "X"
+      expires_gt: round int date "X"
     },
     limit: 1,
     selections: {items: {id: {}, client: {id: {}}, expires: {}, user: {id: {}, name: {}, scope: {}}, scope: {}}}

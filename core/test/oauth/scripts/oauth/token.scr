@@ -1,6 +1,6 @@
 # OauthToken
 
-/now = round parseInt date "X"
+/now = round int date "X"
 
 /client = read {
   model: "OauthClient",

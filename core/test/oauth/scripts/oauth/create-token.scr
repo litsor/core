@@ -9,7 +9,7 @@
 # /token/expires
 # /token/refresh_token
 
-/now = round parseInt date "X"
+/now = int date "X"
 
 /token = {
   client: /client/id,

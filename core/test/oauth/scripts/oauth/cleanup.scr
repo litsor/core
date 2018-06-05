@@ -1,7 +1,7 @@
 # OauthCleanup
 # cron="0 30 5 * * *"
 
-/now = parseInt date "X"
+/now = int date "X"
 
 {now: /now} sql "DELETE FROM oauth_access_token WHERE expires < :now"
 {now: /now} sql "DELETE FROM oauth_authorization_code WHERE expires < :now"
