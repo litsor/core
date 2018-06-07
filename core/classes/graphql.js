@@ -60,7 +60,12 @@ class Graphql {
     const resolvers = {
       Query: {},
       Mutation: {},
-      JSON: GraphQLJson
+      JSON: GraphQLJson,
+      AnyObject: {
+        __resolveType() {
+          return null;
+        }
+      }
     };
     const emptySchema = `
       "Any known object type"
