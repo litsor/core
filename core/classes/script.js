@@ -200,7 +200,7 @@ class Script {
     const graphqlType = type === 'query' ? 'Query' : 'Mutation';
     const {fields, params, variables} = await this.getSelections(selections, [], {}, graphqlType, context);
     const query = `${type}${params.length > 0 ? ' (' + params.join(',') + ')' : ''} ${fields}`;
-    return type === 'query' ? this.graphql.query({query, variables}) : this.graphql.mutate({mutation: query, variables});
+    return this.graphql.query({query, variables});
   }
 
   async runExpression({type, children}, context) {

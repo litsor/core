@@ -1,0 +1,6 @@
+# Delete
+
+/ = delete {
+  id: /id,
+  model: /model
+}

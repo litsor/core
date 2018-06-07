@@ -115,6 +115,24 @@ class GraphqlLinks extends ConfigFiles {
     this.models.getNames().map(name => {
       return this.models.get(name);
     }).filter(model => model.store).forEach(model => {
+      links['Read' + model.id] = {
+        id: 'Read' + model.id,
+        context: 'Query',
+        field: model.id,
+        script: 'Read',
+        params: {
+          id: {
+            schema: {$ref: '#/definitions/ID'},
+            required: true,
+            multiple: false
+          }
+        },
+        variables: {
+          model: model.id
+        },
+        outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+        outputMultiple: false
+      };
       links['List' + model.id] = {
         id: 'List' + model.id,
         context: 'Query',
@@ -136,7 +154,65 @@ class GraphqlLinks extends ConfigFiles {
         outputSchema: {$ref: '#/definitions/' + model.id + 'Connection'},
         outputMultiple: false
       };
-
+      links['Create' + model.id] = {
+        id: 'Create' + model.id,
+        context: 'Mutation',
+        field: 'create' + model.id,
+        script: 'Create',
+        params: {
+          input: {
+            schema: {$ref: '#/definitions/' + model.id + 'Input'},
+            required: true,
+            multiple: false
+          }
+        },
+        variables: {
+          model: model.id
+        },
+        outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+        outputMultiple: false
+      };
+      links['Update' + model.id] = {
+        id: 'Update' + model.id,
+        context: 'Mutation',
+        field: 'update' + model.id,
+        script: 'Update',
+        params: {
+          id: {
+            schema: {$ref: '#/definitions/ID'},
+            required: true,
+            multiple: false
+          },
+          input: {
+            schema: {$ref: '#/definitions/' + model.id + 'Input'},
+            required: true,
+            multiple: false
+          }
+        },
+        variables: {
+          model: model.id
+        },
+        outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+        outputMultiple: false
+      };
+      links['Delete' + model.id] = {
+        id: 'Delete' + model.id,
+        context: 'Mutation',
+        field: 'delete' + model.id,
+        script: 'Delete',
+        params: {
+          id: {
+            schema: {$ref: '#/definitions/ID'},
+            required: true,
+            multiple: false
+          }
+        },
+        variables: {
+          model: model.id
+        },
+        outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+        outputMultiple: false
+      };
     });
     return links;
   }

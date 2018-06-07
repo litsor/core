@@ -19,9 +19,8 @@
   token: secureToken 256,
   expires: /now + 43200
 }
-create {
-  model: "OauthAccessToken",
-  data: /token
+mutation {
+  createOauthAccessToken(input: /token) { id }
 }
 
 # Always create the refresh token. We use it to remember the login.
@@ -39,9 +38,8 @@ create {
   /refresh_token/expires = /now + 2592000
 }}
 
-create {
-  model: "OauthRefreshToken",
-  data: /refresh_token
+mutation {
+  createOauthRefreshToken(input: /refresh_token) { id }
 }
 
 # Add refresh token for confidential clients.

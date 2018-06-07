@@ -3,17 +3,19 @@
 /user = / script "LoadUser"
 
 / = /user then {{
-  /tokens = select {
-    model: "OauthAccessToken",
-    filters: {
+  /tokens = query {
+    tokens: listOauthAccessToken(filters: {
       client: /user/client/id,
       user: /user/id
-    },
-    selections: {items: {id: {}}}
-  }
-  /tokens/items map delete {
-    model: "OauthAccessToken",
-    id: /id
+    }) {
+      items {
+        id
+      }
+    }
+  } pick /tokens/items
+
+  /tokens map mutation {
+    deleteOauthAccessToken (id: /id) { id }
   }
 }}
 

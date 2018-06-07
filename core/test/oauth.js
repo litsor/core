@@ -308,7 +308,7 @@ describe.only('OAuth', () => {
     // The access token is still valid and should be reused.
     expect(tokenResponse).to.have.property('access_token', temporary.access_token);
 
-    expect(tokenResponse).to.have.property('user_id', 1);
+    expect(tokenResponse).to.have.property('user_id', '1');
     expect(tokenResponse).to.have.property('token_type', 'bearer');
     expect(tokenResponse).to.have.property('expires_in');
     expect(tokenResponse.expires_in > 0).to.equal(true);

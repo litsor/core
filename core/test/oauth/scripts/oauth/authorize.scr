@@ -2,10 +2,14 @@
 
 /now = int date "X"
 
-/client = read {
-  model: "OauthClient",
-  id: /client_id
-}
+/client = query {
+  item: OauthClient(id: /client_id) {
+    id
+    name
+    trusted
+    redirectUri
+  }
+} pick /item
 
 /scope = normalizeScope /scope
 
@@ -33,15 +37,21 @@
 
 # If we have posted the login form.
 / = /username then {{
-  /users = select {
-    model: "User",
-    filters: {name: /username, blocked: false}
-  }
-  /validPassword = /users/items/0/password validatePassword /password
+  /users = query {
+    users: listUser(filters: {
+      name: /username,
+      blocked: false
+    }) {
+      items {
+        id name password
+      }
+    }
+  } pick /users/items
+  /validPassword = /users/0/password validatePassword /password
   / = /validPassword then {{
     /user = {
-      id: /users/items/0/id,
-      name: /users/items/0/name
+      id: /users/0/id,
+      name: /users/0/name
     }
     /session = {
       user: /user/id,
@@ -52,7 +62,11 @@
         / = //remember then 604800
       }}
     }
-    /session = create {model: "UserSession", data: /session}
+
+    mutation {
+      session: createUserSession(input: /session) { id token }
+    }
+
     /data/cookies/session = {
       value: /session/token,
       path: "/oauth"
@@ -73,34 +87,33 @@
   }}
   / = (!/client/trusted) then {{
     # Check if authorization was already given by checking the existence of an access token.
-    /tokens = select {
-      model: "OauthAccessToken",
-      filters: {
+    /tokens = query {
+      tokens: listOauthAccessToken(filters: {
         client: /client/id,
         user: /user/id,
         scope: /scope,
         expires_gt: /now + 900
-      },
-      selections: {items: {id: {}}}
-    }
-    / = /tokens/items/0/id then {{
+      }) {
+        items { id }
+      }
+    } pick /tokens/items
+    / = /tokens/0/id then {{
       /allow = "true"
     }}
   }}
 
   / = (/allow == "true") then {{
     / = (/response_type == "code") then {{
-      /authorizationCode = create {
-        model: "OauthAuthorizationCode",
-        data: {
+      /authorizationCode = mutation {
+        code: createOauthAuthorizationCode(input: {
           client: /client/id,
           user: /user/id,
           scope: /scope,
           created: /now,
           expires: /now + 60,
           code: secureToken 256
-        }
-      }
+        }) { id code }
+      } pick /code
       /redirect_uri = /redirect_uri + "?code=" + (urlencode /authorizationCode/code) + "&state=" + (urlencode /state)
     }}
     / = (/response_type == "token") then {{

@@ -101,7 +101,7 @@ class Graphql {
         const outputType = fields[field].type.toString().replace(/[^\w_]/g, '');
         output[type][field] = {type: outputType, args: {}};
         (fields[field].args || []).forEach(arg => {
-          output[type][field].args[arg.name] = arg.type.toString().replace(/[^\w_]/g, '');
+          output[type][field].args[arg.name] = arg.type.toString();
         });
       });
     });

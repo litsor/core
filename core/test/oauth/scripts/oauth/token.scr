@@ -1,11 +1,15 @@
 # OauthToken
 
-/now = round int date "X"
+/now = int date "X"
 
-/client = read {
-  model: "OauthClient",
-  id: /client_id
-}
+/client = query {
+  item: OauthClient(id: /client_id) {
+    id
+    secret
+    type
+    trusted
+  }
+} pick /item
 
 / = (/client/type == "confidential") then {{
   # Check the client authorization.
@@ -17,65 +21,73 @@
 /data/status = 400
 
 / = (/grant_type == "authorization_code") then {{
-  /codes = select {
-    model: "OauthAuthorizationCode",
-    filters: {
+  /codes = query {
+    codes: listOauthAuthorizationCode(filters: {
       code: /code,
       client: /client/id,
       expires_gte: /now
-    },
-    selections: {items: {code: {}, scope: {}, user: {id: {}}, client: {id: {}}}}
-  }
-  / = /codes/items/0 then {{
-    # Immediately delete code, as this is a one-time token.
-    delete {
-      model: "OauthAuthorizationCode",
-      id: /codes/items/0/id
+    }) {
+      items {
+        id
+        code
+        scope
+        user { id }
+        client { id }
+      }
     }
+  } pick /codes/items
+
+  / = /codes/0 then {{
+    # Immediately delete code, as this is a one-time token.
+    mutation { deleteOauthAuthorizationCode(id: /codes/0/id) { id } }
 
     # Check if an access token already exists.
     # Only remember login when token is still valid for at least 15 minutes.
-    /tokens = select {
-      model: "OauthAccessToken",
-      filters: {
-        client: /codes/items/0/client/id,
-        user: /codes/items/0/user/id,
-        scope: /codes/items/0/scope,
-        expires_gt: /now + 900
-      },
-      selections: {items: {id: {}, token: {}, expires: {}, user: {id: {}}, client: {id: {}, type: {}}}}
-    }
+    /tokens = query {
+      tokens: listOauthAccessToken(filters: {
+        client: /codes/0/client/id,
+        user: /codes/0/user/id,
+        scope: /codes/0/scope,
+        expires_gt: (/now + 900)
+      }) {
+        items {
+          id
+          token
+          expires
+          user { id }
+          client { id }
+        }
+      }
+    } pick /tokens/items
 
-    / = /tokens/items/0/id then {{
+    / = /tokens/0/id then {{
       /data/body = {
-        access_token: /tokens/items/0/token,
+        access_token: /tokens/0/token,
         token_type: "bearer",
-        user_id: /tokens/items/0/user/id,
-        expires_in: /tokens/items/0/expires - /now
+        user_id: /tokens/0/user/id,
+        expires_in: /tokens/0/expires - /now
       }
       # Also re-use the refresh token for confidential clients.
-      / = (/tokens/items/0/client/type == "confidential") then {{
-        /refresh_tokens = select {
-          model: "OauthRefreshToken",
-          filters: {
-            client: /codes/items/0/client/id,
-            user: /codes/items/0/user/id,
-            scope: /codes/items/0/scope,
-            expires_gt: /nwo + 900
-          },
-          selections: {items: {token: {}}}
-        }
-        /data/body/refresh_token = /refresh_tokens/items/0/token
+      / = (/tokens/0/client/type == "confidential") then {{
+        /data/body/refresh_token = query {
+          tokens: listOauthRefreshToken(filters: {
+            client: /codes/0/client/id,
+            user: /codes/0/user/id,
+            scope: /codes/0/scope,
+            expires_gt: /now + 900
+          }) { items { token } }
+        } pick /tokens/items/0/token
       }}
     }}
 
-    / = (!/tokens/items/0/id) then {{
+    / = (!/tokens/0/id) then {{
       # Create a new access token.
       /token = {
-        client: /codes/items/0/client,
-        user: /codes/items/0/user,
-        scope: /codes/items/0/scope
+        client: /client,
+        user: /codes/0/user,
+        scope: /codes/0/scope
       } script "OauthCreateToken"
+
       /data/body = {
         access_token: /token/token,
         token_type: "bearer",
@@ -93,26 +105,30 @@
 }}
 
 / = (/grant_type == "refresh_token") then {{
-  /refresh_tokens = select {
-    model: "OauthRefreshToken",
-    filters: {
+  /refresh_tokens = query {
+    tokens: listOauthRefreshToken(filters: {
       token: /refresh_token,
       client: /client/id,
       expires_gte: /now
-    },
-    selections: {items: {id: {}, scope: {}, user: {id: {}}, client: {id: {}, type: {}}}}
-  }
-  / = /refresh_tokens/items/0 then {{
-    # Delete old refresh token.
-    delete {
-      model: "OauthRefreshToken",
-      id: /refresh_tokens/items/0/id
+    }) {
+      items {
+        id
+        scope
+        user { id }
+        client { id type }
+      }
     }
+  } pick /tokens/items
+
+  / = /refresh_tokens/0 then {{
+    # Delete old refresh token.
+    mutation { deleteOauthRefreshToken(id: /refresh_tokens/0/id) { id } }
+
     # Create a new access token.
     /token = {
       client: /client,
-      user: /refresh_tokens/items/0/user,
-      scope: /refresh_tokens/items/0/scope
+      user: /refresh_tokens/0/user,
+      scope: /refresh_tokens/0/scope
     } script "OauthCreateToken"
     /data/body = {
       access_token: /token/token,
