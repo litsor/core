@@ -3,12 +3,12 @@
 module.exports = {
   title: 'Base64',
   description: 'Encode to base64',
-  isUnary: true,
   cache: Infinity,
   lazy: true,
 
   inputSchema: {
-    type: 'object'
+    title: 'Input string',
+    type: 'string'
   },
 
   outputSchema: () => {
@@ -17,7 +17,10 @@ module.exports = {
 
   requires: [],
 
-  tests: [],
+  tests: [{
+    input: 'test',
+    output: 'dGVzdA=='
+  }],
 
   unary: operand => Buffer.from(operand).toString('base64')
 };

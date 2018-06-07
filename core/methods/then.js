@@ -3,19 +3,28 @@
 module.exports = {
   title: 'Then',
   description: 'Then',
-  isBinary: true,
   cache: Infinity,
   lazy: true,
 
-  inputSchema: {},
+  leftSchema: {
+    title: 'Condition'
+  },
 
-  outputSchema: () => {
-    return {};
+  rightSchema: {
+    title: 'Expression'
   },
 
   requires: [],
 
-  tests: [],
+  tests: [{
+    left: () => true,
+    right: () => 'test',
+    output: 'test'
+  }, {
+    left: () => false,
+    right: () => 'test',
+    output: {}
+  }],
 
   binary: async (left, right, dependencies, context) => {
     if (await left()) {

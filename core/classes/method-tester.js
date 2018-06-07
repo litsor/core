@@ -10,37 +10,45 @@ class MethodTester {
   }
 
   async runTest(method, test) {
-    const input = cloneDeep(test.input);
-
     const defaultInputSchema = {
       type: 'object',
       properties: {}
     };
 
-    const inputSchemaValidation = this.jsonSchema.validate(method.inputSchema, true);
-    if (inputSchemaValidation !== true) {
-      console.log('Invalid input schema: ' + inputSchemaValidation);
-      return false;
+    const type = typeof test.input !== 'undefined' ? 'unary' : 'binary';
+
+    const inputs = type === 'unary' ? ['input'] : ['left', 'right'];
+    const inputData = {};
+    for (let i = 0; i < inputs.length; ++i) {
+      const input = inputs[i];
+      inputData[input] = method.lazy ? test[input] : cloneDeep(test[input]);
+      const inputSchemaValidation = this.jsonSchema.validate(method[`${input}Schema`], true);
+      if (inputSchemaValidation !== true) {
+        console.log('Invalid ' + input + ' schema: ' + inputSchemaValidation);
+        return false;
+      }
+      if (!method.lazy) {
+        const validateInput = validator(method[`${input}Schema`]);
+        if (!validateInput(test[input])) {
+          console.log('Test input does not pass input schema: ' + validateInput.error);
+          return false;
+        }
+      }
     }
 
-    const validateInput = validator(method.inputSchema);
-    if (!validateInput(test.input)) {
-      console.log('Test input does not pass input schema: ' + validateInput.error);
-      return false;
-    }
-
-    const outputSchema = method.outputSchema(test.inputSchema || defaultInputSchema, test.input);
-    const outputSchemaValidation = this.jsonSchema.validate(outputSchema, false);
-    if (outputSchemaValidation !== true) {
-      console.log('Invalid output schema: ' + outputSchemaValidation, outputSchema);
-      return false;
-    }
+    const context = {
+      data: {}
+    };
 
     let raisedError = false;
     let output;
     try {
       await (method.startupTest || (async () => {})).bind(method)();
-      output = await method.execute({...(method.defaults || {}), ...input}, method.mockups, 'correlation id');
+      if (type === 'unary') {
+        output = await method.unary(inputData.input, method.mockups, context);
+      } else {
+        output = await method.binary(inputData.left, inputData.right, method.mockups, context);
+      }
       await (method.shutdownTest || (async () => {})).bind(method)();
     } catch (err) {
       await (method.shutdownTest || (async () => {})).bind(method)();
@@ -67,17 +75,13 @@ class MethodTester {
         console.log('Output does not match output given in test: ', output);
         return false;
       }
-
-      const validateOutput = validator(outputSchema);
-      if (!validateOutput(output)) {
-        console.log('Output does not match output schema: ' + validateOutput.error);
-        return false;
-      }
     }
 
-    if (!isEqual(input, test.input)) {
-      console.log('Input object was changed, clone object before modifying');
-      return false;
+    for (let i = 0; i < inputs.length; ++i) {
+      if (!isEqual(inputData[inputs[i]], test[inputs[i]])) {
+        console.log('Input object was changed, clone object before modifying');
+        return false;
+      }
     }
 
     return true;
