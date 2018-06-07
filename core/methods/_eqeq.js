@@ -17,5 +17,5 @@ module.exports = {
 
   tests: [],
 
-  binary: (left, right) => left == right
+  binary: (left, right) => left === right
 };

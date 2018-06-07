@@ -61,9 +61,10 @@ class Script {
 
   async getJson({type, children, text}, context) {
     const promises = [];
+    const array = [];
+    let object = {};
     switch (type) {
       case 'object':
-        let object = {};
         // Serial execution matters for rest operator.
         for (let i = 0; i < (children || []).length; ++i) {
           const child = this.unpackAst(children[i]);
@@ -87,8 +88,7 @@ class Script {
         }
         return object;
       case 'array':
-        const array = [];
-        const items = (children || []).forEach(child => {
+        (children || []).forEach(child => {
           promises.push((async () => {
             if (child.type === 'rest_operator') {
               const addItems = await this.runExpression(child.children[0], context);
@@ -111,8 +111,6 @@ class Script {
   async getValue({type, text, children}, context) {
     let pointer;
     switch (type) {
-      case 'json':
-        return this.getJson(children[0], context);
       case 'jsonpointer':
         pointer = text || '/' + JSON.parse(children[0].text);
         if (pointer === '/') {
@@ -122,6 +120,9 @@ class Script {
       case 'root_jsonpointer':
         pointer = children[0].text || '/' + JSON.parse(children[0].children[0].text);
         return clone(get(context.root, pointer));
+      case 'json':
+      default:
+        return this.getJson(children[0], context);
     }
   }
 
@@ -142,7 +143,7 @@ class Script {
           expressionContext = new Context(data, context.root, context.path);
         }
         return this.runExpression(source.children[0], expressionContext);
-      }
+      };
       return callback(operand(left), operand(right), context);
     }
     const leftOperand = await this.runExpression(left.children[0], context);
@@ -152,11 +153,32 @@ class Script {
 
   async runIf(expression, thenExpression, elseExpression, context) {
     if (await this.runExpression(expression, context)) {
-      return await this.runExpression(thenExpression, context);
-    } else if (elseExpression) {
-      return await this.runExpression(elseExpression, context);
+      return this.runExpression(thenExpression, context);
+    }
+    if (elseExpression) {
+      return this.runExpression(elseExpression, context);
     }
     return false;
+  }
+
+  async getParamDefinitons(field, graphqlType, variables, params, context) {
+    const paramDefs = [];
+    for (let i = 0; i < field.param.length; ++i) {
+      const {name, paramType, ...expression} = this.unpackAst({children: field.param[i]});
+      if (expression.value) {
+        const paramType = this.graphql.getParamType(graphqlType, field.name, name);
+        const num = Object.keys(variables).length + 1;
+        params.push(`$var${num}:${paramType}`);
+        variables['var' + num] = await this.getValue(expression.value[0], context);
+        paramDefs.push(`${name}:$var${num}`);
+      } else {
+        // The expression can only contains a JSON scalar type.
+        // We can use its value without any further checks.
+        const value = expression[Object.keys(expression)[0]];
+        paramDefs.push(`${name}:${value}`);
+      }
+    }
+    return paramDefs;
   }
 
   async getSelections(selections, params, variables, graphqlType, context) {
@@ -170,22 +192,7 @@ class Script {
         let definition = alias + field.name;
         const outputType = this.graphql.getFieldType(graphqlType, field.name);
         if (field.param) {
-          const paramDefs = [];
-          for (let i = 0; i < field.param.length; ++i) {
-            const {name, paramType, ...expression} = this.unpackAst({children: field.param[i]});
-            if (expression.value) {
-              const paramType = this.graphql.getParamType(graphqlType, field.name, name);
-              const num = Object.keys(variables).length + 1;
-              params.push(`$var${num}:${paramType}`);
-              variables['var' + num] = await this.getValue(expression.value[0], context);
-              paramDefs.push(`${name}:$var${num}`);
-            } else {
-              // The expression can only contains a JSON scalar type.
-              // We can use its value without any further checks.
-              const value = expression[Object.keys(expression)[0]];
-              paramDefs.push(`${name}:${value}`);
-            }
-          }
+          const paramDefs = await this.getParamDefinitons(field, graphqlType, variables, params, context);
           definition += ' (' + paramDefs.join(',') + ')';
         }
         if (field.selections) {
@@ -211,9 +218,8 @@ class Script {
 
   async runExpression({type, children}, context) {
     try {
+      let subcontext;
       switch (type) {
-        case 'value':
-          return this.getValue(children[0], context);
         case 'unary_expression':
           return this.runUnaryExpression(children[0], children[1], context);
         case 'binary_expression':
@@ -224,13 +230,16 @@ class Script {
         case 'if_statement':
           return this.runIf(children[0], children[1], children.length > 2 ? children[2] : false, context);
         case 'script':
-          let subcontext = new Context(context.data, context.root, context.path + '/???');
+          subcontext = new Context(context.data, context.root, context.path + '/???');
           for (let i = 0; i < children.length; ++i) {
             subcontext = await this.runCommand(children[i], subcontext);
           }
           return subcontext.data;
         case 'query_statement':
           return this.runQuery(children[0].text, children[1].children, context);
+        case 'value':
+        default:
+          return this.getValue(children[0], context);
       }
     } catch (e) {
       if (e.statusCode) {
@@ -249,12 +258,11 @@ class Script {
     }
     const [pointer, operator] = config.assignment.map(item => item.text || '/' + JSON.parse(item.children[0].text));
     const current = pointer === '/' ? context.data : get(context.data, pointer);
-    const setData = pointer === '/' ? data => context.data = data : data => set(context.data, pointer, data);
+    const setData = pointer === '/' ? data => {
+      context.data = data;
+    } : data => set(context.data, pointer, data);
     let list;
     switch (operator) {
-      case '=':
-        setData(value);
-        break;
       case '[]=':
         list = Array.isArray(current) ? cloneDeep(current) : [];
         list.push(value);
@@ -288,13 +296,14 @@ class Script {
       case '~':
         setData(current || value);
         break;
+      default:
+        setData(value);
     }
     return context;
   }
 
   async run(data, options = {}) {
     const returnContext = options.returnContext || false;
-    const correlationId = options.correlationId || this.log.generateCorrelationId();
 
     const commands = this.ast;
     let context = new Context(data, data, '');

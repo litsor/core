@@ -45,9 +45,7 @@ class ScriptsManager extends ConfigFiles {
     this.crons = {};
   }
 
-  async validationFunction(input) {
-
-
+  async validationFunction() {
     return true;
   }
 

@@ -71,7 +71,7 @@ module.exports = {
     }
   }],
 
-  unary: async (input) => {
+  unary: async input => {
     const date = moment();
     if (typeof input === 'object' && input.timezone) {
       date.tz(input.timezone);

@@ -55,7 +55,7 @@ module.exports = {
     output: str => str.length === 64
   }],
 
-  unary: async (size) => {
+  unary: async size => {
     return randomBytes(Math.ceil(size / 8)).toString('base64');
   }
 };

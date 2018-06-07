@@ -5,7 +5,6 @@
 const {mkdirSync, writeFileSync} = require('fs');
 const {randomBytes} = require('crypto');
 const chai = require('chai');
-const Yaml = require('js-yaml');
 const Rimraf = require('rimraf');
 
 const Container = require('../classes/container');
@@ -25,7 +24,6 @@ describe('Config Files', () => {
     mkdirSync(dir);
     mkdirSync(dir + '/scripts');
 
-    const testScript = {id: 'Test', steps: []};
     writeFileSync(dir + '/scripts/test.scr', '# Test');
 
     const config = await container.get('Config');

@@ -56,7 +56,7 @@ module.exports = {
     }
   }],
 
-  unary: async (password) => {
+  unary: async password => {
     const version = 1;
 
     const versionMarker = Buffer.alloc(1);

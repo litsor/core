@@ -1,3 +1,4 @@
+/* eslint-env node, mocha */
 'use strict';
 
 const {randomBytes} = require('crypto');
@@ -8,7 +9,7 @@ const Log = {
   generateCorrelationId() {
     return randomBytes(18).toString('base64');
   }
-}
+};
 
 const Methods = {
   testCounter: 0,
@@ -18,7 +19,7 @@ const Methods = {
     }
     if (name === 'test') {
       return async () => {
-        ++this.testCounter
+        ++this.testCounter;
       };
     }
     if (name === '!') {
@@ -39,7 +40,7 @@ const Methods = {
       return (left, right) => left >= right;
     }
     if (name === 'cache') {
-      const callback = async (_, right) => await right() === "cid" ? "ok" : false;
+      const callback = async (_, right) => await right() === 'cid' ? 'ok' : false;
       callback.lazy = true;
       return callback;
     }
@@ -211,7 +212,7 @@ describe('Script', () => {
   it('can use pointers in json objects', async () => {
     script.load(`/ = {foo: "bar", bar: {baz: /baz}}`);
     const output = (await script.run({baz: 3}));
-    expect(output).to.deep.equal({foo: "bar", bar: {baz: 3}});
+    expect(output).to.deep.equal({foo: 'bar', bar: {baz: 3}});
   });
 
   it('can use pointers for member names in json objects', async () => {
@@ -223,7 +224,7 @@ describe('Script', () => {
   it('can use pointers in json arrays', async () => {
     script.load(`/ = {foo: "bar", bar: [/baz, /qux]}}`);
     const output = (await script.run({baz: 3, qux: 4}));
-    expect(output).to.deep.equal({foo: "bar", bar: [3, 4]});
+    expect(output).to.deep.equal({foo: 'bar', bar: [3, 4]});
   });
 
   it('can run a code block', async () => {
@@ -296,7 +297,7 @@ describe('Script', () => {
   });
 
   it('can use the root to read from main scope in a nested block', async () => {
-    // verify that the root pointer reads from the main scope and not the parent scope.
+    // Verify that the root pointer reads from the main scope and not the parent scope.
     script.load(`/ = {{/a = 2\n/ = {{/ = //a}}}}`);
     const output = (await script.run({a: 1}));
     expect(output).to.equal(1);
