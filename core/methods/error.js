@@ -5,6 +5,7 @@ const createError = require('http-errors');
 module.exports = {
   title: 'Error',
   description: 'Break the script with an error',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -82,7 +83,7 @@ module.exports = {
     error: () => true
   }],
 
-  execute: ({type, message}) => {
+  unary: ({type, message}) => {
     throw new createError[type](message);
   }
 };

@@ -7,8 +7,10 @@ const pbkdf2 = promisify(Crypto.pbkdf2);
 const randomBytes = Crypto.randomBytes;
 
 module.exports = {
+  id: 'hashPassword',
   title: 'Hash password',
   description: 'Create a hash for storing passwords',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -54,7 +56,7 @@ module.exports = {
     }
   }],
 
-  execute: async ({password}) => {
+  unary: async password => {
     const version = 1;
 
     const versionMarker = Buffer.alloc(1);

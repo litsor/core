@@ -3,7 +3,7 @@
 const Router = require('koa-router');
 const {graphqlKoa, graphiqlKoa} = require('apollo-server-koa');
 const {makeExecutableSchema} = require('graphql-tools');
-const {GraphQLScalarType} = require('graphql');
+const {graphql, GraphQLScalarType} = require('graphql');
 const GraphQLJson = require('graphql-type-json');
 const {map, values} = require('lodash');
 const validator = require('is-my-json-valid');
@@ -18,6 +18,7 @@ class Graphql {
     const router = new Router();
 
     this.published = {};
+    this.schema = null;
 
     router.post('/graphql', this.handleRequest.bind(this));
     router.get('/graphql', this.handleRequest.bind(this));
@@ -29,6 +30,17 @@ class Graphql {
 
   shutdown() {
     this.http.unuse('graphql');
+  }
+
+  async query(query) {
+    if (!this.schema) {
+      throw new Error('Schema is not initialized');
+    }
+    const result = await graphql(this.schema, query.query, {}, {}, query.variables);
+    if (result.errors && result.errors.length > 0) {
+      throw new Error(result.errors[0].message);
+    }
+    return result.data;
   }
 
   handleRequest(ctx, next) {
@@ -48,7 +60,12 @@ class Graphql {
     const resolvers = {
       Query: {},
       Mutation: {},
-      JSON: GraphQLJson
+      JSON: GraphQLJson,
+      AnyObject: {
+        __resolveType() {
+          return null;
+        }
+      }
     };
     const emptySchema = `
       "Any known object type"
@@ -60,7 +77,7 @@ class Graphql {
       type Query {a: Int}
       type Mutation {a: Int}
     `;
-    const schema = makeExecutableSchema({
+    this.schema = makeExecutableSchema({
       typeDefs: [emptySchema, ...map(values(this.published), 'schema')],
       resolvers: [resolvers, ...map(values(this.published), 'resolvers')]
     });
@@ -70,8 +87,46 @@ class Graphql {
         headers: ctx.request.headers,
         correlationId: ctx.correlationId
       };
-      return {schema, context};
+      return {schema: this.schema, context};
     });
+    this.updateTypeMap();
+  }
+
+  updateTypeMap() {
+    const output = {};
+    const types = this.schema.getTypeMap();
+    Object.keys(types).forEach(type => {
+      if (typeof types[type].getFields !== 'function') {
+        // Is a scalar type.
+        return;
+      }
+      output[type] = {};
+      const fields = types[type].getFields();
+      Object.keys(fields).forEach(field => {
+        const outputType = fields[field].type.toString().replace(/[^\w_]/g, '');
+        output[type][field] = {type: outputType, args: {}};
+        (fields[field].args || []).forEach(arg => {
+          output[type][field].args[arg.name] = arg.type.toString();
+        });
+      });
+    });
+    this.typeMap = output;
+  }
+
+  getFieldType(type, field) {
+    try {
+      return this.typeMap[type][field].type;
+    } catch (err) {
+      throw new Error(`Type ${type} does not have a field ${field}`);
+    }
+  }
+
+  getParamType(type, field, param) {
+    try {
+      return this.typeMap[type][field].args[param];
+    } catch (err) {
+      throw new Error(`Field ${field} does not have a parameter ${param}`);
+    }
   }
 
   isScalar(definition) {

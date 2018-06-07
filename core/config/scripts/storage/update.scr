@@ -1,0 +1,3 @@
+# StorageUpdate
+
+/ = (hasScript "StorageUpdate" + /model) then / script "StorageUpdate" + /model

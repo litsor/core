@@ -33,11 +33,12 @@ describe('OAuth', () => {
     });
     testUrl = 'http://127.0.0.1:1234';
     await container.get('Endpoints');
+    await container.get('GraphqlLinks');
 
     db = await container.get('Database');
 
     scriptsManager = await container.get('ScriptsManager');
-    const create = scriptsManager.get('Create');
+    const create = scriptsManager.get('StorageInternalCreate');
     await create.run({
       model: 'User',
       input: {
@@ -239,7 +240,8 @@ describe('OAuth', () => {
     expect(response).to.have.property('access_token');
     expect(response).to.have.property('token_type', 'bearer');
     // Expires is not required by OAuth2, but we will follow the recommendation to always use it.
-    expect(response).to.have.property('expires_in', 43200);
+    expect(response).to.have.property('expires_in');
+    expect(response.expires_in >= 43199 && response.expires_in <= 43201).to.equal(true);
 
     temporary.access_token = response.access_token;
   });
@@ -307,7 +309,7 @@ describe('OAuth', () => {
     // The access token is still valid and should be reused.
     expect(tokenResponse).to.have.property('access_token', temporary.access_token);
 
-    expect(tokenResponse).to.have.property('user_id', 1);
+    expect(tokenResponse).to.have.property('user_id', '1');
     expect(tokenResponse).to.have.property('token_type', 'bearer');
     expect(tokenResponse).to.have.property('expires_in');
     expect(tokenResponse.expires_in > 0).to.equal(true);
@@ -416,6 +418,7 @@ describe('OAuth', () => {
     expect(result.headers.get('pragma')).to.equal('no-cache');
 
     temporary.location = result.headers.get('location');
+    console.log(temporary.location);
     expect(temporary.location.startsWith('https://example.com/callback')).to.equal(true);
   });
 

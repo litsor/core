@@ -3,6 +3,7 @@
 module.exports = {
   title: 'log',
   description: 'Log data',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -44,7 +45,8 @@ module.exports = {
     }
   }],
 
-  execute: ({severity, message}, {Log}, correlationId) => {
-    Log.log({severity, message, correlationId});
+  unary: ({severity, message}, {Log}, context) => {
+    console.log(message);
+    Log.log({severity, message, correlationId: context.correlationId});
   }
 };

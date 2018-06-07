@@ -6,6 +6,7 @@ const {Op, fn, col} = require('sequelize');
 module.exports = {
   title: 'Select',
   description: 'Select objects from the database',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -102,7 +103,7 @@ module.exports = {
     output: {count: 1, items: [{id: '1', title: 'Test A'}]}
   }],
 
-  execute: async ({filters, model, offset, limit, selections}, {Database, Models, ScriptsManager}) => {
+  unary: async ({filters, model, offset, limit, selections}, {Database, Models, ScriptsManager}) => {
     const where = Object.keys(filters || {}).reduce((prev, name) => {
       const match = name.match(/^(.+)_(ne|gt|gte|lt|lte|like|notLike|in|notIn)$/);
       let field = name;
@@ -162,13 +163,15 @@ module.exports = {
     });
 
     // Fetch referenced objects.
-    const script = ScriptsManager.get('Read');
+    const {storage} = Models.get(model);
+    const script = ScriptsManager.get(`Storage${storage}Read`);
     const promises = Object.keys(references).map(key => (async () => {
       const [model, id] = key.split(':');
       let result = null;
       try {
         result = await script.run({model, id});
       } catch (err) {
+        console.log(err);
         console.log('Unable to fetch reference: ' + err.message);
       }
       references[key].forEach(({index, field}) => {

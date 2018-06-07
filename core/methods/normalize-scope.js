@@ -1,8 +1,11 @@
 'use strict';
 
 module.exports = {
+  id: 'normalizeScope',
   title: 'Normalize scope',
   description: 'Normalize an OAuth scope string',
+  isUnary: true,
+  isBinary: true,
   cache: Infinity,
 
   inputSchema: {
@@ -86,7 +89,10 @@ module.exports = {
     output: 'b c:4'
   }],
 
-  execute: async ({scope, patterns}) => {
+  unary: async scope => {
+    // @todo: create a binary variant with patterns
+    const patterns = null;
+
     const scopes = scope.split(' ').filter((item, index, all) => {
       // Filter duplicate scopes.
       return all.indexOf(item) === index;

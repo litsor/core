@@ -1,0 +1,8 @@
+# StorageInternalCreate
+
+/ = / script "StorageCreate"
+
+/ = create {
+  data: /input,
+  model: /model
+}

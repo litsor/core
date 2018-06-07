@@ -5,7 +5,6 @@
 const {mkdirSync, writeFileSync} = require('fs');
 const {randomBytes} = require('crypto');
 const chai = require('chai');
-const Yaml = require('js-yaml');
 const Rimraf = require('rimraf');
 
 const Container = require('../classes/container');
@@ -25,8 +24,7 @@ describe('Config Files', () => {
     mkdirSync(dir);
     mkdirSync(dir + '/scripts');
 
-    const testScript = {id: 'Test', steps: []};
-    writeFileSync(dir + '/scripts/test.yml', Yaml.safeDump(testScript));
+    writeFileSync(dir + '/scripts/test.scr', '# Test');
 
     const config = await container.get('Config');
     config.set({
@@ -56,8 +54,7 @@ describe('Config Files', () => {
   it('will reload files', async () => {
     expect(scripts.getNames()).to.not.contain('NewScript');
 
-    const testScript = {id: 'NewScript', steps: []};
-    writeFileSync(dir + '/scripts/new.yml', Yaml.safeDump(testScript));
+    writeFileSync(dir + '/scripts/new.scr', '# NewScript');
 
     // Reloading may take some time. Wait till we have it.
     for (let i = 0; i < 24; ++i) {

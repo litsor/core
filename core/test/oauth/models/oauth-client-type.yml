@@ -1,6 +1,5 @@
 id: OauthClientType
 description: OAuth2 Client type
-store: false
 type: string
 enum:
   - confidential

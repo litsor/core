@@ -6,8 +6,10 @@ const {promisify} = require('util');
 const pbkdf2 = promisify(Crypto.pbkdf2);
 
 module.exports = {
+  id: 'validatePassword',
   title: 'Validate password',
   description: 'Validate a password against the stored hash',
+  isBinary: true,
   cache: 0,
 
   inputSchema: {
@@ -62,7 +64,7 @@ module.exports = {
     }
   }],
 
-  execute: async ({password, hash}) => {
+  binary: async (hash, password) => {
     if (typeof hash !== 'string' || typeof password !== 'string' || hash.length < 108) {
       return false;
     }

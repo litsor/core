@@ -1,0 +1,9 @@
+# StorageInternalUpdate
+
+/ = / script "StorageUpdate"
+
+/ = update {
+  id: /id,
+  data: /input,
+  model: /model
+}

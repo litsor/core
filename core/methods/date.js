@@ -5,6 +5,7 @@ const moment = require('moment-timezone');
 module.exports = {
   title: 'Date',
   description: 'Get current date',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -70,11 +71,11 @@ module.exports = {
     }
   }],
 
-  execute: async ({format, timezone}) => {
+  unary: async input => {
     const date = moment();
-    if (timezone) {
-      date.tz(timezone);
+    if (typeof input === 'object' && input.timezone) {
+      date.tz(input.timezone);
     }
-    return date.format(format);
+    return date.format(typeof input === 'object' ? input.format : input);
   }
 };

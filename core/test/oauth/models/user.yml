@@ -1,6 +1,6 @@
 id: User
 description: User
-store: true
+storage: Internal
 properties:
   name:
     type: string

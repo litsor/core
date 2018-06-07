@@ -1,8 +1,10 @@
 'use strict';
 
 module.exports = {
+  id: 'matchScope',
   title: 'Match scope',
   description: 'Match scope with user scopes',
+  isBinary: true,
   cache: Infinity,
 
   inputSchema: {
@@ -87,7 +89,7 @@ module.exports = {
     output: true
   }],
 
-  execute: async ({scope, userScopes}) => {
+  binary: async (scope, userScopes) => {
     const patterns = userScopes.split(' ').filter(item => item);
     return scope.split(' ').filter(item => item).reduce((prev, scope) => {
       const parts = scope.split(':');

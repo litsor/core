@@ -1,6 +1,7 @@
 'use strict';
 
 const {resolve} = require('path');
+const {camelCase} = require('lodash');
 const globby = require('globby');
 const Watch = require('watch');
 const {Unauthorized, Forbidden} = require('http-errors');
@@ -25,9 +26,11 @@ class Methods {
       const filename = resolve(file);
       const name = filename.match(/\/([^/]+)\.js$/)[1];
       try {
-        this.methods[name] = reload(filename);
+        const loaded = reload(filename);
+        const id = loaded.id || camelCase(name);
+        this.methods[id] = loaded;
         if (file === changedFile) {
-          promises.push(this.methodTester.test(this.methods[name]));
+          promises.push(this.methodTester.test(this.methods[id]));
         }
       } catch (err) {
         this.log.error(`Unable to load ${name}: ${err.message}`);
@@ -117,8 +120,39 @@ class Methods {
     return this.methods[name];
   }
 
-  async execute(name, input) {
-    const method = await this.get(name);
+  getBinaryMethod(name) {
+    const method = this.methods[name];
+    if (typeof method === 'undefined') {
+      throw new TypeError(`No method found with name "${name}"`);
+    }
+    if (typeof method.binary !== 'function') {
+      throw new TypeError(`Method "${name}" cannot be used as binary operator`);
+    }
+    const callback = async (left, right, context) => {
+      const dependencies = await this.loadDependencies(method);
+      return method.binary(left, right, dependencies, context);
+    };
+    callback.lazy = method.lazy || false;
+    return callback;
+  }
+
+  getUnaryMethod(name) {
+    const method = this.methods[name];
+    if (typeof method === 'undefined') {
+      throw new TypeError(`No method found with name "${name}"`);
+    }
+    if (typeof method.unary !== 'function') {
+      throw new TypeError(`Method "${name}" cannot be used as unary operator`);
+    }
+    const callback = async (operand, context) => {
+      const dependencies = await this.loadDependencies(method);
+      return method.unary(operand, dependencies, context);
+    };
+    callback.lazy = method.lazy || false;
+    return callback;
+  }
+
+  async loadDependencies(method) {
     const dependencies = {};
     const promises = (method.requires || []).map(name => {
       return this.container.get(name);
@@ -126,7 +160,7 @@ class Methods {
     (await Promise.all(promises)).forEach((item, index) => {
       dependencies[method.requires[index]] = item;
     });
-    return method.execute({...(method.defaults || {}), ...input}, dependencies);
+    return dependencies;
   }
 }
 

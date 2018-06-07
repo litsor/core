@@ -1,6 +1,6 @@
 id: OauthRefreshToken
 description: OAuth2 refresh token
-store: true
+storage: Internal
 properties:
   token:
     type: string

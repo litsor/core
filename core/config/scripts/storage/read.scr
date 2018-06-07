@@ -1,0 +1,3 @@
+# StorageRead
+
+/ = (hasScript "StorageRead" + /model) then / script "StorageRead" + /model

@@ -1,0 +1,148 @@
+# OauthToken
+
+/now = int date "X"
+
+/client = query {
+  item: OauthClient(id: /client_id) {
+    id
+    secret
+    type
+    trusted
+  }
+} pick /item
+
+/ = (/client/type == "confidential") then {{
+  # Check the client authorization.
+  # This can be done via HTTP basic authentication or the client_secret field.
+  /allow = (/headers/authorization == ("Basic " + base64 /client/id + ":" + /client/secret)) or /client_secret == /client/secret
+  (!/allow) then error {type: "Unauthorized"}
+}}
+
+/data/status = 400
+
+/ = (/grant_type == "authorization_code") then {{
+  /codes = query {
+    codes: listOauthAuthorizationCode(filters: {
+      code: /code,
+      client: /client/id,
+      expires_gte: /now
+    }) {
+      items {
+        id
+        code
+        scope
+        user { id }
+        client { id }
+      }
+    }
+  } pick /codes/items
+
+  / = /codes/0 then {{
+    # Immediately delete code, as this is a one-time token.
+    mutation { deleteOauthAuthorizationCode(id: /codes/0/id) { id } }
+
+    # Check if an access token already exists.
+    # Only remember login when token is still valid for at least 15 minutes.
+    /tokens = query {
+      tokens: listOauthAccessToken(filters: {
+        client: /codes/0/client/id,
+        user: /codes/0/user/id,
+        scope: /codes/0/scope,
+        expires_gt: (/now + 900)
+      }) {
+        items {
+          id
+          token
+          expires
+          user { id }
+          client { id }
+        }
+      }
+    } pick /tokens/items
+
+    / = /tokens/0/id then {{
+      /data/body = {
+        access_token: /tokens/0/token,
+        token_type: "bearer",
+        user_id: /tokens/0/user/id,
+        expires_in: /tokens/0/expires - /now
+      }
+      # Also re-use the refresh token for confidential clients.
+      / = (/tokens/0/client/type == "confidential") then {{
+        /data/body/refresh_token = query {
+          tokens: listOauthRefreshToken(filters: {
+            client: /codes/0/client/id,
+            user: /codes/0/user/id,
+            scope: /codes/0/scope,
+            expires_gt: /now + 900
+          }) { items { token } }
+        } pick /tokens/items/0/token
+      }}
+    }}
+
+    / = (!/tokens/0/id) then {{
+      # Create a new access token.
+      /token = {
+        client: /client,
+        user: /codes/0/user,
+        scope: /codes/0/scope
+      } script "OauthCreateToken"
+
+      /data/body = {
+        access_token: /token/token,
+        token_type: "bearer",
+        user_id: /token/user,
+        expires_in: /token/expires - /now
+      }
+      / = /token/refresh_token then {{
+        /data/body/refresh_token = /token/refresh_token
+      }}
+    }}
+
+    /data/status = 200
+  }}
+
+}}
+
+/ = (/grant_type == "refresh_token") then {{
+  /refresh_tokens = query {
+    tokens: listOauthRefreshToken(filters: {
+      token: /refresh_token,
+      client: /client/id,
+      expires_gte: /now
+    }) {
+      items {
+        id
+        scope
+        user { id }
+        client { id type }
+      }
+    }
+  } pick /tokens/items
+
+  / = /refresh_tokens/0 then {{
+    # Delete old refresh token.
+    mutation { deleteOauthRefreshToken(id: /refresh_tokens/0/id) { id } }
+
+    # Create a new access token.
+    /token = {
+      client: /client,
+      user: /refresh_tokens/0/user,
+      scope: /refresh_tokens/0/scope
+    } script "OauthCreateToken"
+    /data/body = {
+      access_token: /token/token,
+      token_type: "bearer",
+      user_id: /token/user,
+      expires_in: /token/expires - /now
+    }
+    /data/body/refresh_token = /token/refresh_token
+    /data/status = 200
+  }}
+}}
+
+# Set security related headers.
+/"data/headers/Cache-Control" = "no-store"
+/data/headers/Pragma = "no-cache"
+
+/ = /data

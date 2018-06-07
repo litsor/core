@@ -109,14 +109,133 @@ class GraphqlLinks extends ConfigFiles {
     }, {});
   }
 
+  getDefaultLinks() {
+    const links = {};
+
+    this.models.getNames().map(name => {
+      return this.models.get(name);
+    }).filter(model => model.storage).forEach(model => {
+      if (this.scriptsManager.has(`Storage${model.storage}Read`)) {
+        links['Read' + model.id] = {
+          id: 'Read' + model.id,
+          context: 'Query',
+          field: model.id,
+          script: `Storage${model.storage}Read`,
+          params: {
+            id: {
+              schema: {$ref: '#/definitions/ID'},
+              required: true,
+              multiple: false
+            }
+          },
+          variables: {
+            model: model.id
+          },
+          outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+          outputMultiple: false
+        };
+      }
+      if (this.scriptsManager.has(`Storage${model.storage}List`)) {
+        links['List' + model.id] = {
+          id: 'List' + model.id,
+          context: 'Query',
+          field: 'list' + model.id,
+          script: `Storage${model.storage}List`,
+          params: {
+            filters: {
+              schema: {$ref: '#/definitions/' + model.id + 'FilterSet'},
+              required: false,
+              multiple: false
+            },
+            limit: {
+              schema: {type: 'integer', minimum: 1}
+            }
+          },
+          variables: {
+            model: model.id
+          },
+          outputSchema: {$ref: '#/definitions/' + model.id + 'Connection'},
+          outputMultiple: false
+        };
+      }
+      if (this.scriptsManager.has(`Storage${model.storage}Create`)) {
+        links['Create' + model.id] = {
+          id: 'Create' + model.id,
+          context: 'Mutation',
+          field: 'create' + model.id,
+          script: `Storage${model.storage}Create`,
+          params: {
+            input: {
+              schema: {$ref: '#/definitions/' + model.id + 'Input'},
+              required: true,
+              multiple: false
+            }
+          },
+          variables: {
+            model: model.id
+          },
+          outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+          outputMultiple: false
+        };
+      }
+      if (this.scriptsManager.has(`Storage${model.storage}Update`)) {
+        links['Update' + model.id] = {
+          id: 'Update' + model.id,
+          context: 'Mutation',
+          field: 'update' + model.id,
+          script: `Storage${model.storage}Update`,
+          params: {
+            id: {
+              schema: {$ref: '#/definitions/ID'},
+              required: true,
+              multiple: false
+            },
+            input: {
+              schema: {$ref: '#/definitions/' + model.id + 'Input'},
+              required: true,
+              multiple: false
+            }
+          },
+          variables: {
+            model: model.id
+          },
+          outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+          outputMultiple: false
+        };
+      }
+      if (this.scriptsManager.has(`Storage${model.storage}Delete`)) {
+        links['Delete' + model.id] = {
+          id: 'Delete' + model.id,
+          context: 'Mutation',
+          field: 'delete' + model.id,
+          script: `Storage${model.storage}Delete`,
+          params: {
+            id: {
+              schema: {$ref: '#/definitions/ID'},
+              required: true,
+              multiple: false
+            }
+          },
+          variables: {
+            model: model.id
+          },
+          outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+          outputMultiple: false
+        };
+      }
+    });
+    return links;
+  }
+
   async publish() {
+    const defaultLinks = this.getDefaultLinks();
     const resolvers = {
       Query: {},
       Mutation: {}
     };
-    const schema = Object.keys(this.items).map(id => {
-      const {field, script, params, variables, outputSchema, outputMultiple} = this.items[id];
-      let {context} = this.items[id];
+    const schema = Object.keys({...this.items, ...defaultLinks}).map(id => {
+      const {field, script, params, variables, outputSchema, outputMultiple} = this.items[id] || defaultLinks[id];
+      let {context} = this.items[id] || defaultLinks[id];
 
       if (context !== 'Query' && context !== 'Mutation') {
         context += 'Object';

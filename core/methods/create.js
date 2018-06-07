@@ -3,6 +3,7 @@
 module.exports = {
   title: 'create',
   description: 'Create new object in the database',
+  isUnary: true,
   cache: 0,
 
   inputSchema: {
@@ -73,7 +74,7 @@ module.exports = {
     }
   }],
 
-  execute: async ({data, model}, {Database}) => {
+  unary: async ({data, model}, {Database}) => {
     const db = Database.get(model);
     const item = await db.create(data);
     return {...data, id: item.id};
