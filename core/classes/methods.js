@@ -27,9 +27,10 @@ class Methods {
       const name = filename.match(/\/([^/]+)\.js$/)[1];
       try {
         const loaded = reload(filename);
-        this.methods[loaded.id || camelCase(name)] = loaded;
+        const id = loaded.id || camelCase(name);
+        this.methods[id] = loaded;
         if (file === changedFile) {
-          promises.push(this.methodTester.test(this.methods[name]));
+          promises.push(this.methodTester.test(this.methods[id]));
         }
       } catch (err) {
         this.log.error(`Unable to load ${name}: ${err.message}`);

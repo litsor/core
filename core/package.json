@@ -52,6 +52,7 @@
     "moment": "^2.21.0",
     "moment-timezone": "^0.5.14",
     "mysql2": "^1.5.2",
+    "node-expat": "^2.3.16",
     "node-fetch": "^2.1.2",
     "rc": "^1.2.5",
     "require-reload": "^0.2.2",
