@@ -210,6 +210,10 @@ class ConfigFiles {
     return Object.keys(this.items);
   }
 
+  has(name) {
+    return typeof this.items[name] !== 'undefined';
+  }
+
   get(name) {
     if (typeof this.items[name] === 'undefined') {
       throw new TypeError(`No ${this.configName} found with name "${name}"`);
