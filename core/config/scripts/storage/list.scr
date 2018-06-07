@@ -1,0 +1,3 @@
+# StorageList
+
+/ = (hasScript "StorageList" + /model) then / script "StorageList" + /model

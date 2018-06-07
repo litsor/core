@@ -1,6 +1,0 @@
-id: Read
-steps:
-- read:
-    model: /model
-    id: /id
-    selections: /selections

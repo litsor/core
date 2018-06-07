@@ -1,5 +1,7 @@
 # StorageInternalList
 
+/ = / script "StorageList"
+
 / = select {
   model: /model,
   filters: /filters,

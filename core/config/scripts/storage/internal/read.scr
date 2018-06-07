@@ -1,5 +1,7 @@
 # StorageInternalRead
 
+/ = / script "StorageRead"
+
 / = read {
   model: /model,
   id: /id,

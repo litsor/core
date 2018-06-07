@@ -1,5 +1,7 @@
 # StorageInternalDelete
 
+/ = / script "StorageDelete"
+
 / = delete {
   id: /id,
   model: /model
