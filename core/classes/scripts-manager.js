@@ -1,7 +1,6 @@
 'use strict';
 
 const {CronJob} = require('cron');
-const createValidator = require('is-my-json-valid');
 const ConfigFiles = require('./config-files');
 
 class ScriptsManager extends ConfigFiles {
@@ -54,8 +53,8 @@ class ScriptsManager extends ConfigFiles {
 
   async create(definition, id) {
     const script = await this.container.get('Script');
-    script.load(definition);
     script.setId(id);
+    script.load(definition);
 
     const run = async () => {
       const correlationId = this.log.generateCorrelationId();

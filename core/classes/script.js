@@ -32,9 +32,15 @@ class Script {
     }
 
     const line = position => script.substring(0, position).split('\n').length;
-    const cleanup = ({type, text, children, start}) => children.length > 0 ? {
-      type, children: children.map(cleanup), line: line(start)
-    } : {type, text, line: line(start)};
+    const cleanup = ({type, text, children, start}) => {
+      if (type === 'SyntaxError') {
+        const snippet = text.substring(0, 16).trim();
+        throw new Error(`Syntax error in ${this.id} on line ${line(start)} near "${snippet}"`);
+      }
+      return children.length > 0 ? {
+        type, children: children.map(cleanup), line: line(start)
+      } : {type, text, line: line(start)};
+    };
     this.ast = parser.getAST(script).children.map(cleanup);
   }
 

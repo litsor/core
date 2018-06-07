@@ -103,7 +103,11 @@ class ConfigFiles {
         await this.destroy(this.items[id]);
       }
       this.filenames[id] = filename;
-      this.items[id] = await this.create(files[filename], id);
+      try {
+        this.items[id] = await this.create(files[filename], id);
+      } catch (err) {
+        this.log.error(err.message);
+      }
     }
     await this.publish();
   }
