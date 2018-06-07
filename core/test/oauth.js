@@ -12,7 +12,7 @@ const Container = require('../classes/container');
 
 const expect = chai.expect;
 
-describe.only('OAuth', () => {
+describe('OAuth', () => {
   const temporary = {};
   let container;
   let testUrl;
@@ -38,7 +38,7 @@ describe.only('OAuth', () => {
     db = await container.get('Database');
 
     scriptsManager = await container.get('ScriptsManager');
-    const create = scriptsManager.get('Create');
+    const create = scriptsManager.get('StorageInternalCreate');
     await create.run({
       model: 'User',
       input: {
@@ -240,7 +240,8 @@ describe.only('OAuth', () => {
     expect(response).to.have.property('access_token');
     expect(response).to.have.property('token_type', 'bearer');
     // Expires is not required by OAuth2, but we will follow the recommendation to always use it.
-    expect(response).to.have.property('expires_in', 43200);
+    expect(response).to.have.property('expires_in');
+    expect(response.expires_in >= 43199 && response.expires_in <= 43201).to.equal(true);
 
     temporary.access_token = response.access_token;
   });

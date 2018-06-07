@@ -114,12 +114,12 @@ class GraphqlLinks extends ConfigFiles {
 
     this.models.getNames().map(name => {
       return this.models.get(name);
-    }).filter(model => model.store).forEach(model => {
+    }).filter(model => model.storage).forEach(model => {
       links['Read' + model.id] = {
         id: 'Read' + model.id,
         context: 'Query',
         field: model.id,
-        script: 'Read',
+        script: `Storage${model.storage}Read`,
         params: {
           id: {
             schema: {$ref: '#/definitions/ID'},
@@ -137,7 +137,7 @@ class GraphqlLinks extends ConfigFiles {
         id: 'List' + model.id,
         context: 'Query',
         field: 'list' + model.id,
-        script: 'List',
+        script: `Storage${model.storage}List`,
         params: {
           filters: {
             schema: {$ref: '#/definitions/' + model.id + 'FilterSet'},
@@ -158,7 +158,7 @@ class GraphqlLinks extends ConfigFiles {
         id: 'Create' + model.id,
         context: 'Mutation',
         field: 'create' + model.id,
-        script: 'Create',
+        script: `Storage${model.storage}Create`,
         params: {
           input: {
             schema: {$ref: '#/definitions/' + model.id + 'Input'},
@@ -176,7 +176,7 @@ class GraphqlLinks extends ConfigFiles {
         id: 'Update' + model.id,
         context: 'Mutation',
         field: 'update' + model.id,
-        script: 'Update',
+        script: `Storage${model.storage}Update`,
         params: {
           id: {
             schema: {$ref: '#/definitions/ID'},
@@ -199,7 +199,7 @@ class GraphqlLinks extends ConfigFiles {
         id: 'Delete' + model.id,
         context: 'Mutation',
         field: 'delete' + model.id,
-        script: 'Delete',
+        script: `Storage${model.storage}Delete`,
         params: {
           id: {
             schema: {$ref: '#/definitions/ID'},

@@ -108,7 +108,8 @@ module.exports = {
         promises.push((async () => {
           const refmodel = modelInstance.properties[field].$ref.substring(14);
           try {
-            const script = ScriptsManager.get('Read');
+            const {storage} = Models.get(refmodel);
+            const script = ScriptsManager.get(`Storage${storage}Read`);
             item[field] = await script.run({
               model: refmodel,
               id: item[field]

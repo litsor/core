@@ -1,6 +1,6 @@
 id: OauthAuthorizationCode
 description: OAuth2 authorization code
-store: true
+storage: Internal
 properties:
   code:
     type: string

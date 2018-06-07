@@ -1,6 +1,6 @@
 id: UserSession
 description: User session token
-store: true
+storage: Internal
 properties:
   token:
     type: string

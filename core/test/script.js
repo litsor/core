@@ -55,7 +55,7 @@ const Methods = {
   }
 };
 
-const GraphQL = {
+const Graphql = {
   query({query, variables}) {
     if (query === 'query {foo}') {
       return {foo: 'bar'};
@@ -72,10 +72,30 @@ const GraphQL = {
     if (query === 'query {User (id:"2") {id ...on User{name}}}') {
       return {id: '2', name: 'Bob'};
     }
-  },
-  mutate({mutation, variables}) {
-    if (mutation === 'mutation {createUser (name:"Chris") {id}}') {
+    if (query === 'mutation {createUser (name:"Chris") {id}}') {
       return {createUser: {id: '3'}};
+    }
+  },
+  getFieldType(type, field) {
+    if (type === 'Query' && field === 'foo') {
+      return 'String';
+    }
+    if (type === 'Query' && field === 'User') {
+      return 'User';
+    }
+    if (type === 'User' && field === 'id') {
+      return 'ID!';
+    }
+    if (type === 'User' && field === 'name') {
+      return 'String';
+    }
+    if (type === 'Mutation' && field === 'createUser') {
+      return 'User';
+    }
+  },
+  getParamType(type, field, param) {
+    if (type === 'Query' && field === 'User' && param === 'id') {
+      return 'ID!';
     }
   }
 };
@@ -84,7 +104,7 @@ describe('Script', () => {
   let script;
 
   before(() => {
-    script = new Script({Methods, GraphQL, Log});
+    script = new Script({Methods, Graphql, Log});
   });
 
   it('can run script', async () => {
@@ -372,7 +392,7 @@ describe('Script', () => {
   });
 
   it('can pass variables to query', async () => {
-    script.load(`/ = query {User(id: ID! /id) { id name }}`);
+    script.load(`/ = query {User(id: /id) { id name }}`);
     const output = (await script.run({id: '1'}));
     expect(output).to.deep.equal({id: '1', name: 'Alice'});
   });

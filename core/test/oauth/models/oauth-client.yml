@@ -1,6 +1,6 @@
 id: OauthClient
 description: OAuth2 client
-store: true
+storage: Internal
 properties:
   name:
     type: string

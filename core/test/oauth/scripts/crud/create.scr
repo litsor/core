@@ -1,4 +1,4 @@
-# Create
+# StorageInternalCreate
 
 / = ((/model == "User") and /input/password) then {{
   /input/password = hashPassword /input/password

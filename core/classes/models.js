@@ -20,8 +20,8 @@ class Models extends ConfigFiles {
         description: {
           type: 'string'
         },
-        store: {
-          type: 'boolean'
+        storage: {
+          type: 'string'
         },
         properties: {
           type: 'object',
@@ -67,7 +67,7 @@ class Models extends ConfigFiles {
     const {schema, resolvers} = this.getSchema();
     await this.graphql.publish(schema, resolvers, 'Models');
     const promises = Object.keys(this.items).filter(name => {
-      return this.items[name].store;
+      return this.items[name].storage === 'Internal';
     }).map(name => {
       return this.database.publish(name, this.items[name], this);
     });
