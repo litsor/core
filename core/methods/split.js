@@ -50,7 +50,7 @@ module.exports = {
     }
   }],
 
-  execute: ({input, separator}) => {
+  binary: (input, separator) => {
     return input.split(separator);
   }
 };
