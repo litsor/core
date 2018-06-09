@@ -2,8 +2,9 @@
 
 const {clone} = require('lodash');
 const fetch = require('node-fetch');
-const {expect} = require('chai');
-const WebsiteMockup = require('../test/mockups/website');
+
+let expect;
+let WebsiteMockup;
 
 module.exports = {
   title: 'HTTP request',
@@ -76,6 +77,8 @@ module.exports = {
   },
 
   async startupTest() {
+    expect = require('chai').expect;
+    WebsiteMockup = require('../test/mockups/website');
     this.websiteMockup = new WebsiteMockup();
     await this.websiteMockup.startup();
   },

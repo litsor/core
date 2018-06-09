@@ -150,7 +150,7 @@ module.exports = {
     }
   }],
 
-  execute: ({input}) => {
+  unary: input => {
     if (typeof input === 'string' || Array.isArray(input)) {
       return input.length;
     }
