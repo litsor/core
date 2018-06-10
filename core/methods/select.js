@@ -156,7 +156,7 @@ module.exports = {
       where,
       limit: limit || 10,
       offset: offset || 0,
-      order: order.map(({field, direction}) => [field, direction || 'ASC'])
+      order: (order || []).map(({field, direction}) => [field, direction || 'ASC'])
     })).map(item => item.dataValues);
 
     if (Object.keys(selections || {}).indexOf('count') >= 0) {
