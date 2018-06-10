@@ -72,7 +72,8 @@ selections ::= "{" WS* selection ((WS* "," WS* | WS*) WS* selection)* WS* "}"
 selection ::= query_field | query_fragment
 query_field ::= field_alias? name (WS* "(" WS* param (WS* "," WS* param)* ")")? (WS* selections)?
 field_alias ::= name ":" WS*
-param ::= name WS* ":" WS* (false|null|true|number|string|value)
+param ::= name WS* ":" WS* (false|null|true|number|string|value|constant)
 graphql_type ::= ("[" [_a-zA-Z0-9][_a-zA-Z0-9]* "!"? "]" "!"? | [_a-zA-Z0-9][_a-zA-Z0-9]* "!"?)
+constant ::= [_a-zA-Z0-9][_a-zA-Z0-9]*
 query_fragment ::= "..." WS* "on" WS+ name WS* selections
 `;

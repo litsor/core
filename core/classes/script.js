@@ -172,8 +172,9 @@ class Script {
         variables['var' + num] = await this.getValue(expression.value[0], context);
         paramDefs.push(`${name}:$var${num}`);
       } else {
-        // The expression can only contains a JSON scalar type.
-        // We can use its value without any further checks.
+        // The expression can only contains a JSON scalar type,
+        // or is a constant. We can use its value without any
+        // further checks.
         const value = expression[Object.keys(expression)[0]];
         paramDefs.push(`${name}:${value}`);
       }

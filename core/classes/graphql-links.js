@@ -245,7 +245,7 @@ class GraphqlLinks extends ConfigFiles {
       Query: {},
       Mutation: {}
     };
-    const baseSchema = `input OrderFieldInput { field: String! direction: OrderDirection!} enum OrderDirection { ASC DESC }`;
+    const baseSchema = `input OrderFieldInput { field: String! direction: OrderDirection} enum OrderDirection { ASC DESC }`;
     const schema = baseSchema + Object.keys({...this.items, ...defaultLinks}).map(id => {
       const {field, script, params, variables, outputSchema, outputMultiple} = this.items[id] || defaultLinks[id];
       let {context} = this.items[id] || defaultLinks[id];
