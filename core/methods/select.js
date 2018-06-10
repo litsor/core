@@ -30,6 +30,24 @@ module.exports = {
         type: 'integer',
         minimum: 1
       },
+      order: {
+        title: 'Order',
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            field: {
+              type: 'string',
+              maxLength: 255
+            },
+            direction: {
+              type: 'string',
+              enum: ['ASC', 'DESC']
+            }
+          },
+          required: ['field']
+        }
+      },
       selections: {
         title: 'Selected fields',
         type: 'object'
@@ -103,7 +121,7 @@ module.exports = {
     output: {count: 1, items: [{id: '1', title: 'Test A'}]}
   }],
 
-  unary: async ({filters, model, offset, limit, selections}, {Database, Models, ScriptsManager}) => {
+  unary: async ({filters, model, offset, limit, order, selections}, {Database, Models, ScriptsManager}) => {
     const where = Object.keys(filters || {}).reduce((prev, name) => {
       const match = name.match(/^(.+)_(ne|gt|gte|lt|lte|like|notLike|in|notIn)$/);
       let field = name;
@@ -137,7 +155,8 @@ module.exports = {
       attributes,
       where,
       limit: limit || 10,
-      offset: offset || 0
+      offset: offset || 0,
+      order: order.map(({field, direction}) => [field, direction || 'ASC'])
     })).map(item => item.dataValues);
 
     if (Object.keys(selections || {}).indexOf('count') >= 0) {

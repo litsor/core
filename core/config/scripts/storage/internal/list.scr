@@ -7,5 +7,6 @@
   filters: /filters,
   offset: /offset,
   limit: /limit,
+  order: /order,
   selections: /selections
 }

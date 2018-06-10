@@ -148,10 +148,19 @@ class GraphqlLinks extends ConfigFiles {
               multiple: false
             },
             offset: {
-              schema: {type: 'integer', minimum: 0}
+              schema: {type: 'integer', minimum: 0},
+              required: false,
+              multiple: false
             },
             limit: {
-              schema: {type: 'integer', minimum: 1}
+              schema: {type: 'integer', minimum: 1},
+              required: false,
+              multiple: false
+            },
+            order: {
+              schema: {$ref: '#/definitions/OrderFieldInput'},
+              required: false,
+              multiple: true
             }
           },
           variables: {
@@ -236,7 +245,8 @@ class GraphqlLinks extends ConfigFiles {
       Query: {},
       Mutation: {}
     };
-    const schema = Object.keys({...this.items, ...defaultLinks}).map(id => {
+    const baseSchema = `input OrderFieldInput { field: String! direction: OrderDirection!} enum OrderDirection { ASC DESC }`;
+    const schema = baseSchema + Object.keys({...this.items, ...defaultLinks}).map(id => {
       const {field, script, params, variables, outputSchema, outputMultiple} = this.items[id] || defaultLinks[id];
       let {context} = this.items[id] || defaultLinks[id];
 
