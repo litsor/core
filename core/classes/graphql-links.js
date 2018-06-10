@@ -147,6 +147,9 @@ class GraphqlLinks extends ConfigFiles {
               required: false,
               multiple: false
             },
+            offset: {
+              schema: {type: 'integer', minimum: 0}
+            },
             limit: {
               schema: {type: 'integer', minimum: 1}
             }
