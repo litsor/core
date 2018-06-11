@@ -67,19 +67,46 @@ class ScriptsManager extends ConfigFiles {
         });
       }
     };
-    if (definition.runOnStartup) {
+
+    const annotations = this.getAnnotations(definition);
+
+    if (annotations.runOnStartup) {
       run();
     }
 
-    if (definition.cron) {
+    if (annotations.cron) {
       this.crons[definition.id] = new CronJob({
-        cronTime: definition.cron,
-        timezone: definition.cronTimezone || 'UTC',
+        cronTime: annotations.cron,
+        timezone: annotations.cronTimezone || 'UTC',
         start: true,
         onTick: run
       });
     }
     return script;
+  }
+
+  getAnnotations(definition) {
+    const annotations = {};
+    const lines = definition.split('\n');
+    for (let i = 0; i < lines.length; ++i) {
+      if (lines[i].trim().length === 0) {
+        continue;
+      }
+      if (lines[i].trim().substring(0, 1) !== '#') {
+        break;
+      }
+      const parts = lines[i].match(/^[\s]*#[\s]*([\w]+)[\s]*=(.+)$/);
+      if (!parts) {
+        continue;
+      }
+      try {
+        const value = JSON.parse(parts[2].trim());
+        annotations[parts[1]] = value;
+      } catch (err) {
+        // Ignore error.
+      }
+    }
+    return annotations;
   }
 
   async destroy(script) {
