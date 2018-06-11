@@ -34,7 +34,7 @@ module.exports = {
       format: {
         title: 'Response format',
         type: 'string',
-        enum: ['auto', 'json', 'xml', 'blob']
+        enum: ['auto', 'json', 'xml', 'blob', 'text']
       },
       cookies: {
         title: 'Request cookies',
@@ -57,10 +57,6 @@ module.exports = {
     },
     required: ['url'],
     additionalProperties: false
-  },
-
-  outputSchema: () => {
-    return {};
   },
 
   defaults: {
@@ -146,7 +142,7 @@ module.exports = {
     }
   }],
 
-  execute: async ({url, headers, method, body, format, cookies}) => {
+  unary: async ({url, headers = {}, method = 'GET', body, format = 'auto', cookies = {}}) => {
     const getCookies = (res, initialCookies) => {
       const cookies = clone(initialCookies || {});
       // @todo: Does not work for multiple cookies.
