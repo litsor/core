@@ -82,7 +82,7 @@ module.exports = {
     }
   }],
 
-  execute: async ({id, data, model}, {Database}) => {
+  unary: async ({id, data, model}, {Database}) => {
     const db = Database.get(model);
     const item = await db.findById(id);
     if (item === null) {
