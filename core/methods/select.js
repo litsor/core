@@ -182,10 +182,10 @@ module.exports = {
     });
 
     // Fetch referenced objects.
-    const {storage} = Models.get(model);
-    const script = ScriptsManager.get(`Storage${storage}Read`);
     const promises = Object.keys(references).map(key => (async () => {
       const [model, id] = key.split(':');
+      const {storage} = Models.get(model);
+      const script = ScriptsManager.get(`Storage${storage}Read`);
       let result = null;
       try {
         result = await script.run({model, id});
