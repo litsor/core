@@ -203,7 +203,7 @@ class GraphqlLinks extends ConfigFiles {
               multiple: false
             },
             input: {
-              schema: {$ref: '#/definitions/' + model.id + 'Input'},
+              schema: {$ref: '#/definitions/' + model.id + 'UpdateInput'},
               required: true,
               multiple: false
             }

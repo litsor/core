@@ -157,15 +157,21 @@ class Graphql {
   }
 
   toGraphqlObjectType(name, definition) {
-    const [properties, inputProperties] = [false, true].map(input => {
+    const [properties, inputProperties, updateProperties] = [
+      {input: false, update: false},
+      {input: true, update: false},
+      {input: true, update: true}
+    ].map(({input, update}) => {
       return Object.keys(definition.properties).map(key => {
-        const requiredMark = (definition.required || []).indexOf(key) >= 0 ? '!' : '';
+        const requiredMark = (definition.required || []).indexOf(key) >= 0 && !update ? '!' : '';
         const type = this.getGraphqlType(definition.properties[key], input);
         return `  ${key}: ${type}${requiredMark}`;
       }).join('\n');
     });
     const description = JSON.stringify(definition.description || '');
-    return `${description}\ntype ${name}Object implements AnyObject {\n  id: ID!\n${properties}\n}\ninput ${name}Input {\n${inputProperties}\n}\n`;
+    return `${description}\ntype ${name}Object implements AnyObject {\n  id: ID!\n${properties}\n}\n` +
+      `${description}\ninput ${name}Input {\n${inputProperties}\n}\n` +
+      `${description}\ninput ${name}UpdateInput {\n${updateProperties}\n}\n`;
   }
 
   toGraphqlFilterType(name, definition) {

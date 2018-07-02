@@ -493,7 +493,7 @@ describe('OAuth', () => {
     expect(response).to.have.property('access_token');
     expect(response).to.have.property('token_type', 'bearer');
     // Expires is not required by OAuth2, but we will follow the recommendation to always use it.
-    expect(response).to.have.property('expires_in', 43200);
+    expect(response.expires_in >= 43199 && response.expires_in <= 43201).to.equal(true);
     // We should get a new refresh token.
     expect(response).to.have.property('refresh_token');
     expect(response.refresh_token).to.not.equal(temporary.refresh_token);
