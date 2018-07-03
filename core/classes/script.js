@@ -9,9 +9,10 @@ const grammar = require('../assets/grammar');
 const parser = new Grammars.Custom.Parser(grammar);
 
 class Context {
-  constructor(data, root = data, path = []) {
-    this.data = cloneDeep(data);
-    this.root = root;
+  constructor(data, root, path = '') {
+    const cloned = cloneDeep(data);
+    this.data = cloned;
+    this.root = root || cloned;
     this.path = path;
   }
 }
@@ -307,7 +308,7 @@ class Script {
     const returnContext = options.returnContext || false;
 
     const commands = this.ast;
-    let context = new Context(data, data, '');
+    let context = new Context(data);
     for (let i = 0; i < commands.length; ++i) {
       context = await this.runCommand(commands[i], context);
     }

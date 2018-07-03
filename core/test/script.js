@@ -303,6 +303,20 @@ describe('Script', () => {
     expect(output).to.equal(1);
   });
 
+  it('can use the root to read newly created values', async () => {
+    // Make sure that the root is not a copy of the initial script values.
+    script.load(`/a = 3\n/ = //a`);
+    const output = (await script.run({}));
+    expect(output).to.equal(3);
+  });
+
+  it('can use the root to read newly created values from a nested block', async () => {
+    // Make sure that the root is not a copy of the initial script values.
+    script.load(`/a = 3\n/ = {{/ = //a}}`);
+    const output = (await script.run({}));
+    expect(output).to.equal(3);
+  });
+
   it('can use lazy evaluation for repetitive evaluation in a new scope', async () => {
     // The '/ >= //b' part is evaluated for each item in the list /a.
     // This expression is evaluated in a new context with one of the items set as its value.
