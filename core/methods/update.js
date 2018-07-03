@@ -88,7 +88,11 @@ module.exports = {
     if (item === null) {
       throw new Error(`${model} does not exist`);
     }
-    await db.update(data, {
+    const inputData = Object.keys(data).reduce((prev, curr) => ({
+      ...prev,
+      [curr]: typeof data[curr] === 'object' && data[curr] !== null ? JSON.stringify(data[curr]) : data[curr]
+    }), {});
+    await db.update(inputData, {
       where: {
         id: {
           [Op.eq]: id

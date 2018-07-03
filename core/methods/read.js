@@ -101,9 +101,15 @@ module.exports = {
       throw new NotFound(`${model} does not exist`);
     }
 
+    const data = Object.keys(modelInstance.properties).reduce((prev, key) => ({
+      ...prev,
+      [key]: ['object', 'array'].indexOf(modelInstance.properties[key].type) >= 0 && typeof item.dataValues[key] === 'string' ? JSON.parse(item.dataValues[key]) : item.dataValues[key]
+    }), {});
+    data.id = id;
+
     // Expand referenced objects.
     const promises = [];
-    Object.keys(item.dataValues).forEach(field => {
+    Object.keys(data).forEach(field => {
       if (typeof modelInstance.properties[field] === 'object' && modelInstance.properties[field].isReference) {
         promises.push((async () => {
           const refmodel = modelInstance.properties[field].$ref.substring(14);
@@ -123,6 +129,6 @@ module.exports = {
     });
     await Promise.all(promises);
 
-    return item.dataValues;
+    return data;
   }
 };

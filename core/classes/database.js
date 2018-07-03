@@ -33,6 +33,9 @@ class Database {
     if (schema.type === 'boolean') {
       return Sequelize.BOOLEAN;
     }
+    if (schema.type === 'object' || schema.type === 'array') {
+      return Sequelize.TEXT;
+    }
     // Other types are foreign keys.
     return Sequelize.INTEGER;
   }

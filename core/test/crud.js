@@ -158,4 +158,105 @@ describe('CRUD', () => {
     });
     expect(listAfterDelete.listPost).to.have.property('count', 0);
   });
+
+  it('can create item with array field', async () => {
+    const result = await graphql.query({
+      query: `mutation {
+        createPost(input: {
+          title: "Test",
+          body: "Test",
+          created: 1234567890,
+          tags: ["a", "b"]
+        }) {
+          id
+        }
+      }`
+    });
+    expect(result).to.have.property('createPost');
+    expect(result.createPost).to.have.property('id');
+    temporary.id = result.createPost.id;
+  });
+
+  it('can read array field', async () => {
+    const result = await graphql.query({
+      query: `query readPost ($id: ID!) {
+        Post(id: $id) {
+          tags
+        }
+      }`,
+      variables: {id: temporary.id}
+    });
+    expect(result).to.have.property('Post');
+    expect(result.Post).to.have.property('tags');
+    expect(result.Post.tags).to.deep.equal(['a', 'b']);
+  });
+
+  it('can create item with object field', async () => {
+    const result = await graphql.query({
+      query: `mutation {
+        createPost(input: {
+          title: "Test",
+          body: "Test",
+          created: 1234567890,
+          properties: {foo: "bar"}
+        }) {
+          id
+        }
+      }`
+    });
+    expect(result).to.have.property('createPost');
+    expect(result.createPost).to.have.property('id');
+    temporary.id = result.createPost.id;
+  });
+
+  it('can read object field', async () => {
+    const result = await graphql.query({
+      query: `query readPost ($id: ID!) {
+        Post(id: $id) {
+          properties
+        }
+      }`,
+      variables: {id: temporary.id}
+    });
+    expect(result).to.have.property('Post');
+    expect(result.Post).to.have.property('properties');
+    expect(result.Post.properties).to.deep.equal({foo: 'bar'});
+  });
+
+  it('can update object field', async () => {
+    const result = await graphql.query({
+      query: `mutation updatePost ($id: ID!) {
+        updatePost(id: $id, input: {
+          properties: {bar: "baz"}
+        }) {
+          id
+          properties
+        }
+      }`,
+      variables: {id: temporary.id}
+    });
+    expect(result).to.have.property('updatePost');
+    expect(result.updatePost).to.have.property('id', temporary.id);
+    expect(result.updatePost).to.have.property('properties');
+    expect(result.updatePost.properties).to.deep.equal({bar: 'baz'});
+  });
+
+  it.skip('validates the schema for array fields', async () => {
+    const result = await graphql.query({
+      query: `mutation {
+        createPost(input: {
+          title: "Test",
+          body: "Test",
+          created: 1234567890,
+          tags: ["too long text"]
+        }) {
+          id
+        }
+      }`
+    });
+    expect(result).to.have.property('createPost');
+    expect(result.createPost).to.not.have.property('id');
+    temporary.id = result.createPost.id;
+  });
+
 });

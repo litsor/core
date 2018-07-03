@@ -75,8 +75,12 @@ module.exports = {
   }],
 
   unary: async ({data, model}, {Database}) => {
+    const inputData = Object.keys(data).reduce((prev, curr) => ({
+      ...prev,
+      [curr]: typeof data[curr] === 'object' && data[curr] !== null ? JSON.stringify(data[curr]) : data[curr]
+    }), {});
     const db = Database.get(model);
-    const item = await db.create(data);
+    const item = await db.create(inputData);
     return {...data, id: item.id};
   }
 };

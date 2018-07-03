@@ -153,7 +153,7 @@ class Graphql {
       }
       return definition.$ref.substring(14) + suffix;
     }
-    return primitives[definition.type] || definition.type;
+    return primitives[definition.type] || 'JSON';
   }
 
   toGraphqlObjectType(name, definition) {
