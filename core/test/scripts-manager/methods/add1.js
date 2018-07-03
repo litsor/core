@@ -13,4 +13,4 @@ module.exports = {
     global.add1 = global.add1 || {};
     global.add1[name] = (global.add1[name] || 0) + 1;
   }
-}
+};

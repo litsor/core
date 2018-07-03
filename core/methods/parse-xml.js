@@ -111,7 +111,7 @@ module.exports = {
         element.attributes = attrs;
       }
     });
-    parser.on('endElement', name => {
+    parser.on('endElement', () => {
       stack.pop();
     });
     parser.on('text', text => {

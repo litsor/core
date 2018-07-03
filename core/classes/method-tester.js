@@ -10,12 +10,7 @@ class MethodTester {
   }
 
   async runTest(method, test) {
-    const defaultInputSchema = {
-      type: 'object',
-      properties: {}
-    };
-
-    const type = typeof test.input !== 'undefined' ? 'unary' : 'binary';
+    const type = typeof test.input === 'undefined' ? 'binary' : 'unary';
 
     const inputs = type === 'unary' ? ['input'] : ['left', 'right'];
     const inputData = {};

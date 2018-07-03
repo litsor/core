@@ -1,23 +1,15 @@
 /* eslint-env node, mocha */
 'use strict';
 
-const {stringify} = require('querystring');
-const {resolve, parse} = require('url');
 const chai = require('chai');
-const fetch = require('node-fetch');
-const {JSDOM} = require('jsdom');
-const parseForm = require('form-parse');
-const add1 = require('./scripts-manager/methods/add1');
 
 const Container = require('../classes/container');
+const add1 = require('./scripts-manager/methods/add1');
 
 const expect = chai.expect;
 
 describe('Scripts manager', () => {
-  const temporary = {};
   let container;
-  let testUrl;
-  let scriptsManager;
 
   before(async () => {
     add1.reset();
@@ -34,11 +26,9 @@ describe('Scripts manager', () => {
       'recreate-db': true,
       'secret-key': 'test'
     });
-    testUrl = 'http://127.0.0.1:1234';
     await container.get('Endpoints');
     await container.get('GraphqlLinks');
-
-    scriptsManager = await container.get('ScriptsManager');
+    await container.get('ScriptsManager');
   });
 
   after(async () => {
