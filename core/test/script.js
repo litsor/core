@@ -346,6 +346,17 @@ describe('Script', () => {
     expect(output).to.deep.equal([1, 2, 3, 3, 4]);
   });
 
+  it('will retain order in arrays', async () => {
+    // The trick here is that the first element will be resolved in an async
+    // function, while the latter is immediately available. Order is messed up
+    // easily when not carefully using the async flow.
+    // The "aa" will be added as last element if this goes wrong,
+    // so it is important to test it in this order.
+    script.load(`/ = [{{/ = "a" + "a"}}, "b"]`);
+    const output = (await script.run({}));
+    expect(output).to.deep.equal(['aa', 'b']);
+  });
+
   it('can append to list with []= assignment', async () => {
     script.load(`/ []= 2`);
     const output = (await script.run([1]));

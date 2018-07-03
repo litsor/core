@@ -61,7 +61,6 @@ class Script {
   }
 
   async getJson({type, children, text}, context) {
-    const promises = [];
     const array = [];
     let object = {};
     switch (type) {
@@ -89,20 +88,18 @@ class Script {
         }
         return object;
       case 'array':
-        (children || []).forEach(child => {
-          promises.push((async () => {
-            if (child.type === 'rest_operator') {
-              const addItems = await this.runExpression(child.children[0], context);
-              if (!Array.isArray(addItems)) {
-                throw new TypeError('Expression for rest operator in arrays must result in an array');
-              }
-              addItems.forEach(item => array.push(item));
-            } else {
-              array.push(await this.runExpression(child.children[0], context));
+        for (let i = 0; i < (children || []).length; ++i) {
+          const child = children[i];
+          if (child.type === 'rest_operator') {
+            const addItems = await this.runExpression(child.children[0], context);
+            if (!Array.isArray(addItems)) {
+              throw new TypeError('Expression for rest operator in arrays must result in an array');
             }
-          })());
-        });
-        await Promise.all(promises);
+            addItems.forEach(item => array.push(item));
+          } else {
+            array.push(await this.runExpression(child.children[0], context));
+          }
+        }
         return array;
       default:
         return JSON.parse(text);
