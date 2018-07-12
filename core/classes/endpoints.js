@@ -118,7 +118,10 @@ class Endpoints extends ConfigFiles {
       value = typeof value === 'undefined' ? null : value;
       return {...prev, [name]: value};
     }, {});
-    return params;
+    return {
+      body: ctx.request.body,
+      ...params
+    };
   }
 
   async handleRequest(ctx, next) {
