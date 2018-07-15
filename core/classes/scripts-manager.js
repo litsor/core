@@ -74,6 +74,10 @@ class ScriptsManager extends ConfigFiles {
       run();
     }
 
+    if (typeof this.crons[definition.id] !== 'undefined') {
+      this.crons[definition.id].stop();
+    }
+
     if (annotations.cron) {
       this.crons[definition.id] = new CronJob({
         cronTime: annotations.cron,
