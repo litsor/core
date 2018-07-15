@@ -86,6 +86,7 @@ class Endpoints extends ConfigFiles {
   startup() {
     super.startup();
     this.http.use('endpoints', 1, (ctx, next) => this.handleRequest(ctx, next));
+    this.http.use('endpoints 404', 99, (ctx, next) => this.handleRequest(ctx, next, '404'));
   }
 
   shutdown() {
@@ -124,8 +125,9 @@ class Endpoints extends ConfigFiles {
     };
   }
 
-  async handleRequest(ctx, next) {
-    const {method, path} = ctx.request;
+  async handleRequest(ctx, next, path) {
+    const {method} = ctx.request;
+    path = path || ctx.request.path;
 
     const match = (this.paths[method] || []).filter(route => path.match(route.pattern)).shift();
     if (!match) {
