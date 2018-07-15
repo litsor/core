@@ -317,6 +317,18 @@ describe('Script', () => {
     expect(output).to.equal(3);
   });
 
+  it('can use root inside function arguments', async () => {
+    script.load(`/a = 3\n/ = [1,2,3,4] filter / >= //a`);
+    const output = (await script.run({}));
+    expect(output).to.deep.equal([3, 4]);
+  });
+
+  it('can use root inside code blocks', async () => {
+    script.load(`/a = 3\n/ = [1,2,3,4] filter {{/ = / >= //a}}`);
+    const output = (await script.run({}));
+    expect(output).to.deep.equal([3, 4]);
+  });
+
   it('can use lazy evaluation for repetitive evaluation in a new scope', async () => {
     // The '/ >= //b' part is evaluated for each item in the list /a.
     // This expression is evaluated in a new context with one of the items set as its value.
