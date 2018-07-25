@@ -74,12 +74,11 @@ class ScriptsManager extends ConfigFiles {
       run();
     }
 
-    if (typeof this.crons[definition.id] !== 'undefined') {
-      this.crons[definition.id].stop();
+    if (typeof this.crons[id] !== 'undefined') {
+      this.crons[id].stop();
     }
-
     if (annotations.cron) {
-      this.crons[definition.id] = new CronJob({
+      this.crons[id] = new CronJob({
         cronTime: annotations.cron,
         timezone: annotations.cronTimezone || 'UTC',
         start: true,
