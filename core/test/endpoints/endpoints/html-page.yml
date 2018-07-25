@@ -1,0 +1,19 @@
+id: HtmlPage
+path: /html-page
+method: GET
+script: HtmlPage
+params:
+  query_a:
+    name: Query parameter A
+    in: query
+    schema:
+      type: string
+  query_b:
+    name: Query parameter B
+    in: query
+    schema:
+      type: integer
+output:
+  mime: text/html
+  schema:
+    type: string
