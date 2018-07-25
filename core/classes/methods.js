@@ -20,7 +20,7 @@ class Methods {
   }
 
   async readFiles(changedFile) {
-    const files = await globby([this.methodsDir + '/**/*.js', 'core/methods/**/*.js']);
+    const files = await globby(['core/methods/**/*.js', this.methodsDir + '/**/*.js']);
     const output = {};
     const promises = [];
     files.forEach(file => {
