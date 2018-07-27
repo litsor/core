@@ -259,4 +259,101 @@ describe('CRUD', () => {
     temporary.id = result.createPost.id;
   });
 
+  it('will return null for empty references', async () => {
+    const result = await graphql.query({
+      query: `query readPost ($id: ID!) {
+        Post(id: $id) {
+          author {
+            id
+            name
+          }
+        }
+      }`,
+      variables: {id: temporary.id}
+    });
+    expect(result).to.have.property('Post');
+    expect(result.Post).to.have.property('author');
+    expect(result.Post.author).to.be.a('null');
+  });
+
+  it('can read referenced field', async () => {
+    const authorResult = await graphql.query({
+      query: `mutation {
+        createAuthor (input: {name: "John"}) {
+          id
+        }
+      }`
+    });
+    temporary.authorId = authorResult.createAuthor.id;
+
+    await graphql.query({
+      query: `mutation ($id: ID!, $input: PostUpdateInput!) {
+        updatePost (id: $id, input: $input) {
+          id
+        }
+      }`,
+      variables: {
+        id: temporary.id,
+        input: {author: temporary.authorId}
+      }
+    });
+
+    const result = await graphql.query({
+      query: `query readPost ($id: ID!) {
+        Post(id: $id) {
+          author {
+            id
+            name
+          }
+        }
+      }`,
+      variables: {id: temporary.id}
+    });
+    expect(result).to.have.property('Post');
+    expect(result.Post).to.have.property('author');
+    expect(result.Post.author).to.have.property('id', temporary.authorId);
+    expect(result.Post.author).to.have.property('name', 'John');
+  });
+
+  it('will read references in lists', async () => {
+    const cresateResult = await graphql.query({
+      query: `mutation ($input: PostInput!) {
+        createPost(input: $input) {
+          id
+        }
+      }`,
+      variables: {
+        input: {
+          title: "List references test",
+          body: "Test",
+          created: 1234567890,
+          author: temporary.authorId
+        }
+      }
+    });
+    expect(cresateResult).to.have.property('createPost');
+    expect(cresateResult.createPost).to.have.property('id');
+    temporary.id = cresateResult.createPost.id;
+
+    const result = await graphql.query({
+      query: `query listPost ($filters: PostFilterSet!) {
+        listPost(filters: $filters) {
+          items {
+            author {
+              id
+              name
+            }
+          }
+        }
+      }`,
+      variables: {
+        filters: {
+          author: temporary.authorId
+        }
+      }
+    });
+    expect(result.listPost.items[0]).to.have.property('author');
+    expect(result.listPost.items[0].author).to.have.property('name', 'John');
+  });
+
 });

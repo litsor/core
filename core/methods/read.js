@@ -94,6 +94,7 @@ module.exports = {
     }
 
     const item = await db.findOne({attributes, where: {id}});
+
     if (item === null) {
       if (nullOnError) {
         return null;
@@ -116,12 +117,11 @@ module.exports = {
           try {
             const {storage} = Models.get(refmodel);
             const script = ScriptsManager.get(`Storage${storage}Read`);
-            item[field] = await script.run({
+            data[field] = await script.run({
               model: refmodel,
               id: item[field]
             });
           } catch (err) {
-            console.log('Unable to fetch reference: ' + err.message);
             item[field] = null;
           }
         })());
