@@ -39,6 +39,9 @@ class Models extends ConfigFiles {
               properties: {
                 $ref: {
                   type: 'string'
+                },
+                reverse: {
+                  type: 'string'
                 }
               },
               required: ['$ref']

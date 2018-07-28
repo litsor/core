@@ -169,6 +169,46 @@ class GraphqlLinks extends ConfigFiles {
           outputSchema: {$ref: '#/definitions/' + model.id + 'Connection'},
           outputMultiple: false
         };
+        Object.keys(model.properties).forEach(key => {
+          const prop = model.properties[key];
+          if (prop.isReference && prop.reverse) {
+            const referencedModel = prop.$ref.substring(14);
+            links['ReverseLink' + referencedModel + key] = {
+              id: 'ReverseLink' + referencedModel + key,
+              context: referencedModel,
+              field: prop.reverse,
+              script: `ReverseLink`,
+              params: {
+                filters: {
+                  schema: {$ref: '#/definitions/' + model.id + 'FilterSet'},
+                  required: false,
+                  multiple: false
+                },
+                offset: {
+                  schema: {type: 'integer', minimum: 0},
+                  required: false,
+                  multiple: false
+                },
+                limit: {
+                  schema: {type: 'integer', minimum: 1},
+                  required: false,
+                  multiple: false
+                },
+                order: {
+                  schema: {$ref: '#/definitions/OrderFieldInput'},
+                  required: false,
+                  multiple: true
+                }
+              },
+              variables: {
+                model: model.id,
+                field: key
+              },
+              outputSchema: {$ref: '#/definitions/' + model.id + 'Connection'},
+              outputMultiple: false
+            };
+          }
+        });
       }
       if (this.scriptsManager.has(`Storage${model.storage}Create`)) {
         links['Create' + model.id] = {

@@ -17,6 +17,6 @@ module.exports = {
   }],
 
   unary: (message, {Log}, context) => {
-    Log.log({severity: 'debug', message, correlationId: context.correlationId});
+    Log.log({severity: 'debug', message: JSON.stringify(message), correlationId: context.correlationId});
   }
 };

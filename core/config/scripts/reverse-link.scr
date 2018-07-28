@@ -1,0 +1,14 @@
+# ReverseLink
+
+/engine = (model /model) pick /storage
+
+/filters ~ {}
+
+/ = {
+  .../,
+  model: /model,
+  filters: {
+    .../filters,
+    /field: /parent/id
+  }
+} script "Storage" + /engine + "List"

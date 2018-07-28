@@ -21,6 +21,7 @@ properties:
     type: object
   author:
     $ref: '#/definitions/Author'
+    reverse: posts
 required:
   - title
   - body

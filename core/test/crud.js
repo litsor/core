@@ -356,4 +356,99 @@ describe('CRUD', () => {
     expect(result.listPost.items[0].author).to.have.property('name', 'John');
   });
 
+  it('can read reverse references', async () => {
+    const authorResult = await graphql.query({
+      query: `mutation {
+        createAuthor (input: {name: "John"}) {
+          id
+        }
+      }`
+    });
+    temporary.authorId = authorResult.createAuthor.id;
+    await graphql.query({
+      query: `mutation ($input: PostInput!) {
+        createPost (input: $input) {
+          id
+        }
+      }`,
+      variables: {
+        input: {title: "Test", body: "Test", created: 1234, author: temporary.authorId}
+      }
+    });
+
+    const result = await graphql.query({
+      query: `query ($id: ID!) {
+        Author(id: $id) {
+          posts {
+            count
+            items {
+              title
+            }
+          }
+        }
+      }`,
+      variables: {
+        id: temporary.authorId
+      }
+    });
+    expect(result).to.have.property('Author');
+    expect(result.Author).to.have.property('posts');
+    expect(result.Author.posts).to.have.property('count', 1);
+    expect(result.Author.posts).to.have.property('items');
+    expect(result.Author.posts.items[0]).to.have.property('title', 'Test');
+  });
+
+  it('can provide order in reverse link', async () => {
+    await graphql.query({
+      query: `mutation ($input: PostInput!) {
+        createPost (input: $input) {
+          id
+        }
+      }`,
+      variables: {
+        input: {title: "Another post", body: "Test", created: 1234, author: temporary.authorId}
+      }
+    });
+    const query = async (order) => await graphql.query({
+      query: `query ($id: ID!, $order: [OrderFieldInput]) {
+        Author(id: $id) {
+          posts (order: $order) {
+            count
+            items {
+              title
+            }
+          }
+        }
+      }`,
+      variables: {
+        id: temporary.authorId,
+        order: [order]
+      }
+    });
+    expect((await query({
+      field: 'title',
+      direction: 'ASC'
+    })).Author.posts.items[0].title).to.equal('Another post');
+    expect((await query({
+      field: 'title',
+      direction: 'DESC'
+    })).Author.posts.items[0].title).to.equal('Test');
+  });
+
+  it('can filter in reverse link', async () => {
+    const result = await graphql.query({
+      query: `query ($id: ID!) {
+        Author(id: $id) {
+          posts (filters: {title: "Another post"}) {
+            count
+          }
+        }
+      }`,
+      variables: {
+        id: temporary.authorId
+      }
+    });
+    expect(result.Author.posts.count).to.equal(1);
+  });
+
 });
