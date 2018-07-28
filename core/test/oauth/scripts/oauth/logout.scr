@@ -1,4 +1,31 @@
-# Logout
+# OauthLogout
+
+/ = /cookies/session then {{
+  /sessionId = query {
+    listUserSession(filters: {
+      token: /cookies/session
+    }) {
+      items {
+        id
+      }
+    }
+  } pick /listUserSession/items/0/id
+  / = /sessionId then {{
+    /tokens = query {
+      listOauthAccessToken(filters: {
+        session: /sessionId
+      }) {
+        items { id }
+      }
+    } pick /listOauthAccessToken/items
+    /tokens map mutation {
+      deleteOauthAccessToken(id: /id) { id }
+    }
+    mutation {
+      deleteUserSession(id: /sessionId) { id }
+    }
+  }}
+}}
 
 /user = / script "LoadUser"
 
@@ -13,7 +40,6 @@
       }
     }
   } pick /tokens/items
-
   /tokens map mutation {
     deleteOauthAccessToken (id: /id) { id }
   }
@@ -22,5 +48,11 @@
 / = {
   status: 302,
   body: "Redirecting...",
-  redirect: "/"
+  redirect: "/",
+  cookies: {
+    session: {
+      value: "",
+      path: "/oauth"
+    }
+  }
 }

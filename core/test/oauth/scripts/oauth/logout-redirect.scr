@@ -1,0 +1,9 @@
+# OauthLogoutRedirect
+
+# We cannot logout here, because the session cookie is only valid for /oauth.
+
+/ = {
+  status: 302,
+  body: "Redirecting...",
+  redirect: "/oauth/logout"
+}

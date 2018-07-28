@@ -4,6 +4,7 @@ storage: Internal
 properties:
   token:
     type: string
+    maxLength: 255
   client:
     $ref: '#/definitions/OauthClient'
   expires:
@@ -12,6 +13,8 @@ properties:
     $ref: '#/definitions/User'
   scope:
     type: string
+  session:
+    $ref: '#/definitions/UserSession'
   created:
     type: integer
 required:
@@ -19,5 +22,5 @@ required:
   - client
   - expires
   - user
-  - cope
+  - scope
   - created

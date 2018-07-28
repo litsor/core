@@ -19,6 +19,9 @@
   token: secureToken 256,
   expires: /now + 43200
 }
+/ = /session/id then {{
+  /token/session = /session/id
+}}
 mutation {
   createOauthAccessToken(input: /token) { id }
 }

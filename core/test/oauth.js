@@ -192,7 +192,7 @@ describe('OAuth', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Set-Cookie': temporary.cookies
+        'Cookie': temporary.cookies
       },
       body: stringify(values),
       redirect: 'manual'
@@ -281,7 +281,7 @@ describe('OAuth', () => {
     });
     const result = await fetch(testUrl + '/oauth/authorize?' + query, {
       headers: {
-        'Set-Cookie': temporary.cookies
+        'Cookie': temporary.cookies
       },
       redirect: 'manual'
     });
@@ -325,7 +325,7 @@ describe('OAuth', () => {
     });
     const result = await fetch(testUrl + '/oauth/authorize?' + query, {
       headers: {
-        'Set-Cookie': temporary.cookies
+        'Cookie': temporary.cookies
       },
       redirect: 'manual'
     });
@@ -342,7 +342,7 @@ describe('OAuth', () => {
     });
     const result = await fetch(testUrl + '/oauth/authorize?' + query, {
       headers: {
-        'Set-Cookie': temporary.cookies
+        'Cookie': temporary.cookies
       },
       redirect: 'manual'
     });
@@ -404,7 +404,7 @@ describe('OAuth', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Set-Cookie': temporary.cookies
+        'Cookie': temporary.cookies
       },
       body: stringify(values),
       redirect: 'manual'
@@ -418,7 +418,6 @@ describe('OAuth', () => {
     expect(result.headers.get('pragma')).to.equal('no-cache');
 
     temporary.location = result.headers.get('location');
-    console.log(temporary.location);
     expect(temporary.location.startsWith('https://example.com/callback')).to.equal(true);
   });
 
@@ -440,7 +439,7 @@ describe('OAuth', () => {
     });
     const result = await fetch(testUrl + '/oauth/authorize?' + query, {
       headers: {
-        'Set-Cookie': temporary.cookies
+        'Cookie': temporary.cookies
       },
       redirect: 'manual'
     });
@@ -540,9 +539,11 @@ describe('OAuth', () => {
     expect(result.status).to.equal(200);
   });
 
-  it('can destroy the token by calling /logout', async () => {
-    const result = await fetch('http://127.0.0.1:1234/logout', {
-      headers: {Authorization: 'Bearer ' + temporary.access_token},
+  it('can destroy the token by calling /oauth/logout with access token', async () => {
+    const result = await fetch('http://127.0.0.1:1234/oauth/logout', {
+      headers: {
+        Authorization: 'Bearer ' + temporary.access_token
+      },
       redirect: 'manual'
     });
     expect(result.status).to.equal(302);
@@ -604,5 +605,56 @@ describe('OAuth', () => {
     await checkExists(true);
     await scriptsManager.get('OauthCleanup').run({});
     await checkExists(false);
+  });
+
+  it('can destroy the token by calling /oauth/logout with session cookie', async () => {
+    const loginResult = await login({
+      responseType: 'token',
+      clientId: temporary.trustedPublicCilent
+    });
+    const location = loginResult.headers.get('location');
+    expect(location).to.contain('token=');
+    temporary.access_token = decodeURIComponent(location.match(/token=([^&]+)/)[1]);
+    const cookieHeaders = (loginResult.headers.get('set-cookie') || []).split(/,[\s]*/).filter(str => str);
+    temporary.cookies = cookieHeaders.reduce((prev, curr) => prev + curr.split(';')[0] + ';', '');
+
+    // Verify that we have access with this token.
+    const resourceResultBefore = await fetch('http://127.0.0.1:1234/protected-resource', {
+      headers: {Authorization: 'Bearer ' + temporary.access_token}
+    });
+    expect(resourceResultBefore.status).to.equal(200);
+
+    // Call logout.
+    const result = await fetch('http://127.0.0.1:1234/oauth/logout', {
+      headers: {
+        'Cookie': temporary.cookies
+      },
+      redirect: 'manual'
+    });
+    expect(result.status).to.equal(302);
+
+    // And verify that the access token was revoked.
+    const resourceResult = await fetch('http://127.0.0.1:1234/protected-resource', {
+      headers: {Authorization: 'Bearer ' + temporary.access_token}
+    });
+    expect(resourceResult.status).to.equal(401);
+  });
+
+  it('will redirect /login to /oauth/authorize', async () => {
+    const result = await fetch('http://127.0.0.1:1234/login', {
+      redirect: 'manual'
+    });
+    expect(result.status).to.equal(302);
+    expect(result.headers.has('location')).to.equal(true);
+    expect(result.headers.get('location')).to.equal('http://127.0.0.1:1234/oauth/authorize');
+  });
+
+  it('will redirect /logout to /oauth/logout', async () => {
+    const result = await fetch('http://127.0.0.1:1234/logout', {
+      redirect: 'manual'
+    });
+    expect(result.status).to.equal(302);
+    expect(result.headers.has('location')).to.equal(true);
+    expect(result.headers.get('location')).to.equal('http://127.0.0.1:1234/oauth/logout');
   });
 });

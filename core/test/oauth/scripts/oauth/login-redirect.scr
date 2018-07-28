@@ -1,0 +1,7 @@
+# OauthLoginRedirect
+
+/ = {
+  status: 302,
+  body: "Redirecting...",
+  redirect: "/oauth/authorize"
+}

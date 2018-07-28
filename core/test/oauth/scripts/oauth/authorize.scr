@@ -2,6 +2,11 @@
 
 /now = int date "X"
 
+/response_type ~ "token"
+/client_id ~ "1"
+/scope ~ "*"
+/state ~ ""
+
 /client = query {
   item: OauthClient(id: /client_id) {
     id
@@ -63,9 +68,9 @@
       }}
     }
 
-    mutation {
+    /session = mutation {
       session: createUserSession(input: /session) { id token }
-    }
+    } pick /session
 
     /data/cookies/session = {
       value: /session/token,
@@ -120,11 +125,9 @@
       /token = / script "OauthCreateToken"
       /redirect_uri = /redirect_uri + "#token=" + (urlencode /token/token) + "&state=" + (urlencode /state)
     }}
-    /data = {
-      status: 302,
-      body: "Redirecting...",
-      redirect: /redirect_uri
-    }
+    /data/status = 302
+    /data/body = "Redirecting..."
+    /data/redirect = /redirect_uri
   }}
 
   / = (/allow != "true") then {{

@@ -1,7 +1,7 @@
-id: OauthLogout
-path: /oauth/logout
+id: OauthLoginRedirect
+path: /login
 method: GET
-script: OauthLogout
+script: OauthLoginRedirect
 params: {}
 output:
   mime: text/html

@@ -139,12 +139,10 @@ class Endpoints extends ConfigFiles {
     const params = this.getParams(route, ctx);
 
     const headers = ctx.request.headers;
-    const cookies = (ctx.request.headers['set-cookie'] || []).map(value => {
-      return value.split(';').filter(str => str.match(/[^\s]/)).reduce((prev, curr) => {
-        const match = curr.match(/^([^=]+)=(.*)$/);
-        return match ? {...prev, [match[1]]: match[2]} : prev;
-      }, {});
-    }).reduce((prev, curr) => ({...prev, ...curr}), []);
+    const cookies = (ctx.request.headers['cookie'] || '').split(';').filter(str => str.match(/[^\s]/)).reduce((prev, curr) => {
+      const match = curr.match(/^([^=]+)=(.*)$/);
+      return match ? {...prev, [match[1]]: match[2]} : prev;
+    }, {});
 
     let input = {path, headers, cookies, ...params};
     input = {...input, ...this.input.get(input, route.variables || {})};
