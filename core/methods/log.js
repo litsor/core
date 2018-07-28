@@ -46,7 +46,6 @@ module.exports = {
   }],
 
   unary: ({severity, message}, {Log}, context) => {
-    console.log(message);
     Log.log({severity, message, correlationId: context.correlationId});
   }
 };
