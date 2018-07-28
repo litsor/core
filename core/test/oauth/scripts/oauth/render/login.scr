@@ -1,0 +1,14 @@
+# OauthRenderLogin
+
+# Available variables:
+# /client: Client name
+# /client_id: Client id, pass as hidden value
+# /response_type: Response type, pass as hidden value
+# /redirect_uri: Redirect uri, pass as hidden value
+# /scope: Scope, pass as hidden value
+# /state: State, pass as hidden value
+# /message: Optional message to display
+
+/template = "<!doctype html>\n<html>\n    <body>\n    <h1>Login</h1>\n    {{#if message }}\n    <div class=\"message\">\n        {{message}}\n    </div>\n    {{/if}}\n    <form action=\"/oauth/authorize\" method=\"post\">\n        <input type=\"hidden\" name=\"client_id\" value=\"{{client_id}}\">\n        <input type=\"hidden\" name=\"response_type\" value=\"{{response_type}}\">\n        <input type=\"hidden\" name=\"redirect_uri\" value=\"{{redirect_uri}}\">\n        <input type=\"hidden\" name=\"scope\" value=\"{{scope}}\">\n        <input type=\"hidden\" name=\"state\" value=\"{{state}}\">\n        <div>\n        <label>\n            Username\n            <input type=\"text\" name=\"username\">\n        </label>\n        </div>\n        <div>\n        <label>\n            Password\n            <input type=\"password\" name=\"password\">\n        </label>\n        </div>\n        <div>\n        <label>\n            <input type=\"checkbox\" name=\"remember\" value=\"remember\">\n            Remember\n        </label>\n        </div>\n        <input type=\"submit\" value=\"Login\">\n    </form>\n    </body>\n</html>"
+
+/ = / handlebars /template
