@@ -173,8 +173,8 @@ class GraphqlLinks extends ConfigFiles {
           const prop = model.properties[key];
           if (prop.isReference && prop.reverse) {
             const referencedModel = prop.$ref.substring(14);
-            links['ReverseLink' + referencedModel + key] = {
-              id: 'ReverseLink' + referencedModel + key,
+            links['ReverseLink' + referencedModel + prop.reverse] = {
+              id: 'ReverseLink' + referencedModel + prop.reverse,
               context: referencedModel,
               field: prop.reverse,
               script: `ReverseLink`,
