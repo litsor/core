@@ -259,6 +259,8 @@ class Script {
     const current = pointer === '/' ? context.data : get(context.data, pointer);
     const setData = pointer === '/' ? data => {
       context.data = data;
+      // Also update root reference, but make sure that this is an object.
+      context.root = typeof data === 'object' && !Array.isArray(data) && data !== null ? data : {};
     } : data => set(context.data, pointer, data);
     let list;
     switch (operator) {

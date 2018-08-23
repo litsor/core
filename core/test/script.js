@@ -310,6 +310,13 @@ describe('Script', () => {
     expect(output).to.equal(3);
   });
 
+  it('Will update root reference on root assignment', async () => {
+    // We overwrite the root. Make sure that the context root reference is updated as well.
+    script.load(`/a = 3\n/ = {{/a = 4}}\n/ = //a`);
+    const output = (await script.run({}));
+    expect(output).to.equal(4);
+  });
+
   it('can use the root to read newly created values from a nested block', async () => {
     // Make sure that the root is not a copy of the initial script values.
     script.load(`/a = 3\n/ = {{/ = //a}}`);
