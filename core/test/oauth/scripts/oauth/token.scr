@@ -128,7 +128,8 @@
     /token = {
       client: /client,
       user: /refresh_tokens/0/user,
-      scope: /refresh_tokens/0/scope
+      scope: /refresh_tokens/0/scope,
+      forceRecreate: true
     } script "OauthCreateToken"
     /data/body = {
       access_token: /token/token,

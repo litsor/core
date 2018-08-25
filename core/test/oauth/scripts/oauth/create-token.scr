@@ -11,43 +11,82 @@
 
 /now = int date "X"
 
-/token = {
-  client: /client/id,
-  user: /user/id,
-  scope: /scope,
-  created: /now,
-  token: secureToken 256,
-  expires: /now + 43200
-}
-/ = /session/id then {{
-  /token/session = /session/id
-}}
-mutation {
-  createOauthAccessToken(input: /token) { id }
-}
-
-# Always create the refresh token. We use it to remember the login.
-/refresh_token = {
-  client: /client/id,
-  user: /user/id,
-  scope: /scope,
-  created: /now,
-  token: secureToken 256,
-  expires: /now + 432000
-}
-
-# Confidential clients (often API integrations) must use the refresh token within 30 days.
-/ = (/client/type == "confidential") then {{
-  /refresh_token/expires = /now + 2592000
+/token = null
+/ = (!/forceRecreate) then {{
+  /token = query {
+    listOauthAccessToken(filters: {
+      client: /client/id,
+      user: /user/id,
+      scope: /scope,
+      expires_gt: /now + 21600
+    }, limit: 1) {
+      items {
+        client { id }
+        user { id }
+        scope
+        created
+        token
+        expires
+      }
+    }
+  } pick /listOauthAccessToken/items/0
 }}
 
-mutation {
-  createOauthRefreshToken(input: /refresh_token) { id }
-}
+/ = (!/token) then {{
+  /token = {
+    client: /client/id,
+    user: /user/id,
+    scope: /scope,
+    created: /now,
+    token: secureToken 256,
+    expires: /now + 43200
+  }
+  / = /session/id then {{
+    /token/session = /session/id
+  }}
+  mutation {
+    createOauthAccessToken(input: /token) { id }
+  }
 
-# Add refresh token for confidential clients.
-/ = (/client/type == "confidential") then {{
-  /token/refresh_token = /refresh_token/token
+  # Always create the refresh token. We use it to remember the login.
+  /refresh_token = {
+    client: /client/id,
+    user: /user/id,
+    scope: /scope,
+    created: /now,
+    token: secureToken 256,
+    expires: /now + 432000
+  }
+
+  # Confidential clients (often API integrations) must use the refresh token within 30 days.
+  / = (/client/type == "confidential") then {{
+    /refresh_token/expires = /now + 2592000
+  }}
+
+  mutation {
+    createOauthRefreshToken(input: /refresh_token) { id }
+  }
+
+  # Add refresh token for confidential clients.
+  / = (/client/type == "confidential") then {{
+    /token/refresh_token = /refresh_token/token
+  }}
+}}
+
+/ = ((/client/type == "confidential") and (!/token/refresh_token)) then {{
+  # We re-used the access token. Also get the refresh token for confidential clients.
+  /token/refresh_token = query {
+    listOauthRefreshToken(filters: {
+      client: /client/id,
+      user: /user/id,
+      scope: /scope,
+      expires_gt: /now + 21600
+    }, limit: 1) {
+      items {
+        token
+      }
+    }
+  } pick /listOauthRefreshToken/items/0/token
 }}
 
 / = /token
