@@ -15,6 +15,7 @@ class Context {
     this.root = root || cloned;
     this.path = path;
     this.level = level;
+    this.unassignedValue = undefined;
   }
 }
 
@@ -251,9 +252,11 @@ class Script {
   }
 
   async runCommand(command, context) {
+    context.unassignedValue = undefined;
     const config = this.unpackAst(command);
     const value = await this.runExpression(config.expression[0], context);
     if (!config.assignment) {
+      context.unassignedValue = value || null;
       return context;
     }
     const [pointer, operator] = config.assignment.map(item => item.text || '/' + JSON.parse(item.children[0].text));

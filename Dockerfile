@@ -14,7 +14,10 @@ RUN apk update \
  && find . -type f -iname changelog.md | xargs rm \
  && find . -type f -iname history.md | xargs rm \
  && find . -type f -iname license | xargs rm \
- && rm /var/cache/apk/*
+ && rm /var/cache/apk/* \
+ && echo '#!/bin/ash' > /usr/bin/repl \
+ && echo 'node /app/core/repl.js' >> /usr/bin/repl \
+ && chmod +x /usr/bin/repl
 
 ADD . /app
 

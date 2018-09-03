@@ -11,6 +11,6 @@ class Application {
 }
 
 Application.singleton = true;
-Application.require = ['GraphqlLinks', 'Endpoints', 'Static', 'Log'];
+Application.require = ['GraphqlLinks', 'Endpoints', 'Static', 'Log', 'Repl'];
 
 module.exports = Application;
