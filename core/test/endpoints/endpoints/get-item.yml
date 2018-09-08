@@ -1,0 +1,15 @@
+id: GetItem
+path:
+  - /item/{id}
+method: GET
+script: Echo
+params:
+  id:
+    name: Item ID
+    in: path
+    schema:
+      type: string
+output:
+  mime: application/json
+  schema:
+    type: object

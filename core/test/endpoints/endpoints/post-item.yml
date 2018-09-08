@@ -1,0 +1,15 @@
+id: PostItem
+path:
+  - /item/{id}
+method: POST
+script: Echo
+params:
+  title:
+    name: Title
+    in: body
+    schema:
+      type: string
+output:
+  mime: application/json
+  schema:
+    type: object

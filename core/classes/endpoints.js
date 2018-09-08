@@ -109,14 +109,34 @@ class Endpoints extends ConfigFiles {
     const params = Object.keys(route.params).reduce((prev, name) => {
       const item = route.params[name];
       let value;
-      // @todo: Add values from path.
+      if (item.in === 'path') {
+        const paths = Array.isArray(route.path) ? route.path : [route.path];
+        value = paths.reduce((prev, path) => {
+          const pattern = path.split(/\{[^}]+\}/).map(escapeRegex).join('([^/]+)');
+          const parts = ctx.request.path.match(pattern);
+          if (parts) {
+            const names = path.match(pattern);
+            for (let i = 1; i < names.length; ++i) {
+              if (name === names[i].substring(1, names[i].length - 1)) {
+                return parts[i];
+              }
+            }
+          }
+          return prev;
+        }, null);
+      }
       if (item.in === 'query') {
         value = ctx.request.query[name];
       }
       if (item.in === 'body' && typeof ctx.request.body === 'object' && ctx.request.body !== null) {
         value = ctx.request.body[name];
       }
+      const type = (item.schema || {}).type;
       value = typeof value === 'undefined' ? null : value;
+      if (value) {
+        value = type === 'integer' || type === 'float' ? Number(value) : value;
+        value = type === 'boolean' ? value === '1' || String(value).toLowerCase() === 'true' || String(value).toLowerCase() === 't' : value;
+      }
       return {...prev, [name]: value};
     }, {});
     return {

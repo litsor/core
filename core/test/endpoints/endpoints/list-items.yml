@@ -1,0 +1,25 @@
+id: ListItems
+path:
+  - /item
+method: GET
+script: Echo
+params:
+  title:
+    name: Title
+    in: query
+    schema:
+      type: string
+  limit:
+    name: Limit
+    in: query
+    schema:
+      type: integer
+  unpublished:
+    name: Show unpublished
+    in: query
+    schema:
+      type: boolean
+output:
+  mime: application/json
+  schema:
+    type: object

@@ -47,4 +47,48 @@ describe('Endpoints', () => {
     const contentType = result.headers.get('Content-Type');
     expect(contentType).to.equal('text/html; charset=utf-8');
   });
+
+  it('accepts path arguments', async () => {
+    const result = await fetch('http://localhost:1234/item/123', {
+      headers: {Accept: 'application/json'}
+    });
+    const body = await result.json();
+    expect(body).to.have.property('id', '123');
+  });
+
+  it('accepts query arguments', async () => {
+    const result = await fetch('http://localhost:1234/item?title=Test&limit=10&unpublished=true', {
+      headers: {Accept: 'application/json'}
+    });
+    const body = await result.json();
+    expect(body).to.have.property('title', 'Test');
+    expect(body).to.have.property('limit', 10);
+    expect(body).to.have.property('unpublished', true);
+  });
+
+  it('accepts body arguments from formdata', async () => {
+    const result = await fetch('http://localhost:1234/item/123', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: 'title=Hello%20world'
+    });
+    const body = await result.json();
+    expect(body).to.have.property('title', 'Hello world');
+  });
+
+  it('accepts body arguments from json body', async () => {
+    const result = await fetch('http://localhost:1234/item/123', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: '{"title":"Hello world"}'
+    });
+    const body = await result.json();
+    expect(body).to.have.property('title', 'Hello world');
+  });
 });
