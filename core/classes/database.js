@@ -59,7 +59,9 @@ class Database {
     this.databaseModels[name] = this.client.define(name, fields, {
       tableName: snakeCase(name)
     });
-    await this.databaseModels[name].sync({force: this.recreate});
+    await this.databaseModels[name].sync({force: this.recreate}).catch(err => {
+      this.log.error(`Error synchronizing database: ${err.message}`);
+    });
   }
 
   get(name) {
