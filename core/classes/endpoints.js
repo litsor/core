@@ -164,7 +164,7 @@ class Endpoints extends ConfigFiles {
       return match ? {...prev, [match[1]]: match[2]} : prev;
     }, {});
 
-    let input = {path, headers, cookies, ...params};
+    let input = {path: ctx.request.path, headers, cookies, ...params};
     input = {...input, ...this.input.get(input, route.variables || {})};
 
     const result = (await script.run(input)) || {};
