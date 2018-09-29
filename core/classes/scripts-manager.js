@@ -80,7 +80,7 @@ class ScriptsManager extends ConfigFiles {
     if (annotations.cron) {
       this.crons[id] = new CronJob({
         cronTime: annotations.cron,
-        timezone: annotations.cronTimezone || 'UTC',
+        timeZone: annotations.cronTimezone || 'UTC',
         start: true,
         onTick: run
       });
