@@ -20,16 +20,15 @@ assignment ::= jsonpointer SP* assignment_operator
 
 assignment_operator ::= "[]=" | "=[]" | "+[]" | "-[]" | "+=" | "-=" | "/=" | "*=" | "~" | "="
 
-expression ::= binary_expression | if_statement | query_statement | unary_expression | grouped_expression | value | block
+expression ::= binary_expression | query_statement | unary_expression | grouped_expression | value | block
 
-if_statement ::= "if" WS* "(" expression ")" WS* expression_nb (WS* "else" WS* expression)?
 query_statement ::= query_type WS* query
 query_type ::= "query" | "mutation"
 
 grouped_expression ::= "(" expression ")" {fragment=true}
 unary_expression ::= unary_operator SP* expression {pin=2}
 binary_expression ::= expression_nb SP* binary_operator SP* expression {pin=3}
-expression_nb ::= if_statement | query_statement | unary_expression | grouped_expression | value | block
+expression_nb ::= query_statement | unary_expression | grouped_expression | value | block
 
 unary_operator ::= method_name | "!"
 binary_operator ::= method_name | "+" | "-" | "*" | "/" | "^" | "===" | "==" | "!==" | "!=" | "<=" | ">=" | "<" | ">"

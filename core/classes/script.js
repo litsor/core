@@ -151,16 +151,6 @@ class Script {
     return callback(leftOperand, rightOperand, context);
   }
 
-  async runIf(expression, thenExpression, elseExpression, context) {
-    if (await this.runExpression(expression, context)) {
-      return this.runExpression(thenExpression, context);
-    }
-    if (elseExpression) {
-      return this.runExpression(elseExpression, context);
-    }
-    return false;
-  }
-
   async getParamDefinitons(field, graphqlType, variables, params, context) {
     const paramDefs = [];
     for (let i = 0; i < field.param.length; ++i) {
@@ -228,8 +218,6 @@ class Script {
         case 'expression':
         case 'expression_nb':
           return this.runExpression(children[0], context);
-        case 'if_statement':
-          return this.runIf(children[0], children[1], children.length > 2 ? children[2] : false, context);
         case 'script':
           subcontext = new Context(context.data, context.root, context.path + '/???', context.level + 1);
           for (let i = 0; i < children.length; ++i) {

@@ -253,24 +253,6 @@ describe('Script', () => {
     expect(output).to.deep.equal({a: 2, b: 2});
   });
 
-  it('can use if statement with simple expressions', async () => {
-    script.load(`/a = if (false) 3 else 5\n/b = if (true) 3 else 5`);
-    const output = (await script.run({}));
-    expect(output).to.deep.equal({a: 5, b: 3});
-  });
-
-  it('can use if statement without else part', async () => {
-    script.load(`/a = if (false) 3\n/b = if (true) 3`);
-    const output = (await script.run({}));
-    expect(output).to.deep.equal({a: false, b: 3});
-  });
-
-  it('can use if with code block', async () => {
-    script.load(`/a = if (true) {{/a = 1\n/b = 2}}`);
-    const output = (await script.run({}));
-    expect(output).to.deep.equal({a: {a: 1, b: 2}});
-  });
-
   it('can use strings for jsonpointers', async () => {
     script.load(`/ = /"$"`);
     const output = (await script.run({$: 24}));
