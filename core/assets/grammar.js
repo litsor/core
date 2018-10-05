@@ -34,13 +34,12 @@ unary_operator ::= method_name | "!"
 binary_operator ::= method_name | "+" | "-" | "*" | "/" | "^" | "===" | "==" | "!==" | "!=" | "<=" | ">=" | "<" | ">"
 method_name ::= [a-z][a-zA-Z0-9]*
 
-value ::= json | root_jsonpointer | jsonpointer
+value ::= json | jsonpointer
 
 /* https://tools.ietf.org/html/rfc6901 */
 /* Non-printable and UTF8 characters are not allowed */
 jsonpointer    ::= jsonpointer_ne | "/" string | "/"
 jsonpointer_ne    ::= "/" name_fragment ( "/" name_fragment )* {fragment=true}
-root_jsonpointer    ::= "/" jsonpointer
 
 /* https://www.ietf.org/rfc/rfc4627.txt */
 json                ::= false | null | true | object | array | number | string

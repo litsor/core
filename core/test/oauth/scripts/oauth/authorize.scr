@@ -63,8 +63,11 @@
       created: /now,
       token: secureToken 256,
       expires: /now + {{
-        / = 43200
-        / = //remember then 604800
+        /expires = 43200
+        / = /remember then {{
+          /expires = 604800
+        }}
+        / = /expires
       }}
     }
 

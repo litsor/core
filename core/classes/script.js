@@ -9,10 +9,9 @@ const grammar = require('../assets/grammar');
 const parser = new Grammars.Custom.Parser(grammar);
 
 class Context {
-  constructor(data, root, path = '', level = 0) {
+  constructor(data, path = '', level = 0) {
     const cloned = cloneDeep(data);
     this.data = cloned;
-    this.root = root || cloned;
     this.path = path;
     this.level = level;
     this.unassignedValue = undefined;
@@ -117,9 +116,6 @@ class Script {
           return clone(context.data);
         }
         return clone(get(typeof context.data === 'object' && context !== null ? context.data : {}, pointer));
-      case 'root_jsonpointer':
-        pointer = children[0].text || '/' + JSON.parse(children[0].children[0].text);
-        return clone(get(context.root, pointer));
       case 'json':
       default:
         return this.getJson(children[0], context);
@@ -140,7 +136,7 @@ class Script {
       const operand = source => data => {
         let expressionContext = context;
         if (typeof data !== 'undefined') {
-          expressionContext = new Context(data, context.root, context.path, context.level + 1);
+          expressionContext = new Context(data, context.path, context.level + 1);
         }
         return this.runExpression(source.children[0], expressionContext);
       };
@@ -219,7 +215,7 @@ class Script {
         case 'expression_nb':
           return this.runExpression(children[0], context);
         case 'script':
-          subcontext = new Context(context.data, context.root, context.path + '/???', context.level + 1);
+          subcontext = new Context(context.data, context.path + '/???', context.level + 1);
           for (let i = 0; i < children.length; ++i) {
             subcontext = await this.runCommand(children[i], subcontext);
           }
@@ -251,10 +247,6 @@ class Script {
     const current = pointer === '/' ? context.data : get(context.data, pointer);
     const setData = pointer === '/' ? data => {
       context.data = data;
-      if (context.level === 0) {
-        // Also update root reference, but make sure that this is an object.
-        context.root = typeof data === 'object' && !Array.isArray(data) && data !== null ? data : {};
-      }
     } : data => set(context.data, pointer, data);
     let list;
     switch (operator) {

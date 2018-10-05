@@ -17,11 +17,14 @@ module.exports = {
 
   tests: [],
 
-  binary: async (left, right) => {
+  binary: async (left, right, {}, context) => {
     const value = await left();
     if (!Array.isArray(value)) {
       throw new TypeError('Left operand for map must be an array');
     }
-    return Promise.all(value.map(item => right(item)));
+    return Promise.all(value.map(item => right({
+      ...context.data,
+      item
+    })));
   }
 };

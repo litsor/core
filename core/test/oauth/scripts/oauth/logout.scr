@@ -19,7 +19,7 @@
       }
     } pick /listOauthAccessToken/items
     /tokens map mutation {
-      deleteOauthAccessToken(id: /id) { id }
+      deleteOauthAccessToken(id: /item/id) { id }
     }
     mutation {
       deleteUserSession(id: /sessionId) { id }
@@ -41,7 +41,7 @@
     }
   } pick /tokens/items
   /tokens map mutation {
-    deleteOauthAccessToken (id: /id) { id }
+    deleteOauthAccessToken (id: /item/id) { id }
   }
 }}
 

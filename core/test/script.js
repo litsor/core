@@ -45,10 +45,22 @@ const Methods = {
       return callback;
     }
     if (name === 'filter') {
-      const callback = async (left, right) => {
-        const items = await left();
-        const promises = items.map(async value => ({value, keep: await right(value)}));
-        return (await Promise.all(promises)).filter(item => item.keep).map(item => item.value);
+      const callback = async (input, filter, context) => {
+        let output = [];
+        const items = await input();
+        for (let i = 0; i < items.length; ++i) {
+          if (typeof items[i] === 'undefined') {
+            continue;
+          }
+          const keep = await filter({
+            ...context.data,
+            item: items[i]
+          });
+          if (keep) {
+            output.push(items[i]);
+          }
+        }
+        return output;
       };
       callback.lazy = true;
       return callback;
@@ -265,89 +277,10 @@ describe('Script', () => {
     expect(output).to.deep.equal({$: 34});
   });
 
-  it('can use the root pointer', async () => {
-    script.load(`/ = //a`);
-    const output = (await script.run({a: 34}));
-    expect(output).to.equal(34);
-  });
-
-  it('can use the root to read from main scope', async () => {
-    // We override /a in the block scope, but we can still get the original value with //a.
-    script.load(`/ = {{/a = 2\n/ = //a}}`);
-    const output = (await script.run({a: 1}));
-    expect(output).to.equal(1);
-  });
-
-  it('can use the root to read from main scope in a nested block', async () => {
-    // Verify that the root pointer reads from the main scope and not the parent scope.
-    script.load(`/ = {{/a = 2\n/ = {{/ = //a}}}}`);
-    const output = (await script.run({a: 1}));
-    expect(output).to.equal(1);
-  });
-
-  it('can use the root to read newly created values', async () => {
-    // Make sure that the root is not a copy of the initial script values.
-    script.load(`/a = 3\n/ = //a`);
-    const output = (await script.run({}));
-    expect(output).to.equal(3);
-  });
-
-  it('will update root reference on root assignment', async () => {
-    // We overwrite the root. Make sure that the context root reference is updated as well.
-    script.load(`/a = 3\n/ = {{/a = 4}}\n/ = //a`);
-    const output = (await script.run({}));
-    expect(output).to.equal(4);
-  });
-
-  it('will retain root reference on root assignment in code block', async () => {
-    script.load(`
-      /a = 3
-      / = {{
-        / = {{/b = 4}}
-        / = //a
-      }}
-    `);
-    const output = (await script.run({}));
-    expect(output).to.equal(3);
-  });
-
-  it('will retain root reference on root assignment in function block', async () => {
-    script.load(`
-      /a = 3
-      / = [1,2,3] filter {{
-        / = {
-          b: /
-        }
-        / = /b >= //a
-      }}
-    `);
-    const output = (await script.run({}));
-    expect(output).to.deep.equal([3]);
-  });
-
-  it('can use the root to read newly created values from a nested block', async () => {
-    // Make sure that the root is not a copy of the initial script values.
-    script.load(`/a = 3\n/ = {{/ = //a}}`);
-    const output = (await script.run({}));
-    expect(output).to.equal(3);
-  });
-
-  it('can use root inside function arguments', async () => {
-    script.load(`/a = 3\n/ = [1,2,3,4] filter / >= //a`);
-    const output = (await script.run({}));
-    expect(output).to.deep.equal([3, 4]);
-  });
-
-  it('can use root inside code blocks', async () => {
-    script.load(`/a = 3\n/ = [1,2,3,4] filter {{/ = / >= //a}}`);
-    const output = (await script.run({}));
-    expect(output).to.deep.equal([3, 4]);
-  });
-
   it('can use lazy evaluation for repetitive evaluation in a new scope', async () => {
-    // The '/ >= //b' part is evaluated for each item in the list /a.
+    // The '/item >= /b' part is evaluated for each item in the list /a.
     // This expression is evaluated in a new context with one of the items set as its value.
-    script.load(`/ = /a filter / >= //b`);
+    script.load(`/ = /a filter /item >= /b`);
     const output = (await script.run({
       a: [1, 2, 3, 4],
       b: 2
