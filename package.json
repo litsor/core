@@ -1,8 +1,8 @@
 {
-  "name": "restapir",
-  "version": "2.0.0",
+  "name": "litsor",
+  "version": "1.0.0",
   "description": "",
-  "main": "restapir.js",
+  "main": "litsor.js",
   "scripts": {
     "test": "mocha -b -t 5s core/test/*.js && xo core",
     "coverage": "nyc mocha -b -t 5s core/test/*.js"
