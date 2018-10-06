@@ -23,8 +23,6 @@ class Graphql {
     router.post('/graphql', this.handleRequest.bind(this));
     router.get('/graphql', this.handleRequest.bind(this));
 
-    router.get('/graphiql', graphiqlKoa({endpointURL: '/graphql'}));
-
     this.http.use('graphql', 2, router.routes());
   }
 
