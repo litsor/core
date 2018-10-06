@@ -122,11 +122,11 @@
           code: secureToken 256
         }) { id code }
       } pick /code
-      /redirect_uri = /redirect_uri + "?code=" + (urlencode /authorizationCode/code) + "&state=" + (urlencode /state)
+      /redirect_uri = /redirect_uri + "?code=" + (urlencoded /authorizationCode/code) + "&state=" + (urlencoded /state)
     }}
     / = (/response_type == "token") then {{
       /token = / script "OauthCreateToken"
-      /redirect_uri = /redirect_uri + "#token=" + (urlencode /token/token) + "&state=" + (urlencode /state)
+      /redirect_uri = /redirect_uri + "#token=" + (urlencoded /token/token) + "&state=" + (urlencoded /state)
     }}
     /data/status = 302
     /data/body = "Redirecting..."

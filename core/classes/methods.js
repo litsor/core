@@ -20,7 +20,9 @@ class Methods {
   }
 
   async readFiles(changedFile) {
-    const files = await globby(['core/methods/**/*.js', this.methodsDir + '/**/*.js']);
+    const files = (await globby(['core/methods/**/*.js', this.methodsDir + '/**/*.js'])).filter(filename => {
+      return !filename.endsWith('.test.js');
+    });
     const output = {};
     const promises = [];
     files.forEach(file => {
@@ -31,7 +33,7 @@ class Methods {
         const id = loaded.id || camelCase(name);
         this.methods[id] = loaded;
         if (file === changedFile) {
-          promises.push(this.methodTester.test(this.methods[id]));
+          promises.push(this.methodTester.test(this.methods[id], filename, false));
         }
       } catch (err) {
         this.log.error(`Unable to load ${name}: ${err.message}`);
@@ -44,12 +46,11 @@ class Methods {
   async startup() {
     await this.readFiles();
     if (this.config.get('/reload', false)) {
-      let first = true;
       const callback = changedFile => {
-        if (first) {
-          first = false;
+        if (typeof changedFile !== 'string') {
           return;
         }
+        changedFile = changedFile = changedFile.replace(/\.test\.js$/, '.js');
         this.log.info('Reloading methods');
         this.readFiles(changedFile);
       };

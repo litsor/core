@@ -1,6 +1,8 @@
 /* eslint-env node, mocha */
 'use strict';
 
+const {resolve} = require('path');
+const {camelCase} = require('lodash');
 const chai = require('chai');
 const globby = require('globby');
 
@@ -8,7 +10,7 @@ const Container = require('../classes/container');
 
 const expect = chai.expect;
 
-describe.skip('Methods', () => {
+describe('Methods', () => {
   let container;
   let Methods;
   let MethodTester;
@@ -25,7 +27,6 @@ describe.skip('Methods', () => {
       'recreate-db': true,
       'secret-key': 'test'
     });
-    await container.get('Endpoints');
 
     Methods = await container.get('Methods');
     MethodTester = await container.get('MethodTester');
@@ -35,14 +36,27 @@ describe.skip('Methods', () => {
     await container.shutdown();
   });
 
-  globby.sync('core/methods/**/*.js').forEach(filename => {
+  globby.sync('core/methods/**/*.js').filter(filename => {
+    return !filename.endsWith('.test.js');
+  }).forEach(filename => {
     const name = filename.match(/\/([^/]+)\.js$/)[1];
     it(name, async () => {
-      const method = await Methods.get(name);
-      if (method.tests.length === 0) {
-        throw new Error(`Method ${name} does not have any tests`);
-      }
-      const passed = await MethodTester.test(method, true);
+      const operators = {
+        not: '!',
+        equal: '==',
+        notEqual: '!=',
+        greaterThan: '>',
+        greaterThanEqual: '>=',
+        lessThan: '<',
+        lessThanEqual: '<=',
+        divide: '/',
+        multiply: '*',
+        plus: '+',
+        minus: '-'
+      };
+      const methodName = camelCase(name);
+      const method = await Methods.get(operators[methodName] || methodName);
+      const passed = await MethodTester.test(method, resolve(filename), true);
       expect(passed).to.equal(true);
     });
   });

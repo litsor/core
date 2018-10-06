@@ -53,6 +53,9 @@ class JsonSchema {
             type: 'array',
             items: {type: 'string'},
             minItems: 1
+          },
+          default: {
+            type: 'string'
           }
         },
         additionalProperties: false,
@@ -73,6 +76,9 @@ class JsonSchema {
           },
           maximum: {
             type: 'number'
+          },
+          default: {
+            type: 'number'
           }
         },
         additionalProperties: false,
@@ -87,6 +93,9 @@ class JsonSchema {
           },
           title: {
             type: 'string'
+          },
+          default: {
+            type: 'boolean'
           }
         },
         additionalProperties: false,
@@ -98,6 +107,9 @@ class JsonSchema {
           type: {
             type: 'string',
             enum: ['null']
+          },
+          default: {
+            type: 'null'
           }
         },
         additionalProperties: false,
@@ -123,6 +135,9 @@ class JsonSchema {
           maxItems: {
             type: 'integer',
             minimum: 0
+          },
+          default: {
+            type: 'array'
           }
         },
         additionalProperties: false,
@@ -154,11 +169,15 @@ class JsonSchema {
             }, {
               $ref: '#'
             }]
+          },
+          default: {
+            type: 'object'
           }
         },
         additionalProperties: false,
         required: ['type']
       }, {
+        // Reference.
         type: 'object',
         properties: {
           title: {
@@ -172,8 +191,8 @@ class JsonSchema {
         additionalProperties: false
       }],
       definitions: {
-        Script: {
-          type: 'array'
+        JsonSchema: {
+          $ref: '#'
         }
       }
     };

@@ -3,13 +3,14 @@
 
 const {cloneDeep, isEqual} = require('lodash');
 const validator = require('is-my-json-valid');
+const reload = require('require-reload')(require);
 
 class MethodTester {
   constructor({JsonSchema}) {
     this.jsonSchema = JsonSchema;
   }
 
-  async runTest(method, test) {
+  async runTest(method, {startupTest, shutdownTest, mockups}, test) {
     const type = typeof test.input === 'undefined' ? 'binary' : 'unary';
 
     const inputs = type === 'unary' ? ['input'] : ['left', 'right'];
@@ -17,13 +18,17 @@ class MethodTester {
     for (let i = 0; i < inputs.length; ++i) {
       const input = inputs[i];
       inputData[input] = method.lazy ? test[input] : cloneDeep(test[input]);
-      const inputSchemaValidation = this.jsonSchema.validate(method[`${input}Schema`], true);
+      const inputSchema = method[`${input}Schema`];
+      if (inputSchema) {
+        inputSchema.title = inputSchema.title || input;
+      }
+      const inputSchemaValidation = this.jsonSchema.validate(inputSchema, true);
       if (inputSchemaValidation !== true) {
         console.log('Invalid ' + input + ' schema: ' + inputSchemaValidation);
         return false;
       }
       if (!method.lazy) {
-        const validateInput = validator(method[`${input}Schema`]);
+        const validateInput = validator(inputSchema);
         if (!validateInput(test[input])) {
           console.log('Test input does not pass input schema: ' + validateInput.error);
           return false;
@@ -38,15 +43,17 @@ class MethodTester {
     let raisedError = false;
     let output;
     try {
-      await (method.startupTest || (async () => {})).bind(method)();
+      await (startupTest || (async () => {})).bind(method)();
       if (type === 'unary') {
-        output = await method.unary(inputData.input, method.mockups, context);
+        output = await method.unary(inputData.input, mockups || {}, context);
       } else {
-        output = await method.binary(inputData.left, inputData.right, method.mockups, context);
+        const left = method.lazy && typeof inputData.left !== 'function' ? () => inputData.left : inputData.left;
+        const right = method.lazy && typeof inputData.right !== 'function' ? () => inputData.right : inputData.right;
+        output = await method.binary(left, right, mockups || {}, context);
       }
-      await (method.shutdownTest || (async () => {})).bind(method)();
+      await (shutdownTest || (async () => {})).bind(method)();
     } catch (err) {
-      await (method.shutdownTest || (async () => {})).bind(method)();
+      await (shutdownTest || (async () => {})).bind(method)();
       raisedError = true;
       if (typeof test.error === 'function') {
         // Exceptions must be validated by a callback.
@@ -82,15 +89,26 @@ class MethodTester {
     return true;
   }
 
-  async test(method, quiet) {
+  async test(method, filename, quiet) {
+    let tests;
+    try {
+      tests = reload(filename.replace(/\.js$/, '.test.js'));
+      if (!Array.isArray(tests.tests)) {
+        throw new Error('Missing tests');
+      }
+    } catch (err) {
+      console.log('No test found for ' + method.name);
+      return false;
+    }
+
     let passed = 0;
     let failed = 0;
-    const count = method.tests.length;
+    const count = tests.tests.length;
     for (let i = 0; i < count; ++i) {
-      const test = method.tests[i];
+      const test = tests.tests[i];
       let result;
       try {
-        result = await this.runTest(method, test);
+        result = await this.runTest(method, tests, test);
       } catch (err) {
         console.log(err);
         result = false;
@@ -98,7 +116,7 @@ class MethodTester {
       if (result) {
         ++passed;
       } else {
-        console.log(`Failed: ${test.title}`);
+        console.log(`Failed: cannot ${test.can}`);
         ++failed;
       }
     }
