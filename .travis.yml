@@ -10,4 +10,4 @@ before_install:
   - cd core && npm install && cd ..
   - mkdir data
 after_script:
-  - semantic_release
+  - npx semantic_release
