@@ -23,7 +23,7 @@ module.exports = {
   },
 
   tests: [{
-    title: 'Read object',
+    can: 'read object',
     input: {id: '1', model: 'Item'},
     output: {id: '1', title: 'Test'},
     outputSchema: {

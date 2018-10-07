@@ -17,7 +17,7 @@ module.exports = {
   },
 
   tests: [{
-    title: 'Delete object',
+    can: 'delete object',
     input: {id: '1', model: 'Item'},
     output: {id: '1', title: 'Test'},
     inputSchema: {

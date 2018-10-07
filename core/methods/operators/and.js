@@ -7,17 +7,8 @@ module.exports = {
   cache: Infinity,
   lazy: true,
 
-  inputSchema: {
-    type: 'object'
-  },
-
-  outputSchema: () => {
-    return {type: 'boolean'};
-  },
-
-  requires: [],
-
-  tests: [],
+  leftSchema: {},
+  rightSchema: {},
 
   binary: async (left, right) => {
     const value = await left();

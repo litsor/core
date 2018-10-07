@@ -4,13 +4,13 @@ const moment = require('moment');
 
 module.exports = {
   tests: [{
-    title: 'Can get current date',
+    can: 'get current date',
     input: {},
     output: () => {
       return moment().format('YYYY-MM-DD');
     }
   }, {
-    title: 'Can get current time in UTC',
+    can: 'get current time in UTC',
     input: {
       format: 'HH:mm'
     },
@@ -18,7 +18,7 @@ module.exports = {
       return moment().tz('UTC').format('HH:mm');
     }
   }, {
-    title: 'Can get current time in Paris',
+    can: 'get current time in Paris',
     input: {
       format: 'HH:mm'
     },
@@ -26,7 +26,7 @@ module.exports = {
       return moment().tz('Europe/Paris').format('HH:mm');
     }
   }, {
-    title: 'Can get unix timestamp',
+    can: 'get unix timestamp',
     input: {
       format: 'X'
     },

@@ -2,8 +2,10 @@
 
 module.exports = {
   name: 'Type',
-  requires: [],
-  tests: [],
+  description: 'Get type of input',
+
+  inputSchema: {},
+
   unary: input => {
     if (input === null || typeof input === 'undefined') {
       return 'null';

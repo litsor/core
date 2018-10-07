@@ -7,6 +7,10 @@ const NodeMailerHtmlToText = require('nodemailer-html-to-text');
 module.exports = {
   name: 'Mail',
 
+  inputSchema: {
+    type: 'object'
+  },
+
   unary: async options => {
     options = defaults(options, {
       from: 'info@localhost',

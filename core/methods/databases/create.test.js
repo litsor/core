@@ -14,7 +14,7 @@ module.exports = {
   },
 
   tests: [{
-    title: 'Create object',
+    can: 'create object',
     input: {data: {title: 'Test'}, model: 'Item'},
     output: {id: '1', title: 'Test'},
     inputSchema: {

@@ -10,7 +10,7 @@ module.exports = {
   },
 
   tests: [{
-    title: 'Can decrypt data',
+    can: 'decrypt data',
     input: 'cipher',
     output: 'original'
   }]

@@ -7,6 +7,9 @@ let client;
 module.exports = {
   name: 'Redis',
 
+  leftSchema: {},
+  rightSchema: {type: 'string'},
+
   binary: (input, command) => {
     if (!client) {
       client = Redis.createClient('redis://redis');

@@ -31,7 +31,7 @@ module.exports = {
   },
 
   tests: [{
-    title: 'Can select all results',
+    can: 'select all results',
     input: {
       model: 'Post',
       selections: {count: {}, items: {}}

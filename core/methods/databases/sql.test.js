@@ -10,7 +10,7 @@ module.exports = {
   },
 
   tests: [{
-    title: 'Execute query',
+    can: 'execute query',
     left: {},
     right: 'SELECT * FROM tablename',
     output: []

@@ -7,7 +7,7 @@ const pbkdf2 = promisify(Crypto.pbkdf2);
 
 module.exports = {
   tests: [{
-    title: 'Can generate hash',
+    can: 'generate hash',
     input: 'Welcome01!!',
     output: async data => {
       // The result will be 81 bytes; 1 for the version, 16 for salt and 64 for the derived key.

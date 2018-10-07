@@ -21,7 +21,7 @@ module.exports = {
   },
 
   tests: [{
-    title: 'can execute request',
+    can: 'execute request',
     input: {
       url: 'http://localhost:8372/list-pages'
     },
@@ -33,7 +33,7 @@ module.exports = {
       return true;
     }
   }, {
-    title: 'will parse JSON output on request',
+    can: 'parse JSON output on request',
     input: {
       url: 'http://localhost:8372/feed.json'
     },
@@ -42,7 +42,7 @@ module.exports = {
       return true;
     }
   }, {
-    title: 'will return cookies on request',
+    can: 'return cookies on request',
     input: {
       url: 'http://localhost:8372/cookie/a'
     },
@@ -51,7 +51,7 @@ module.exports = {
       return true;
     }
   }, {
-    title: 'can provide cookies for request',
+    can: 'provide cookies for request',
     input: {
       url: 'http://localhost:8372/cookie/b',
       cookies: {
@@ -63,7 +63,7 @@ module.exports = {
       return true;
     }
   }, {
-    title: 'can post request body',
+    can: 'post request body',
     input: {
       method: 'POST',
       url: 'http://localhost:8372/echo',
