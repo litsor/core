@@ -1,0 +1,5 @@
+
+publish:
+  - "@semantic-release/github"
+
+tagFormat: "${version}"
