@@ -6,7 +6,7 @@ class Application {
   }
 
   async startup() {
-    this.log.info('Restapir is running');
+    this.log.info('Litsor is running');
   }
 }
 

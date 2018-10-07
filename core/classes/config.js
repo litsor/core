@@ -9,7 +9,7 @@ class Config {
   }
 
   startup() {
-    this.config = rc('restapir', {
+    this.config = rc('litsor', {
       port: 80
     });
   }
