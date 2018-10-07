@@ -20,7 +20,7 @@ describe('CRUD', () => {
     config.set({
       port: 1234,
       configDir: 'core/test/crud',
-      database: 'mysql:root:password@127.0.0.1/litsor',
+      database: process.env.LITSOR_DATABASE || 'mysql:root:password@127.0.0.1/litsor',
       'recreate-db': true,
       'secret-key': 'test'
     });
