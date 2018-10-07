@@ -8,3 +8,6 @@ env:
 before_install:
   - mysql -e 'CREATE DATABASE litsor;'
   - cd core && npm install && cd ..
+  - mkdir data
+after_script:
+  - semantic_release

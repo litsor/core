@@ -1,11 +1,12 @@
 {
   "name": "litsor",
-  "version": "1.0.0",
+  "version": "0.0.0-development",
   "description": "",
   "main": "litsor.js",
   "scripts": {
-    "test": "mocha -b -t 5s core/test/*.js && xo core",
-    "coverage": "nyc mocha -b -t 5s core/test/*.js"
+    "test": "mocha -b -t 5s core/test/*.js",
+    "coverage": "nyc mocha -b -t 5s core/test/*.js",
+    "semantic-release": "semantic-release"
   },
   "author": "",
   "license": "ISC",
@@ -28,6 +29,14 @@
   },
   "devDependencies": {
     "mocha": "^5.0.4",
-    "nyc": "^11.6.0"
+    "nyc": "^11.6.0",
+    "semantic-release": "^15.9.17"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/litsor/core.git"
+  },
+  "release": {
+    "publish": ["@semantic-release/github"]
   }
 }
