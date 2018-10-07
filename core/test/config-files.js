@@ -30,7 +30,7 @@ describe('Config Files', () => {
     config.set({
       port: 1234,
       configDir: dir,
-      database: 'mysql:root:password@127.0.0.1/restapir',
+      database: 'mysql:root:password@127.0.0.1/litsor',
       'recreate-db': true,
       'secret-key': 'test',
       reload: true
