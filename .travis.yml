@@ -7,4 +7,4 @@ env:
   - LITSOR_DATABASE="mysql:root:@127.0.0.1/litsor"
 before_install:
   - mysql -e 'CREATE DATABASE litsor;'
-  - cd core && npm install
+  - cd core && npm install && cd ..
