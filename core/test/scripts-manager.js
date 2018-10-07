@@ -36,13 +36,13 @@ describe('Scripts manager', () => {
   });
 
   it('will run scripts on startup', async () => {
-    await new Promise(resolve => setInterval(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500));
     expect(add1.getValue('startup')).to.equal(1);
   });
 
   it('will run cron', async () => {
     const before = add1.getValue('cron');
-    await new Promise(resolve => setInterval(resolve, 1010));
+    await new Promise(resolve => setTimeout(resolve, 1010));
     const after = add1.getValue('cron');
     expect(after > before).to.equal(true);
   });
