@@ -1,3 +1,11 @@
 # StorageList
 
 / = (hasScript "StorageList" + /model) then / script "StorageList" + /model
+
+/ = /headers then {{
+  /scope ~ /model + ":*:read"
+  / = (/scope != "*") then {{
+    /user = / script "LoadUser"
+    / script "RequireScope"
+  }}
+}}

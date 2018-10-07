@@ -1,3 +1,11 @@
 # StorageUpdate
 
 / = (hasScript "StorageUpdate" + /model) then / script "StorageUpdate" + /model
+
+/ = /headers then {{
+  /scope ~ /model + ":" + /id + ":update"
+  / = (/scope != "*") then {{
+    /user = / script "LoadUser"
+    / script "RequireScope"
+  }}
+}}

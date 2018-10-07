@@ -1,3 +1,11 @@
 # StorageCreate
 
 / = (hasScript "StorageCreate" + /model) then / script "StorageCreate" + /model
+
+/ = /headers then {{
+  /scope ~ /model + ":create"
+  / = (/scope != "*") then {{
+    /user = / script "LoadUser"
+    / script "RequireScope"
+  }}
+}}
