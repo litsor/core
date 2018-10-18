@@ -12,7 +12,9 @@ class Static {
   startup() {
     const dataDir = this.config.get('/configDir', 'data');
     const path = resolve(dataDir, 'public');
-    const handler = koaStatic(path, {});
+    const handler = koaStatic(path, {
+      maxage: 86400000
+    });
     this.http.use('static', 10, (ctx, next) => handler(ctx, next));
   }
 
