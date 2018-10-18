@@ -27,13 +27,6 @@ module.exports = {
           }
         }
       }
-    },
-    outputSchema: {
-      type: 'object',
-      properties: {
-        id: {type: 'string', minLength: 1},
-        title: {type: 'string'}
-      }
     }
   }]
 };

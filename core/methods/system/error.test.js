@@ -1,5 +1,9 @@
 'use strict';
 
 module.exports = {
-  tests: []
+  tests: [{
+    can: 'raise error',
+    input: {type: 'BadRequest', message: 'bad'},
+    error: () => true
+  }]
 };

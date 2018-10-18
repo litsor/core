@@ -1,93 +1,13 @@
 'use strict';
 
 module.exports = {
-  id: 'normalizeScope',
   title: 'Normalize scope',
   description: 'Normalize an OAuth scope string',
-  isUnary: true,
-  isBinary: true,
-  cache: Infinity,
 
   inputSchema: {
-    type: 'object',
-    properties: {
-      scope: {
-        title: 'Scope string',
-        type: 'string'
-      },
-      patterns: {
-        title: 'Patterns',
-        type: 'array',
-        items: {
-          title: 'Pattern',
-          type: 'string'
-        }
-      }
-    },
-    required: ['scope'],
-    additionalProperties: false
+    title: 'Scope string',
+    type: 'string'
   },
-
-  outputSchema: inputSchema => {
-    const property = (inputSchema.properties || {}).scope || {};
-    const schema = {type: 'string'};
-    if (property.maxLength) {
-      schema.maxLength = property.maxLength;
-    }
-    return schema;
-  },
-
-  defaults: {
-    scope: '/scope',
-    _output: '/scope'
-  },
-
-  requires: [],
-
-  tests: [{
-    title: 'Will sort scopes',
-    input: {
-      scope: 'a b d c'
-    },
-    output: 'a b c d'
-  }, {
-    title: 'Will filter duplicates',
-    input: {
-      scope: 'a b c c'
-    },
-    output: 'a b c'
-  }, {
-    title: 'Will filter specific scopes covered by more generic scope',
-    input: {
-      scope: 'a b b:34'
-    },
-    output: 'a b'
-  }, {
-    title: 'Will not combine different specific scopes',
-    input: {
-      scope: 'b:3 b:4'
-    },
-    output: 'b:3 b:4'
-  }, {
-    title: 'Will remove other scopes if "*" was provided',
-    input: {
-      scope: 'a b *'
-    },
-    output: '*'
-  }, {
-    title: 'Will not output any scopes when no input scopes are given',
-    input: {
-      scope: ''
-    },
-    output: ''
-  }, {
-    title: 'Will filter scopes not matched by given patterns',
-    input: {
-      scope: 'a b b:3 c:4',
-      patterns: ['b', 'c:*']
-    },
-    output: 'b c:4'
-  }],
 
   unary: async scope => {
     // @todo: create a binary variant with patterns

@@ -3,7 +3,6 @@
 module.exports = {
   title: 'Then',
   description: 'Then',
-  cache: Infinity,
   lazy: true,
 
   leftSchema: {
@@ -14,19 +13,7 @@ module.exports = {
     title: 'Expression'
   },
 
-  requires: [],
-
-  tests: [{
-    left: () => true,
-    right: () => 'test',
-    output: 'test'
-  }, {
-    left: () => false,
-    right: () => 'test',
-    output: {}
-  }],
-
-  binary: async (left, right, dependencies, context) => {
+  binary: async (left, right, {}, context) => {
     if (await left()) {
       return right();
     }

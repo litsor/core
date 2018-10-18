@@ -5,8 +5,6 @@ const createError = require('http-errors');
 module.exports = {
   title: 'Error',
   description: 'Break the script with an error',
-  isUnary: true,
-  cache: 0,
 
   inputSchema: {
     type: 'object',
@@ -66,22 +64,10 @@ module.exports = {
     additionalProperties: false
   },
 
-  outputSchema: () => {
-    return {};
-  },
-
   defaults: {
     code: 'InternalServerError',
     _output: null
   },
-
-  requires: [],
-
-  tests: [{
-    title: 'Can raise error',
-    input: {type: 'BadRequest', message: 'bad'},
-    error: () => true
-  }],
 
   unary: ({type, message}) => {
     throw new createError[type](message);

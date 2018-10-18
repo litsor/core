@@ -3,52 +3,15 @@
 module.exports = {
   title: 'split',
   description: 'Split string on separator',
-  cache: Infinity,
 
-  inputSchema: {
-    type: 'object',
-    properties: {
-      input: {
-        title: 'Input string',
-        type: 'string'
-      },
-      separator: {
-        title: 'Separator',
-        type: 'string'
-      }
-    },
-    required: ['input', 'separator'],
-    additionalProperties: false
+  leftSchema: {
+    title: 'Input string',
+    type: 'string'
   },
-
-  outputSchema: () => {
-    return {
-      type: 'array',
-      items: {
-        type: 'string'
-      }
-    };
+  rightSchema: {
+    title: 'Separator',
+    type: 'string'
   },
-
-  requires: [],
-
-  tests: [{
-    title: 'Split string',
-    input: {
-      input: 'first, second',
-      separator: ', '
-    },
-    inputSchema: {
-      type: 'string'
-    },
-    output: ['first', 'second'],
-    outputSchema: {
-      type: 'array',
-      items: {
-        type: 'string'
-      }
-    }
-  }],
 
   binary: (input, separator) => {
     return input.split(separator);

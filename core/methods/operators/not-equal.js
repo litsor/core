@@ -9,13 +9,5 @@ module.exports = {
 
   inputSchema: {},
 
-  outputSchema: () => {
-    return {type: 'boolean'};
-  },
-
-  requires: [],
-
-  tests: [],
-
   binary: (left, right) => left !== right
 };

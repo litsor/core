@@ -8,13 +8,5 @@ module.exports = {
 
   inputSchema: {},
 
-  outputSchema: () => {
-    return {};
-  },
-
-  requires: [],
-
-  tests: [],
-
   unary: operand => Math.round(operand)
 };

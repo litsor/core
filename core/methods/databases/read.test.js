@@ -25,12 +25,6 @@ module.exports = {
   tests: [{
     can: 'read object',
     input: {id: '1', model: 'Item'},
-    output: {id: '1', title: 'Test'},
-    outputSchema: {
-      type: 'object',
-      properties: {
-        id: {type: 'string', minLength: 1}
-      }
-    }
+    output: {id: '1', title: 'Test'}
   }]
 };

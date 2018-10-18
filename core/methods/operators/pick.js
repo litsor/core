@@ -9,14 +9,6 @@ module.exports = {
 
   inputSchema: {},
 
-  outputSchema: () => {
-    return {};
-  },
-
-  requires: [],
-
-  tests: [],
-
   binary: async (left, right) => {
     return right(await left());
   }

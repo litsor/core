@@ -30,13 +30,6 @@ module.exports = {
         id: {type: 'string'},
         model: {type: 'string'}
       }
-    },
-    outputSchema: {
-      type: 'object',
-      properties: {
-        id: {type: 'string', minLength: 1},
-        title: {type: 'string'}
-      }
     }
   }]
 };

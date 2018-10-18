@@ -1,5 +1,17 @@
 'use strict';
 
 module.exports = {
-  tests: []
+  mockups: {
+    Log: {
+      log(_) {}
+    }
+  },
+
+  tests: [{
+    can: 'write to log',
+    input: {
+      severity: 'debug',
+      message: 'Test'
+    }
+  }]
 };

@@ -11,14 +11,6 @@ module.exports = {
     type: 'object'
   },
 
-  outputSchema: () => {
-    return {type: 'boolean'};
-  },
-
-  requires: [],
-
-  tests: [],
-
   binary: async (left, right) => {
     const value = await left();
     return value ? value : right();

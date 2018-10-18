@@ -9,13 +9,5 @@ module.exports = {
 
   inputSchema: {},
 
-  outputSchema: () => {
-    return {};
-  },
-
-  requires: [],
-
-  tests: [],
-
   binary: (left, right) => left + right
 };
