@@ -25,4 +25,4 @@ WORKDIR /app
 
 EXPOSE 80
 
-CMD ["node", "restapir.js"]
+CMD ["node", "litsor.js"]
