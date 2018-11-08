@@ -1,7 +1,7 @@
 'use strict';
 
 const {readFileSync, writeFileSync} = require('fs');
-const {createHash, createCipher, createDecipher, randomBytes} = require('crypto');
+const {createHash, createCipher, createDecipher, createHmac, randomBytes} = require('crypto');
 
 class Encrypt {
   constructor({Config, Log}) {
@@ -57,12 +57,20 @@ class Encrypt {
     try {
       const decipher = createDecipher('aes256', this.key);
       return JSON.parse(Buffer.concat([
-        decipher.update(Buffer.from(data, 'base64')),
+        decipher.update(data instanceof Buffer ? data : Buffer.from(data, 'base64')),
         decipher.final()
       ]).toString());
     } catch (err) {
       return false;
     }
+  }
+
+  hash(data, returnBuffer = false) {
+    return createHash('sha256').update(JSON.stringify(data)).digest(returnBuffer ? null : 'base64');
+  }
+
+  hmac(data, returnBuffer = false) {
+    return createHmac('sha256', this.key).update(JSON.stringify(data)).digest(returnBuffer ? null : 'base64');
   }
 }
 
