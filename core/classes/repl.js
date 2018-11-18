@@ -5,24 +5,31 @@ const {createServer} = require('net');
 class Repl {
   constructor({Script}) {
     this.server = createServer((socket) => {
+      let buffer = Buffer.alloc(0);
       socket.on('data', async data => {
-        data = JSON.parse(data);
-        const result = {};
+        buffer = Buffer.concat([buffer, data]);
         try {
-          Script.load(data.script);
+          data = JSON.parse(buffer.toString());
+          buffer = Buffer.alloc(0);
+          const result = {};
           try {
-            const context = await Script.run(data.data, {returnContext: true});
-            result.data = context.data;
-            if (typeof context.unassignedValue !== 'undefined') {
-              result.unassignedValue = context.unassignedValue;
+            Script.load(data.script);
+            try {
+              const context = await Script.run(data.data, {returnContext: true});
+              result.data = context.data;
+              if (typeof context.unassignedValue !== 'undefined') {
+                result.unassignedValue = context.unassignedValue;
+              }
+            } catch (err) {
+              result.runtimeError = err.message;
             }
           } catch (err) {
-            result.runtimeError = err.message;
+            result.syntaxError = err.message;
           }
+          socket.end(JSON.stringify(result));
         } catch (err) {
-          result.syntaxError = err.message;
+          // Data is not complete yet.
         }
-        socket.end(JSON.stringify(result));
       });
     }).on('error', (err) => {
       // handle errors here

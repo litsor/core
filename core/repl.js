@@ -19,13 +19,21 @@ rl.on('line', (line) => {
 
   script += line + '\n';
 
+  let buffer = Buffer.alloc(0);
+
   const client = createConnection({ port: 7375 }, () => {
     client.write(JSON.stringify({
       data,
       script
     }));
     client.on('data', result => {
-      result = JSON.parse(result.toString());
+      buffer = Buffer.concat([buffer, result]);
+      try {
+        result = JSON.parse(buffer.toString());
+        buffer = Buffer.alloc(0);
+      } catch (err) {
+        // Data is not complete yet.
+      }
       if (result.syntaxError) {
         syntaxError = result.syntaxError;
       } else {
