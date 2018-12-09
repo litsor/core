@@ -1,38 +1,27 @@
 'use strict';
 
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 module.exports = {
   tests: [{
-    can: 'get current date',
-    input: {},
-    output: () => {
-      return moment().format('YYYY-MM-DD');
-    }
-  }, {
-    can: 'get current time in UTC',
+    can: 'get date with format YYYY and in UTC',
     input: {
-      format: 'HH:mm'
+      date: '2018',
+      format: 'YYYY'
     },
-    output: () => {
-      return moment().tz('UTC').format('HH:mm');
-    }
+    output: value => value === moment.tz('2018', 'YYYY').toISOString()
   }, {
-    can: 'get current time in Paris',
+    can: 'get date with format YYYY-MM-DD in Amsterdam',
     input: {
-      format: 'HH:mm'
+      date: '2018-02-12',
+      format: 'YYYY-MM-DD'
     },
-    output: () => {
-      return moment().tz('Europe/Paris').format('HH:mm');
-    }
+    output: value => value === moment.tz('2018-02-12', 'YYYY-MM-DD').toISOString()
   }, {
-    can: 'get unix timestamp',
+    can: 'get false when input is incorrect',
     input: {
-      format: 'X'
+      format: 'YYYY-MM-DD'
     },
-    output: timestamp => {
-      const now = ~~(new Date() / 1e3);
-      return parseInt(timestamp, 10) === now || parseInt(timestamp, 10) + 1 === now;
-    }
+    output: false
   }]
 };

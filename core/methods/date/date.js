@@ -3,7 +3,7 @@
 const moment = require('moment-timezone');
 
 module.exports = {
-  title: 'Date',
+  title: 'Marcdate',
   description: 'Get current date',
 
   inputSchema: {
@@ -18,21 +18,23 @@ module.exports = {
         title: 'Timezone',
         type: 'string',
         enum: moment.tz.names()
+      },
+      date: {
+        title: 'Date',
+        type: 'string'
       }
     },
     required: [],
     additionalProperties: false
   },
 
-  defaults: {
-    format: 'YYYY-MM-DD'
-  },
+  defaults: {},
 
   unary: async input => {
-    const date = moment();
-    if (typeof input === 'object' && input.timezone) {
-      date.tz(input.timezone);
+    const date = moment.tz(input.date, input.format, true, input.timezone || 'UTC');
+    if (date.isValid()) {
+      return date.toISOString();
     }
-    return date.format(typeof input === 'object' ? input.format : input);
+    return false;
   }
 };
