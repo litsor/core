@@ -116,14 +116,16 @@ class ConfigFiles {
     await this.readFiles();
     if (this.config.get('/reload', false)) {
       let first = true;
-      Watch.watchTree(`${this.configDir}/${this.configName}`, () => {
-        if (first) {
-          first = false;
-          return;
-        }
-        this.log.info('Reloading ' + this.configName);
-        this.readFiles();
-      });
+      if (Fs.existsSync(`${this.configDir}/${this.configName}`)) {
+        Watch.watchTree(`${this.configDir}/${this.configName}`, () => {
+          if (first) {
+            first = false;
+            return;
+          }
+          this.log.info('Reloading ' + this.configName);
+          this.readFiles();
+        });
+      }
     }
     const ucfirst = str => str.substring(0, 1).toUpperCase() + str.substring(1);
     const schema = `
