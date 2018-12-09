@@ -3,7 +3,7 @@
 const moment = require('moment-timezone');
 
 module.exports = {
-  title: 'Marcdate',
+  title: 'Date',
   description: 'Get current date',
 
   inputSchema: {
