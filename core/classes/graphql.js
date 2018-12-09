@@ -24,10 +24,17 @@ class Graphql {
     router.get('/graphql', this.handleRequest.bind(this));
 
     this.http.use('graphql', 2, router.routes());
+
+    this.logCallback = data => this.query(data);
+    this.log.on('logModel', this.logCallback);
   }
 
   shutdown() {
     this.http.unuse('graphql');
+    if (this.log.off) {
+      // @todo: remove if-condition when Litsor runs on Node 10+.
+      this.log.off('logModel', this.logCallback);
+    }
   }
 
   async query(query) {
