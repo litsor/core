@@ -1,0 +1,27 @@
+id: LogEntry
+description: Single log message
+storage: Internal
+properties:
+  message:
+    type: string
+    maxLength: 255
+  severity:
+    type: string
+    maxLength: 255
+    enum: [debug, info, warning, error, critical]
+  date:
+    type: integer
+  correlationId:
+    type: string
+    maxLength: 255
+  metadata:
+    type: object
+    additionalProperties:
+      type: string
+    default: {}
+required:
+  - message
+  - severity
+  - date
+  - correlationId
+  - metadata

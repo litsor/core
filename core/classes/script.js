@@ -9,12 +9,13 @@ const grammar = require('../assets/grammar');
 const parser = new Grammars.Custom.Parser(grammar);
 
 class Context {
-  constructor(data, path = '', level = 0) {
+  constructor(data, path = '', level = 0, correlationId = '') {
     const cloned = cloneDeep(data);
     this.data = cloned;
     this.path = path;
     this.level = level;
     this.unassignedValue = undefined;
+    this.correlationId = correlationId;
   }
 }
 
@@ -136,7 +137,7 @@ class Script {
       const operand = source => data => {
         let expressionContext = context;
         if (typeof data !== 'undefined') {
-          expressionContext = new Context(data, context.path, context.level + 1);
+          expressionContext = new Context(data, context.path, context.level + 1, context.correlationId);
         }
         return this.runExpression(source.children[0], expressionContext);
       };
@@ -215,7 +216,7 @@ class Script {
         case 'expression_nb':
           return this.runExpression(children[0], context);
         case 'script':
-          subcontext = new Context(context.data, context.path + '/???', context.level + 1);
+          subcontext = new Context(context.data, context.path + '/???', context.level + 1, context.correlationId);
           for (let i = 0; i < children.length; ++i) {
             subcontext = await this.runCommand(children[i], subcontext);
           }
@@ -293,7 +294,7 @@ class Script {
     const returnContext = options.returnContext || false;
 
     const commands = this.ast;
-    let context = new Context(data);
+    let context = new Context(data, '', 0, this.log.generateCorrelationId());
     for (let i = 0; i < commands.length; ++i) {
       context = await this.runCommand(commands[i], context);
     }

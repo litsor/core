@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const EventEmitter = require('events');
 const {promisify} = require('util');
 const {resolve} = require('path');
 const {randomBytes} = require('crypto');
@@ -13,8 +14,9 @@ const write = promisify(fs.write);
 const stat = promisify(fs.stat);
 const mkdir = promisify(fs.mkdir);
 
-class Log {
+class Log extends EventEmitter {
   constructor({Config}) {
+    super();
     this.dir = Config.get('/logDir', 'data/logs');
     this.writeInterval = parseInt(Config.get('/logWriteInterval', '5'), 10);
     this.logTo = Config.get('/logTo', 'file,console').split(',');
@@ -98,6 +100,28 @@ class Log {
     }
   }
 
+  writeToModel({severity, correlationId, message, timestamp, ...properties}) {
+    const date = moment(timestamp).unix();
+    const metadata = {};
+    Object.keys(properties).forEach(key => {
+      if (typeof properties[key] !== 'object') {
+        metadata[key] = String(properties[key]);
+      }
+    });
+    this.emit('logModel', {
+      query: 'mutation ($input: LogEntryInput!) { createLogEntry(input: $input) { id } }',
+      variables: {
+        input: {
+          message,
+          severity,
+          date,
+          metadata,
+          correlationId
+        }
+      }
+    });
+  }
+
   generateCorrelationId() {
     return randomBytes(18).toString('base64');
   }
@@ -113,7 +137,9 @@ class Log {
    *   Additional properties may provided. Value must be a string.
    */
   log(data) {
-    data.timestamp = (new Date()).toISOString();
+    if (typeof data.timestamp !== 'string') {
+      data.timestamp = (new Date()).toISOString();
+    }
     if (this.logTo.indexOf('console') >= 0) {
       this.writeToConsole(data);
     }
@@ -127,6 +153,9 @@ class Log {
       if (this.bufferSize > this.maxBufferSize) {
         this.flush();
       }
+    }
+    if (this.logTo.indexOf('model') >= 0) {
+      this.writeToModel(data);
     }
   }
 
