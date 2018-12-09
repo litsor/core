@@ -116,8 +116,9 @@ class ConfigFiles {
     await this.readFiles();
     if (this.config.get('/reload', false)) {
       let first = true;
-      if (Fs.existsSync(`${this.configDir}/${this.configName}`)) {
-        Watch.watchTree(`${this.configDir}/${this.configName}`, () => {
+      const path = `${this.configDir}/${this.configName}`;
+      if (Fs.existsSync(path)) {
+        Watch.watchTree(path, () => {
           if (first) {
             first = false;
             return;
