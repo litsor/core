@@ -1,0 +1,13 @@
+# OauthConfig
+
+# Interval in seconds that an access token remains valid.
+/accessTokenExpire = 43200
+
+# Interval in seconds that a refresh token remains valid.
+/refreshTokenExpire = 2592000
+
+# Interval in scecons that a remembered login remains valid.
+/rememberExpire = 604800
+
+# Re-use access tokens when tokens exists that are at least valid for this interval in seconds.
+/minValidInterval = 21600

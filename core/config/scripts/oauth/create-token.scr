@@ -9,6 +9,7 @@
 # /token/expires
 # /token/refresh_token
 
+/config = {} script "OauthConfig"
 /now = int date "X"
 
 /token = null
@@ -18,7 +19,7 @@
       client: /client/id,
       user: /user/id,
       scope: /scope,
-      expires_gt: /now + 21600
+      expires_gt: /now + /config/minValidInterval
     }, limit: 1) {
       items {
         client { id }
@@ -55,12 +56,12 @@
     scope: /scope,
     created: /now,
     token: secureToken 256,
-    expires: /now + 432000
+    expires: /now + /config/rememberExpire
   }
 
   # Confidential clients (often API integrations) must use the refresh token within 30 days.
   / = (/client/type == "confidential") then {{
-    /refresh_token/expires = /now + 2592000
+    /refresh_token/expires = /now + /config/refreshTokenExpire
   }}
 
   mutation {
@@ -80,7 +81,7 @@
       client: /client/id,
       user: /user/id,
       scope: /scope,
-      expires_gt: /now + 21600
+      expires_gt: /now + /config//minValidInterval
     }, limit: 1) {
       items {
         token
