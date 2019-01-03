@@ -6,7 +6,21 @@ let websiteMockup;
 
 module.exports = {
   mockups: {
-    Fetch: true
+    Fetch: true,
+    Statistics: {
+      async add() {
+        return {
+          add() {},
+          count() {}
+        };
+      },
+      get() {
+        return {
+          add() {},
+          count() {}
+        };
+      }
+    }
   },
 
   async startupTest() {

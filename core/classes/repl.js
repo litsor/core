@@ -36,8 +36,8 @@ class Repl {
       throw err;
     });
 
-    // Provides more readable error messages.
-    Script.setId('input');
+    // Name is visible in exported statistics.
+    Script.setId('repl');
 
     this.server.listen(7375);
   }

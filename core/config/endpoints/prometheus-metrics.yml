@@ -1,0 +1,10 @@
+id: PrometheusMetrics
+path:
+  - /metrics
+method: GET
+script: PrometheusMetrics
+params: {}
+output:
+  mime: text/plain; version=0.0.4
+  schema:
+    type: string
