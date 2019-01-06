@@ -1,0 +1,8 @@
+# PrometheusMetrics
+
+/user = / script "LoadUser"
+{.../, scope: "admin:statistics"} script "RequireScope"
+
+/ = {
+  body: exportStatistics "all"
+}

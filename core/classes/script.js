@@ -20,13 +20,15 @@ class Context {
 }
 
 class Script {
-  constructor({Methods, Graphql, Log}) {
+  constructor({Methods, Graphql, Log, Statistics}) {
     this.methods = Methods;
     this.graphql = Graphql;
     this.log = Log;
+    this.statistics = Statistics;
 
     this.ast = [];
     this.id = null;
+    this.statistic = null;
   }
 
   load(script) {
@@ -49,6 +51,10 @@ class Script {
 
   setId(id) {
     this.id = id;
+
+    this.statistics.add('Histogram', 'script_duration_seconds', 'script', 'script execution time').then(statistic => {
+      this.statistic = statistic;
+    });
   }
 
   getId() {
@@ -293,15 +299,21 @@ class Script {
   async run(data, options = {}) {
     const returnContext = options.returnContext || false;
 
+    const start = new Date();
+
     const commands = this.ast;
     let context = new Context(data, '', 0, this.log.generateCorrelationId());
     for (let i = 0; i < commands.length; ++i) {
       context = await this.runCommand(commands[i], context);
     }
+
+    const time = (new Date() - start) / 1e3;
+    this.statistic && this.statistic.add(time, {script: this.id});
+
     return returnContext ? context : context.data;
   }
 }
 
-Script.require = ['Container', 'Methods', 'Input', 'Log', 'Graphql'];
+Script.require = ['Container', 'Methods', 'Input', 'Log', 'Graphql', 'Statistics'];
 
 module.exports = Script;

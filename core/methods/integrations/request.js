@@ -1,5 +1,6 @@
 'use strict';
 
+const {parse} = require('url');
 const {clone} = require('lodash');
 const fetch = require('node-fetch');
 
@@ -62,7 +63,9 @@ module.exports = {
     cookies: {}
   },
 
-  unary: async ({url, headers = {}, method = 'GET', body, format = 'auto', cookies = {}}) => {
+  requires: ['Statistics'],
+
+  unary: async ({url, headers = {}, method = 'GET', body, format = 'auto', cookies = {}}, {Statistics}) => {
     const getCookies = (res, initialCookies) => {
       const cookies = clone(initialCookies || {});
       // @todo: Does not work for multiple cookies.
@@ -94,8 +97,33 @@ module.exports = {
     if (Object.keys(cookies).length > 0) {
       headers.Cookie = getCookieHeader(cookies);
     }
+
+    const host = parse(url).host;
+    if (host === null) {
+      throw new Error('Missing hostname in URL');
+    }
+
+    let durationStatistic = Statistics.get('request_duration_seconds');
+    if (!durationStatistic) {
+      durationStatistic = await Statistics.add('Histogram', 'request_duration_seconds', 'request duration in seconds');
+    }
+    let statusStatistic = Statistics.get('request_status');
+    if (!statusStatistic) {
+      statusStatistic = await Statistics.add('Counter', 'requests', 'number of requests by host and response status');
+    }
+    const start = new Date();
+    const recordStats = status => {
+      if (status >= 200 && status < 500) {
+        durationStatistic.add((new Date() - start) / 1e3, {host});
+      }
+      // Record status as one of 2xx, 3xx, 400, 401, 403, 429, 4xx, 5xx or connect_error.
+      const statusCategory = [400, 401, 403, 429].indexOf(status) < 0 ? String(status).match(/^[\d]{3}$/) ? String(status)[0] + 'xx' : 'connect_error' : String(status);
+      statusStatistic.count({host, status: statusCategory});
+    };
+
     return fetch(url, {method, headers, body}).then(_response => {
       response = _response;
+      recordStats(response.status);
       if (response.status >= 300) {
         throw new Error('Retrieved error code from remote server: ' + response.status);
       }
@@ -118,6 +146,7 @@ module.exports = {
         cookies: getCookies(response, cookies)
       };
     }).catch(err => {
+      recordStats(0);
       throw new Error(`Unable to connect to "${url}": ${err.message}`);
     });
   }

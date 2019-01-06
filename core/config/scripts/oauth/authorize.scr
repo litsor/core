@@ -1,5 +1,6 @@
 # OauthAuthorize
 
+/config = {} script "OauthConfig"
 /now = int date "X"
 
 /response_type ~ "token"
@@ -63,9 +64,9 @@
       created: /now,
       token: secureToken 256,
       expires: /now + {{
-        /expires = 43200
+        /expires = /config/accessTokenExpire
         / = /remember then {{
-          /expires = 604800
+          /expires = /config/rememberExpire
         }}
         / = /expires
       }}
@@ -80,7 +81,7 @@
       path: "/oauth"
     }
     / = /remember then {{
-      /data/cookies/session/maxAge = 604800
+      /data/cookies/session/maxAge = /config/rememberExpire
     }}
   }}
   / = (!/validPassword) then {{

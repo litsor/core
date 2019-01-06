@@ -113,11 +113,29 @@ const Graphql = {
   }
 };
 
+const Statistics = {
+  data: {},
+  async add(type, name) {
+    const data = this.data;
+    data[name] = {};
+    if (type === 'Histogram') {
+      return {
+        add(value, {script}) {
+          if (typeof data[name][script] === 'undefined') {
+            data[name][script] = [];
+          }
+          data[name][script].push(value);
+        }
+      };
+    }
+  }
+};
+
 describe('Script', () => {
   let script;
 
   before(() => {
-    script = new Script({Methods, Graphql, Log});
+    script = new Script({Methods, Graphql, Log, Statistics});
   });
 
   it('can run script', async () => {
@@ -406,5 +424,14 @@ describe('Script', () => {
     script.load(`/ = mutation { createUser(name: "Chris") { id }}`);
     const output = (await script.run({}));
     expect(output).to.deep.equal({createUser: {id: '3'}});
+  });
+
+  it('logs running time in statistics', async () => {
+    script.load(`/foo = "bar"`);
+    script.setId('StatisticsTestScript');
+    await script.run({});
+    expect(Statistics.data).to.have.property('script_duration_seconds');
+    expect(Statistics.data.script_duration_seconds).to.have.property('StatisticsTestScript');
+    expect(Statistics.data.script_duration_seconds.StatisticsTestScript).to.have.length(1);
   });
 });
