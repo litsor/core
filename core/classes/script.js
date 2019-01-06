@@ -35,6 +35,30 @@ class Context {
       this.child.kill();
     }
   }
+
+  getRoot() {
+    return this.parent ? this.parent.getRoot() : this;
+  }
+
+  export() {
+    return {
+      data: this.data,
+      scriptState: this.scriptState,
+      methodState: this.methodState,
+      child: this.child ? this.child.export() : null,
+      correlationId: this.correlationId
+    };
+  }
+
+  import(state) {
+    this.data = state.data;
+    this.scriptState = state.scriptState;
+    this.methodState = state.methodState;
+    if (state.child) {
+      this.child = new Context({}, this.correlationId);
+      this.child.import(state.child);
+    }
+  }
 }
 
 class Script {
@@ -154,23 +178,31 @@ class Script {
     const methodName = method.text || method.children[0].text;
     const callback = this.methods.getUnaryMethod(methodName);
     const operand = await this.runExpression(expression.children[0], context);
-    return callback(operand, context);
+    const output = callback(operand, context);
+    context.methodState = null;
+    return output;
   }
 
   async runBinaryExpression(left, method, right, context) {
     const methodName = method.text || method.children[0].text;
     const callback = this.methods.getBinaryMethod(methodName);
+    let importContext = context.child;
     if (callback.lazy) {
-      const operand = source => data => {
+      const operand = source => async data => {
         let expressionContext = context;
         if (typeof data !== 'undefined') {
-          expressionContext = new Context(data, context.correlationId);
+          expressionContext = importContext || new Context(data, context.correlationId);
           expressionContext.parent = context;
           context.child = expressionContext;
+          importContext = null;
         }
-        return this.runExpression(source.children[0], expressionContext);
+        const output = this.runExpression(source.children[0], expressionContext);
+        return output;
       };
-      return callback(operand(left), operand(right), context);
+      const output = await callback(operand(left), operand(right), context);
+      context.child = null;
+      context.methodState = null;
+      return output;
     }
     const leftOperand = await this.runExpression(left.children[0], context);
     const rightOperand = await this.runExpression(right.children[0], context);
@@ -235,6 +267,9 @@ class Script {
 
   async runExpression({type, children}, context) {
     if (context.killed) {
+      if (context.getRoot().killedCallback) {
+        context.getRoot().killedCallback();
+      }
       throw new Error('Script was killed');
     }
     try {
@@ -258,6 +293,7 @@ class Script {
             subcontext.scriptState = i;
             await this.runCommand(children[i], subcontext);
           }
+          context.child = null;
           return subcontext.data;
         case 'query_statement':
           return this.runQuery(children[0].text, children[1].children, context);
@@ -276,7 +312,6 @@ class Script {
 
   async runCommand(command, context) {
     context.setLine(command.line);
-    context.child = null;
     context.unassignedValue = undefined;
     const config = this.unpackAst(command);
     const value = await this.runExpression(config.expression[0], context);
@@ -340,10 +375,25 @@ class Script {
     }));
   }
 
-  kill(processId) {
+  async kill(processId, wait = 0) {
     if (this.processes[processId]) {
       this.processes[processId].context.kill();
     }
+    if (wait > 0) {
+      return new Promise(resolve => {
+        const timeout = setTimeout(() => resolve(null), wait);
+        this.processes[processId].context.killedCallback = () => {
+          clearTimeout(timeout);
+          resolve(this.processes[processId].context.export());
+        };
+      });
+    }
+  }
+
+  async resume(state) {
+    const context = new Context({}, state.correlationId);
+    context.import(state);
+    return this.run({}, {context});
   }
 
   async run(data, options = {}) {
@@ -351,7 +401,7 @@ class Script {
 
     const processId = ++this.lastProcessId;
     const correlationId = this.log.generateCorrelationId();
-    let context = new Context(data, '', 0, correlationId);
+    const context = options.context || new Context(data, correlationId);
     const start = new Date();
 
     this.processes[processId] = {

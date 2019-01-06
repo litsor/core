@@ -9,10 +9,23 @@ module.exports = {
   rightSchema: {title: 'Callback'},
 
   binary: async (left, right, {}, context) => {
-    const value = await left();
-    return Promise.all(value.map(item => right({
-      ...context.data,
-      item
-    })));
+    const items = await left();
+    if (!Array.isArray(items)) {
+      throw new Error('Left operand must be an array');
+    }
+    if (!context.methodState) {
+      context.methodState = {
+        i: 0,
+        output: []
+      };
+    }
+    for (let i = context.methodState.i; i < items.length; ++i) {
+      const value = await right({
+        ...context.data,
+        item: items[i]
+      });
+      context.methodState.output.push(value);
+    }
+    return context.methodState.output;
   }
 };

@@ -9,7 +9,10 @@ module.exports = {
 
   inputSchema: {},
 
-  binary: async (left, right) => {
-    return right(await left());
+  binary: async (left, right, {}, context) => {
+    if (context.methodState === null) {
+      context.methodState = {left: await left()};
+    }
+    return right(context.methodState.left);
   }
 };

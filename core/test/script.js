@@ -51,9 +51,15 @@ const Methods = {
     }
     if (name === 'filter') {
       const callback = async (input, filter, context) => {
-        let output = [];
         const items = await input();
-        for (let i = 0; i < items.length; ++i) {
+        if (!context.methodState) {
+          context.methodState = {
+            i: 0,
+            output: []
+          };
+        }
+        for (let i = context.methodState.i; i < items.length; ++i) {
+          context.methodState.i = i;
           if (typeof items[i] === 'undefined') {
             continue;
           }
@@ -62,10 +68,10 @@ const Methods = {
             item: items[i]
           });
           if (keep) {
-            output.push(items[i]);
+            context.methodState.output.push(items[i]);
           }
         }
-        return output;
+        return context.methodState.output;
       };
       callback.lazy = true;
       return callback;
@@ -547,6 +553,105 @@ describe('Script', () => {
     await new Promise(resolve => setTimeout(resolve, 25));
     expect(script.getProcessList()).to.have.length(0);
     expect(Methods.testCounter).to.equal(1);
+  });
+
+  it('can kill a script and wait for the state export', async () => {
+    script.load(`test 1\nsleep 25\ntest 1\nsleep 25`);
+    const fn = async () => {
+      try {
+        await script.run({});
+      } catch (err) {
+        // Expected error.
+      }
+    };
+    fn();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const processId = script.getProcessList()[0].processId;
+    const state = await script.kill(processId, 25);
+    expect(state).to.be.an('object');
+  });
+
+  it('will get null when script is not killed within wait timeout', async () => {
+    script.load(`sleep 50\ntest 1`);
+    const fn = async () => {
+      try {
+        await script.run({});
+      } catch (err) {
+        // Expected error.
+      }
+    };
+    fn();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const processId = script.getProcessList()[0].processId;
+    const state = await script.kill(processId, 25);
+    expect(state).to.equal(null);
+    await new Promise(resolve => setTimeout(resolve, 50));
+  });
+
+  it('can resume a script after it is killed', async () => {
+    Methods.testCounter = 0;
+    script.load(`test 1\nsleep 25\ntest 1`);
+    const run = async () => {
+      try {
+        await script.run({});
+      } catch (err) {
+        // Expected error.
+      }
+    };
+    const resume = async state => {
+      try {
+        await script.resume(state);
+      } catch (err) {
+        console.log(err);
+        // Expected error.
+      }
+    };
+
+    run();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const processId = script.getProcessList()[0].processId;
+    const state = await script.kill(processId, 25);
+
+    // It should start with the last command after a resume.
+    resume(state);
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(Methods.testCounter).to.equal(2);
+
+    // After 25ms, it should still be 2.
+    // Otherwise it indicates that script was started from the beginning.
+    await new Promise(resolve => setTimeout(resolve, 25));
+    expect(Methods.testCounter).to.equal(2);
+  });
+
+  it('can resume a script within a subscript after it is killed', async () => {
+    Methods.testCounter = 0;
+    script.load(`[1,2] filter {{\nsleep 25\ntest 1\n}}\ntest 1`);
+    const run = async () => {
+      try {
+        await script.run({});
+      } catch (err) {
+        // Expected error.
+      }
+    };
+    const resume = async state => {
+      try {
+        await script.resume(state);
+      } catch (err) {
+        // Expected error.
+      }
+    };
+
+    run();
+    await new Promise(resolve => setTimeout(resolve, 30));
+    expect(Methods.testCounter).to.equal(1);
+    const processId = script.getProcessList()[0].processId;
+    const state = await script.kill(processId, 100);
+    expect(Methods.testCounter).to.equal(1);
+
+    // It should start with the second "test 1" of first loop after a resume.
+    resume(state);
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(Methods.testCounter).to.equal(3);
   });
 
 });

@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Reduce',
+  title: 'Reduce',
   description: 'Reduce list to single value',
   lazy: true,
 
@@ -9,14 +9,22 @@ module.exports = {
   rightSchema: {title: 'Reducer'},
 
   binary: async (input, reducer, {}, context) => {
-    let output = null;
     const items = await input();
-    for (let i = 0; i < items.length; ++i) {
-      output = await reducer({
-        previous: output,
+    if (!Array.isArray(items)) {
+      throw new Error('Left operand must be an array');
+    }
+    if (!context.methodState) {
+      context.methodState = {
+        i: 0,
+        output: null
+      };
+    }
+    for (let i = context.methodState.i; i < items.length; ++i) {
+      context.methodState.output = await reducer({
+        previous: context.methodState.output,
         current: items[i]
       }, context);
     }
-    return output;
+    return context.methodState.output;
   }
 };

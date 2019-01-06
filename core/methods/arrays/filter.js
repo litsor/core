@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  name: 'Filter',
+  title: 'Filter',
   description: 'Filter array on callback',
   lazy: true,
 
@@ -11,7 +11,16 @@ module.exports = {
   binary: async (input, filter, {}, context) => {
     let output = [];
     const items = await input();
-    for (let i = 0; i < items.length; ++i) {
+    if (!Array.isArray(items)) {
+      throw new Error('Left operand must be an array');
+    }
+    if (!context.methodState) {
+      context.methodState = {
+        i: 0,
+        output: []
+      };
+    }
+    for (let i = context.methodState.i; i < items.length; ++i) {
       if (typeof items[i] === 'undefined') {
         continue;
       }
@@ -20,9 +29,9 @@ module.exports = {
         item: items[i]
       });
       if (keep) {
-        output.push(items[i]);
+        context.methodState.output.push(items[i]);
       }
     }
-    return output;
+    return context.methodState.output;
   }
 };

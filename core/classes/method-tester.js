@@ -37,7 +37,8 @@ class MethodTester {
     }
 
     const context = {
-      data: {}
+      data: {},
+      methodState: null
     };
 
     let raisedError = false;

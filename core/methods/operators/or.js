@@ -11,8 +11,14 @@ module.exports = {
     type: 'object'
   },
 
-  binary: async (left, right) => {
-    const value = await left();
-    return value ? value : right();
+  binary: async (left, right, {}, context) => {
+    if (context.methodState === null) {
+      const value = await left();
+      if (value) {
+        return value;
+      }
+      context.methodState = false;
+    }
+    return right();
   }
 };

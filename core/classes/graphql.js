@@ -43,6 +43,7 @@ class Graphql {
     }
     const result = await graphql(this.schema, query.query, {}, {}, query.variables);
     if (result.errors && result.errors.length > 0) {
+      console.log(result.errors[0].stack);
       throw new Error(result.errors[0].message);
     }
     return result.data;

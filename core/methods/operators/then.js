@@ -14,7 +14,10 @@ module.exports = {
   },
 
   binary: async (left, right, {}, context) => {
-    if (await left()) {
+    if (context.methodState === null) {
+      context.methodState = {left: await left()};
+    }
+    if (context.methodState.left) {
       return right();
     }
     return context.data;
