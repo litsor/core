@@ -456,6 +456,7 @@ describe('Script', () => {
     expect(processList[0]).to.have.property('correlationId');
     expect(processList[0]).to.have.property('line');
     expect(processList[0]).to.have.property('runningTime');
+    expect(processList[0]).to.have.property('killed');
     await new Promise(resolve => setTimeout(resolve, 60));
   });
 
@@ -493,4 +494,59 @@ describe('Script', () => {
     expect(script.getProcessList()[0]).to.have.property('line', 3);
     await new Promise(resolve => setTimeout(resolve, 25));
   });
+
+  it('can kill a script', async () => {
+    Methods.testCounter = 0;
+    script.load(`test 1\nsleep 25\ntest 1\nsleep 25`);
+    const fn = async () => {
+      try {
+        await script.run({});
+      } catch (err) {
+        // Expected error.
+      }
+    };
+    fn();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const processId = script.getProcessList()[0].processId;
+    expect(script.getProcessList()[0]).to.have.property('killed', false);
+
+    // After killing the process, the script will finish the sleep method.
+    // The processlist still lists this process, but marked as killed.
+    script.kill(processId);
+    expect(script.getProcessList()[0]).to.have.property('killed', true);
+
+    // After 25ms, the sleep is finished. It should not run the second
+    // test method anymore and the process should be gone.
+    await new Promise(resolve => setTimeout(resolve, 25));
+    expect(script.getProcessList()).to.have.length(0);
+    expect(Methods.testCounter).to.equal(1);
+  });
+
+  it('will kill subscripts when parent is killed', async () => {
+    Methods.testCounter = 0;
+    script.load(`test 1\n[1,2] filter {{\nsleep 25\ntest 1\n}}`);
+    const fn = async () => {
+      try {
+        await script.run({});
+      } catch (err) {
+        // Expected error.
+      }
+    };
+    fn();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const processId = script.getProcessList()[0].processId;
+    expect(script.getProcessList()[0]).to.have.property('killed', false);
+
+    // After killing the process, the script will finish the sleep method.
+    // The processlist still lists this process, but marked as killed.
+    script.kill(processId);
+    expect(script.getProcessList()[0]).to.have.property('killed', true);
+
+    // After 25ms, the sleep is finished. It should not run the second
+    // test method anymore and the process should be gone.
+    await new Promise(resolve => setTimeout(resolve, 25));
+    expect(script.getProcessList()).to.have.length(0);
+    expect(Methods.testCounter).to.equal(1);
+  });
+
 });

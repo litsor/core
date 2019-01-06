@@ -7,10 +7,11 @@ module.exports = {
         return {
           getProcessList() {
             return [{
-              processId: 1,
+              processId: '...',
               correlationId: '...',
               runningTime: 123,
-              line: 1
+              line: 1,
+              killed: false
             }];
           }
         }
@@ -22,10 +23,11 @@ module.exports = {
     can: 'get processlist',
     input: "ScriptId",
     output: [{
-      processId: 1,
+      processId: '...',
       correlationId: '...',
       runningTime: 123,
-      line: 1
+      line: 1,
+      killed: false
     }]
   }]
 };

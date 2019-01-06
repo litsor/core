@@ -18,12 +18,23 @@ class Context {
     this.correlationId = correlationId;
     this.line = 1;
     this.parent = null;
+    this.child = null;
+    this.scriptState = null;
+    this.methodState = null;
+    this.killed = false;
   }
 
   setLine(line) {
     this.line = line;
     if (this.parent) {
       this.parent.setLine(line);
+    }
+  }
+
+  kill() {
+    this.killed = true;
+    if (this.child) {
+      this.child.kill();
     }
   }
 }
@@ -157,6 +168,7 @@ class Script {
         if (typeof data !== 'undefined') {
           expressionContext = new Context(data, context.path, context.level + 1, context.correlationId);
           expressionContext.parent = context;
+          context.child = expressionContext;
         }
         return this.runExpression(source.children[0], expressionContext);
       };
@@ -224,6 +236,9 @@ class Script {
   }
 
   async runExpression({type, children}, context) {
+    if (context.killed) {
+      throw new Error('Script was killed');
+    }
     try {
       let subcontext;
       switch (type) {
@@ -235,9 +250,14 @@ class Script {
         case 'expression_nb':
           return this.runExpression(children[0], context);
         case 'script':
-          subcontext = new Context(context.data, context.path + '/???', context.level + 1, context.correlationId);
+          subcontext = context.child || new Context(context.data, context.path + '/???', context.level + 1, context.correlationId);
           subcontext.parent = context;
-          for (let i = 0; i < children.length; ++i) {
+          context.child = subcontext;
+          if (!subcontext.scriptState) {
+            subcontext.scriptState = 0;
+          }
+          for (let i = subcontext.scriptState; i < children.length; ++i) {
+            subcontext.scriptState = i;
             await this.runCommand(children[i], subcontext);
           }
           return subcontext.data;
@@ -258,6 +278,7 @@ class Script {
 
   async runCommand(command, context) {
     context.setLine(command.line);
+    context.child = null;
     context.unassignedValue = undefined;
     const config = this.unpackAst(command);
     const value = await this.runExpression(config.expression[0], context);
@@ -316,8 +337,15 @@ class Script {
       processId,
       correlationId: this.processes[processId].context.correlationId,
       line: this.processes[processId].context.line,
-      runningTime: now - this.processes[processId].start
+      runningTime: now - this.processes[processId].start,
+      killed: this.processes[processId].context.killed
     }));
+  }
+
+  kill(processId) {
+    if (this.processes[processId]) {
+      this.processes[processId].context.kill();
+    }
   }
 
   async run(data, options = {}) {
@@ -335,7 +363,11 @@ class Script {
 
     try {
       const commands = this.ast;
-      for (let i = 0; i < commands.length; ++i) {
+      if (!context.scriptState) {
+        context.scriptState = 0;
+      }
+      for (let i = context.scriptState; i < commands.length; ++i) {
+        context.scriptState = i;
         await this.runCommand(commands[i], context);
       }
     } catch (err) {
