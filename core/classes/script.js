@@ -306,7 +306,7 @@ class Script {
         // Throw HttpErrors as-is.
         throw e;
       }
-      throw new Error(this.id + ' line ' + children[0].line + ': ' + e.message);
+      throw new Error(this.id + ' line ' + this.context.line + ': ' + e.message);
     }
   }
 
