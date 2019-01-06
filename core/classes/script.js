@@ -238,7 +238,7 @@ class Script {
           subcontext = new Context(context.data, context.path + '/???', context.level + 1, context.correlationId);
           subcontext.parent = context;
           for (let i = 0; i < children.length; ++i) {
-            subcontext = await this.runCommand(children[i], subcontext);
+            await this.runCommand(children[i], subcontext);
           }
           return subcontext.data;
         case 'query_statement':
@@ -308,7 +308,6 @@ class Script {
       default:
         setData(value);
     }
-    return context;
   }
 
   getProcessList() {
@@ -337,7 +336,7 @@ class Script {
     try {
       const commands = this.ast;
       for (let i = 0; i < commands.length; ++i) {
-        context = await this.runCommand(commands[i], context);
+        await this.runCommand(commands[i], context);
       }
     } catch (err) {
       delete this.processes[processId];
