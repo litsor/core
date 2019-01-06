@@ -484,4 +484,13 @@ describe('Script', () => {
     expect(script.getProcessList()[0]).to.have.property('line', 4);
     await new Promise(resolve => setTimeout(resolve, 25));
   });
+
+  it('reports line numbers in subscripts', async () => {
+    script.load(`[1] filter {{\n/a = 1\nsleep 25\n/ = true\n}}`);
+    script.setId('TestScript');
+    script.run({});
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(script.getProcessList()[0]).to.have.property('line', 3);
+    await new Promise(resolve => setTimeout(resolve, 25));
+  });
 });

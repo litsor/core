@@ -17,6 +17,14 @@ class Context {
     this.unassignedValue = undefined;
     this.correlationId = correlationId;
     this.line = 1;
+    this.parent = null;
+  }
+
+  setLine(line) {
+    this.line = line;
+    if (this.parent) {
+      this.parent.setLine(line);
+    }
   }
 }
 
@@ -148,6 +156,7 @@ class Script {
         let expressionContext = context;
         if (typeof data !== 'undefined') {
           expressionContext = new Context(data, context.path, context.level + 1, context.correlationId);
+          expressionContext.parent = context;
         }
         return this.runExpression(source.children[0], expressionContext);
       };
@@ -227,6 +236,7 @@ class Script {
           return this.runExpression(children[0], context);
         case 'script':
           subcontext = new Context(context.data, context.path + '/???', context.level + 1, context.correlationId);
+          subcontext.parent = context;
           for (let i = 0; i < children.length; ++i) {
             subcontext = await this.runCommand(children[i], subcontext);
           }
@@ -247,7 +257,7 @@ class Script {
   }
 
   async runCommand(command, context) {
-    context.line = command.line;
+    context.setLine(command.line);
     context.unassignedValue = undefined;
     const config = this.unpackAst(command);
     const value = await this.runExpression(config.expression[0], context);
