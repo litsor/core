@@ -16,6 +16,7 @@ class Context {
     this.level = level;
     this.unassignedValue = undefined;
     this.correlationId = correlationId;
+    this.line = 1;
   }
 }
 
@@ -29,6 +30,9 @@ class Script {
     this.ast = [];
     this.id = null;
     this.statistic = null;
+
+    this.processes = [];
+    this.lastProcessId = 0;
   }
 
   load(script) {
@@ -243,6 +247,7 @@ class Script {
   }
 
   async runCommand(command, context) {
+    context.line = command.line;
     context.unassignedValue = undefined;
     const config = this.unpackAst(command);
     const value = await this.runExpression(config.expression[0], context);
@@ -296,17 +301,40 @@ class Script {
     return context;
   }
 
+  getProcessList() {
+    const now = new Date();
+    return Object.keys(this.processes).map(processId => ({
+      processId,
+      correlationId: this.processes[processId].context.correlationId,
+      line: this.processes[processId].context.line,
+      runningTime: now - this.processes[processId].start
+    }));
+  }
+
   async run(data, options = {}) {
     const returnContext = options.returnContext || false;
 
+    const processId = ++this.lastProcessId;
+    const correlationId = this.log.generateCorrelationId();
+    let context = new Context(data, '', 0, correlationId);
     const start = new Date();
 
-    const commands = this.ast;
-    let context = new Context(data, '', 0, this.log.generateCorrelationId());
-    for (let i = 0; i < commands.length; ++i) {
-      context = await this.runCommand(commands[i], context);
+    this.processes[processId] = {
+      context,
+      start
+    };
+
+    try {
+      const commands = this.ast;
+      for (let i = 0; i < commands.length; ++i) {
+        context = await this.runCommand(commands[i], context);
+      }
+    } catch (err) {
+      delete this.processes[processId];
+      throw err;
     }
 
+    delete this.processes[processId];
     const time = (new Date() - start) / 1e3;
     this.statistic && this.statistic.add(time, {script: this.id});
 

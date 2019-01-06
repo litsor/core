@@ -25,6 +25,11 @@ const Methods = {
     if (name === '!') {
       return value => !value;
     }
+    if (name === 'sleep') {
+      return async interval => {
+        return new Promise(resolve => setTimeout(resolve, interval));
+      }
+    }
   },
   getBinaryMethod(name) {
     if (name === 'in') {
@@ -433,5 +438,50 @@ describe('Script', () => {
     expect(Statistics.data).to.have.property('script_duration_seconds');
     expect(Statistics.data.script_duration_seconds).to.have.property('StatisticsTestScript');
     expect(Statistics.data.script_duration_seconds.StatisticsTestScript).to.have.length(1);
+  });
+
+  it('returns an empty process list when no scripts are running', async () => {
+    script.load(`/foo = "bar"\nsleep 50\n/foo = "baz"\nsleep 50`);
+    script.setId('TestScript');
+    expect(script.getProcessList()).to.deep.equal([]);
+  });
+
+  it('reports running script in processlist', async () => {
+    script.load(`/foo = "bar"\nsleep 25\n/foo = "baz"\nsleep 25`);
+    script.setId('TestScript');
+    script.run({});
+    const processList = script.getProcessList();
+    expect(processList).to.have.length(1);
+    expect(processList[0]).to.have.property('processId');
+    expect(processList[0]).to.have.property('correlationId');
+    expect(processList[0]).to.have.property('line');
+    expect(processList[0]).to.have.property('runningTime');
+    await new Promise(resolve => setTimeout(resolve, 60));
+  });
+
+  it('reports multiple running scripts in processlist', async () => {
+    script.load(`/foo = "bar"\nsleep 25\n/foo = "baz"\nsleep 25`);
+    script.setId('TestScript');
+    script.run({});
+    expect(script.getProcessList()).to.have.length(1);
+    await new Promise(resolve => setTimeout(resolve, 25));
+    script.run({});
+    const processList = script.getProcessList();
+    expect(processList).to.have.length(2);
+    expect(processList[0].processId).to.not.equal(processList[1].processId);
+    await new Promise(resolve => setTimeout(resolve, 30));
+    expect(script.getProcessList()).to.have.length(1);
+    await new Promise(resolve => setTimeout(resolve, 30));
+  });
+
+  it('includes line numbers in processlist', async () => {
+    script.load(`/foo = "bar"\nsleep 25\n/foo = "baz"\nsleep 25`);
+    script.setId('TestScript');
+    script.run({});
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(script.getProcessList()[0]).to.have.property('line', 2);
+    await new Promise(resolve => setTimeout(resolve, 25));
+    expect(script.getProcessList()[0]).to.have.property('line', 4);
+    await new Promise(resolve => setTimeout(resolve, 25));
   });
 });
