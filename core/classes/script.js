@@ -9,11 +9,9 @@ const grammar = require('../assets/grammar');
 const parser = new Grammars.Custom.Parser(grammar);
 
 class Context {
-  constructor(data, path = '', level = 0, correlationId = '') {
+  constructor(data, correlationId = '') {
     const cloned = cloneDeep(data);
     this.data = cloned;
-    this.path = path;
-    this.level = level;
     this.unassignedValue = undefined;
     this.correlationId = correlationId;
     this.line = 1;
@@ -166,7 +164,7 @@ class Script {
       const operand = source => data => {
         let expressionContext = context;
         if (typeof data !== 'undefined') {
-          expressionContext = new Context(data, context.path, context.level + 1, context.correlationId);
+          expressionContext = new Context(data, context.correlationId);
           expressionContext.parent = context;
           context.child = expressionContext;
         }
@@ -250,7 +248,7 @@ class Script {
         case 'expression_nb':
           return this.runExpression(children[0], context);
         case 'script':
-          subcontext = context.child || new Context(context.data, context.path + '/???', context.level + 1, context.correlationId);
+          subcontext = context.child || new Context(context.data, context.correlationId);
           subcontext.parent = context;
           context.child = subcontext;
           if (!subcontext.scriptState) {
