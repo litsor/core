@@ -31,7 +31,7 @@ binary_expression ::= expression_nb SP* binary_operator SP* expression {pin=3}
 expression_nb ::= query_statement | unary_expression | grouped_expression | value | block
 
 unary_operator ::= method_name | "!"
-binary_operator ::= method_name | "+" | "-" | "*" | "/" | "^" | "===" | "==" | "!==" | "!=" | "<=" | ">=" | "<" | ">"
+binary_operator ::= method_name | "+" | "-" | "*" | "/" | "==" | "!=" | "<=" | ">=" | "<" | ">"
 method_name ::= [a-z][a-zA-Z0-9]*
 
 value ::= json | jsonpointer

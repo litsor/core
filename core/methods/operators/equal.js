@@ -5,12 +5,8 @@ module.exports = {
   title: 'Equals',
   description: 'Check if left operand equals right operand',
 
-  leftSchema: {
-    title: 'Left operand'
-  },
-  rightSchema: {
-    title: 'Right operand'
-  },
+  leftSchema: {},
+  rightSchema: {},
 
   binary: (left, right) => left === right
 };

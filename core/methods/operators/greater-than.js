@@ -4,10 +4,9 @@ module.exports = {
   id: '>',
   title: '>',
   description: 'Greather than',
-  isBinary: true,
-  cache: Infinity,
 
-  inputSchema: {},
+  leftSchema: {},
+  rightSchema: {},
 
   binary: (left, right) => left > right
 };
