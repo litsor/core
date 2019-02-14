@@ -7,7 +7,8 @@ module.exports = {
   isBinary: true,
   cache: Infinity,
 
-  inputSchema: {},
+  leftSchema: {},
+  rightSchema: {},
 
   binary: (left, right) => left >= right
 };

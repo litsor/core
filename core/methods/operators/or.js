@@ -3,8 +3,6 @@
 module.exports = {
   title: 'Or',
   description: 'Logical or',
-  isBinary: true,
-  cache: Infinity,
   lazy: true,
 
   inputSchema: {
