@@ -30,7 +30,7 @@ module.exports = {
 
   unary: async ({id, data, model}, {Database}) => {
     const db = Database.get(model);
-    const item = await db.findById(id);
+    const item = await db.findByPk(id);
     if (item === null) {
       throw new Error(`${model} does not exist`);
     }
