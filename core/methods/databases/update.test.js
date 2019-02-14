@@ -5,7 +5,7 @@ module.exports = {
     Database: {
       get() {
         return {
-          findById() {
+          findByPk() {
             return {};
           },
           update() {}

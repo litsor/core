@@ -5,7 +5,7 @@ module.exports = {
     Database: {
       get() {
         return {
-          findById() {
+          findByPk() {
             return {
               dataValues: {id: '1', title: 'Test'},
               destroy() {}
