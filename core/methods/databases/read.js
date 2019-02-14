@@ -61,27 +61,6 @@ module.exports = {
     }), {});
     data.id = id;
 
-    // Expand referenced objects.
-    const promises = [];
-    Object.keys(data).forEach(field => {
-      if (typeof modelInstance.properties[field] === 'object' && modelInstance.properties[field].isReference) {
-        promises.push((async () => {
-          const refmodel = modelInstance.properties[field].$ref.substring(14);
-          try {
-            const {storage} = Models.get(refmodel);
-            const script = ScriptsManager.get(`Storage${storage}Read`);
-            data[field] = await script.run({
-              model: refmodel,
-              id: item[field]
-            });
-          } catch (err) {
-            item[field] = null;
-          }
-        })());
-      }
-    });
-    await Promise.all(promises);
-
     return data;
   }
 };
