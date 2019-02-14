@@ -120,24 +120,6 @@ module.exports = {
       });
     });
 
-    // Fetch referenced objects.
-    const promises = Object.keys(references).map(key => (async () => {
-      const [model, id] = key.split(':');
-      const {storage} = Models.get(model);
-      const script = ScriptsManager.get(`Storage${storage}Read`);
-      let result = null;
-      try {
-        result = await script.run({model, id});
-      } catch (err) {
-        console.log(err);
-        console.log('Unable to fetch reference: ' + err.message);
-      }
-      references[key].forEach(({index, field}) => {
-        output.items[index][field] = result;
-      });
-    })());
-    await Promise.all(promises);
-
     return output;
   }
 };

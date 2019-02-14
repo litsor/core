@@ -2,7 +2,7 @@
 
 / = / script "StorageList"
 
-/ = select {
+/data = select {
   model: /model,
   filters: /filters,
   offset: /offset,
@@ -10,3 +10,12 @@
   order: /order,
   selections: /selections
 }
+
+/selections/items ~ {id: {}}
+/data/items = /data/items map expandReferences {
+  model: /model,
+  data: /item,
+  selections: /selections/items
+}
+
+/ = /data

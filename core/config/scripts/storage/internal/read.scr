@@ -2,8 +2,14 @@
 
 / = / script "StorageRead"
 
-/ = read {
+/data = read {
   model: /model,
   id: /id,
+  selections: /selections
+}
+
+/ = expandReferences {
+  model: /model,
+  data: /data,
   selections: /selections
 }

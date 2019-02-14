@@ -2,8 +2,14 @@
 
 / = / script "StorageUpdate"
 
-/ = update {
+/data = update {
   id: /id,
   data: /input,
   model: /model
+}
+
+/ = expandReferences {
+  model: /model,
+  data: /data,
+  selections: /selections
 }
