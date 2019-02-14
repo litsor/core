@@ -7,7 +7,6 @@
     "test": "mocha -b -t 5s core/test/*.js",
     "coverage": "nyc mocha -b -t 5s core/test/*.js",
     "semantic-release": "semantic-release",
-    "commitmsg": "commitlint -e $GIT_PARAMS",
     "semantic-commit": "commit"
   },
   "author": "",
@@ -41,5 +40,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/litsor/core.git"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -e $HUSKY_GIT_PARAMS"
+    }
   }
 }
