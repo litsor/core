@@ -2,7 +2,6 @@
 
 let expect;
 let WebsiteMockup;
-let websiteMockup;
 
 module.exports = {
   mockups: {
