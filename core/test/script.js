@@ -239,6 +239,18 @@ describe('Script', () => {
     expect(output).to.deep.equal({foo: 'bar', bar: [3, 4]});
   });
 
+  it('will return null when value in json pointer is not found', async () => {
+    script.load(`/ = /foo`);
+    const output = (await script.run({baz: 3, qux: 4}));
+    expect(output).to.deep.equal(null);
+  });
+
+  it('will return null json pointer when requesting property on null', async () => {
+    script.load(`/ = /foo/bar`);
+    const output = (await script.run({foo: null}));
+    expect(output).to.deep.equal(null);
+  });
+
   it('can run a code block', async () => {
     script.load(`/ = {{/a = 3\n/b = 4}}`);
     const output = (await script.run({}));
