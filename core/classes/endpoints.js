@@ -168,7 +168,11 @@ class Endpoints extends ConfigFiles {
     input = {...input, ...this.input.get(input, route.variables || {})};
 
     const result = (await script.run(input)) || {};
-    ctx.response.body = result.body || null;
+    if (result.binary && typeof result.body === 'string') {
+      ctx.response.body = Buffer.from(result.body, 'base64');
+    } else {
+      ctx.response.body = result.body || null;
+    }
     if (typeof result.status === 'number' && result.status >= 100 && result.status <= 512) {
       ctx.response.status = result.status;
     }

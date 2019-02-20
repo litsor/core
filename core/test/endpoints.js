@@ -91,4 +91,12 @@ describe('Endpoints', () => {
     const body = await result.json();
     expect(body).to.have.property('title', 'Hello world');
   });
+
+  it('can send binary response', async () => {
+    const result = await fetch('http://localhost:1234/binary', {
+      method: 'GET'
+    });
+    const body = await result.buffer();
+    expect(body.toString('base64')).to.equal('/dTFXaRb2H1rINhamO9cEw==');
+  });
 });
