@@ -1,0 +1,9 @@
+id: Binary
+path: /binary
+method: GET
+script: Binary
+params: {}
+output:
+  mime: application/octet-stream
+  schema:
+    type: string

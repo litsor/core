@@ -167,7 +167,12 @@ class Script {
         if (pointer === '/') {
           return clone(context.data);
         }
-        return clone(get(typeof context.data === 'object' && context !== null ? context.data : {}, pointer));
+        try {
+          const output = clone(get(typeof context.data === 'object' && context !== null ? context.data : {}, pointer));
+          return typeof output === 'undefined' ? null : output;
+        } catch (err) {
+          return null;
+        }
       case 'json':
       default:
         return this.getJson(children[0], context);
