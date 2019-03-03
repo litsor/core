@@ -106,20 +106,11 @@ module.exports = {
       }))[0].dataValues.count;
     }
 
-    // Build a list of referenced objects.
-    const references = {};
-    output.items.forEach((item, index) => {
+    // Parse JSON fields.
+    output.items.forEach(item => {
       attributes.forEach(field => {
         if (item[field] && typeof modelInstance.properties[field] === 'object' && ['object', 'array'].indexOf(modelInstance.properties[field].type) >= 0) {
           item[field] = JSON.parse(item[field]);
-        }
-        if (item[field] && typeof modelInstance.properties[field] === 'object' && modelInstance.properties[field].isReference) {
-          const refmodel = modelInstance.properties[field].$ref.substring(14);
-          const id = item[field];
-          if (typeof references[`${refmodel}:${id}`] === 'undefined') {
-            references[`${refmodel}:${id}`] = [];
-          }
-          references[`${refmodel}:${id}`].push({index, field});
         }
       });
     });
