@@ -136,19 +136,13 @@ describe('CRUD', () => {
       query: `mutation deletePost ($id: ID!) {
         deletePost(id: $id) {
           id
-          title
-          body
-          created
         }
       }`,
       variables: {id: temporary.id}
     });
     expect(result).to.have.property('deletePost');
-    // The return value is expected to be the deleted Post object.
+    // The return value is expected to have the deleted id.
     expect(result.deletePost).to.have.property('id', temporary.id);
-    expect(result.deletePost).to.have.property('title', 'Test2');
-    expect(result.deletePost).to.have.property('body', 'Test4');
-    expect(result.deletePost).to.have.property('created', 1534567890);
     const listAfterDelete = await graphql.query({
       query: `query listPost {
         listPost(filters: {title: "Test2"}) {

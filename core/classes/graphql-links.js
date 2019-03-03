@@ -271,7 +271,7 @@ class GraphqlLinks extends ConfigFiles {
           variables: {
             model: model.id
           },
-          outputSchema: {$ref: '#/definitions/' + model.id + 'Object'},
+          outputSchema: {$ref: '#/definitions/DeletedObject'},
           outputMultiple: false
         };
       }

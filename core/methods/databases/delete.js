@@ -31,6 +31,6 @@ module.exports = {
     }
     const output = {...item.dataValues};
     await item.destroy();
-    return Immutable.fromJS(output);
+    return Immutable.fromJS({id});
   }
 };

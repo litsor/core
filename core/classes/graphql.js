@@ -1,7 +1,7 @@
 'use strict';
 
 const Router = require('koa-router');
-const {graphqlKoa, graphiqlKoa} = require('apollo-server-koa');
+const {graphqlKoa} = require('apollo-server-koa');
 const {makeExecutableSchema} = require('graphql-tools');
 const {graphql, GraphQLScalarType} = require('graphql');
 const GraphQLJson = require('graphql-type-json');
@@ -83,6 +83,10 @@ class Graphql {
     const emptySchema = `
       "Any known object type"
       interface AnyObject {
+        id: ID!
+      }
+      "Deleted object"
+      type DeletedObject implements AnyObject {
         id: ID!
       }
       "JSON value"
