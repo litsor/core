@@ -2,6 +2,7 @@
 'use strict';
 
 const Fs = require('fs');
+const {resolve} = require('path');
 const {promisify} = require('util');
 const {kebabCase} = require('lodash');
 const globby = require('globby');
@@ -65,7 +66,7 @@ class ConfigFiles {
   async readFiles() {
     const loader = this.plain ? this.readPlainFiles : this.yaml.readFiles;
     const files = {
-      ...(await loader(`core/config/${this.configName}/**/*${this.extension}`)),
+      ...(await loader(resolve(__dirname, `../config/${this.configName}/**/*${this.extension}`))),
       ...(await loader(`${this.configDir}/${this.configName}/**/*${this.extension}`))
     };
     for (let i = 0; i < Object.keys(files).length; ++i) {
