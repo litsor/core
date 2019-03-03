@@ -189,7 +189,7 @@ describe('CRUD', () => {
     const result = await graphql.query({
       query: `mutation {
         createPost(input: {
-          title: "Test",
+          title: "Test property",
           body: "Test",
           created: 1234567890,
           properties: {foo: "bar"}
@@ -215,6 +215,22 @@ describe('CRUD', () => {
     expect(result).to.have.property('Post');
     expect(result.Post).to.have.property('properties');
     expect(result.Post.properties).to.deep.equal({foo: 'bar'});
+  });
+
+  it('can read object field in list query', async () => {
+    const result = await graphql.query({
+      query: `query {
+        listPost(filters: {title: "Test property"}) {
+          items {
+            properties
+          }
+        }
+      }`,
+      variables: {}
+    });
+    expect(result.listPost.items).to.have.length(1);
+    expect(result.listPost.items[0]).to.have.property('properties');
+    expect(result.listPost.items[0].properties).to.deep.equal({foo: 'bar'});
   });
 
   it('can update object field', async () => {

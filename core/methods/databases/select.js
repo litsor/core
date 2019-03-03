@@ -110,6 +110,9 @@ module.exports = {
     const references = {};
     output.items.forEach((item, index) => {
       attributes.forEach(field => {
+        if (item[field] && typeof modelInstance.properties[field] === 'object' && ['object', 'array'].indexOf(modelInstance.properties[field].type) >= 0) {
+          item[field] = JSON.parse(item[field]);
+        }
         if (item[field] && typeof modelInstance.properties[field] === 'object' && modelInstance.properties[field].isReference) {
           const refmodel = modelInstance.properties[field].$ref.substring(14);
           const id = item[field];
