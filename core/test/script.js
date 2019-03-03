@@ -716,4 +716,13 @@ describe('Script', () => {
     });
   });
 
+  it('returns null when requesting properties on null', async () => {
+    script.load(`
+      /a = null
+      / = /a/b
+    `);
+    const output = (await script.run({}));
+    expect(output).to.equal(null);
+  });
+
 });
