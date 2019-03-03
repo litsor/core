@@ -434,7 +434,9 @@ class Script {
         setData(current / value);
         break;
       case '~':
-        setData(current || value);
+        if (typeof current === 'undefined' || current === null || current === '') {
+          setData(value);
+        }
         break;
       default:
         setData(value);

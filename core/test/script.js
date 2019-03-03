@@ -416,6 +416,26 @@ describe('Script', () => {
     expect(output).to.deep.equal({a: 3, b: 2});
   });
 
+  it('will not override 0 or false when using default operator', async () => {
+    script.load(`
+      /a = null
+      /b = false
+      /c = 0
+      /d = ""
+      /a ~ true
+      /b ~ true
+      /c ~ true
+      /d ~ true
+    `);
+    const output = (await script.run({}));
+    expect(output).to.deep.equal({
+      a: true,
+      b: false,
+      c: 0,
+      d: true
+    });
+  });
+
   it('can execute query', async () => {
     script.load(`/ = query {foo}`);
     const output = (await script.run({}));
