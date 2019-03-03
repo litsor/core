@@ -3,8 +3,6 @@
 module.exports = {
   title: 'And',
   description: 'Logical and',
-  isBinary: true,
-  cache: Infinity,
   lazy: true,
 
   leftSchema: {},
@@ -17,6 +15,6 @@ module.exports = {
     if (context.methodState) {
       return right();
     }
-    return false;
+    return null;
   }
 };

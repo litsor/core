@@ -5,9 +5,8 @@ module.exports = {
   description: 'Logical or',
   lazy: true,
 
-  inputSchema: {
-    type: 'object'
-  },
+  leftSchema: {},
+  rightSchema: {},
 
   binary: async (left, right, {}, context) => {
     if (context.methodState === null) {
