@@ -16,6 +16,12 @@ class Container {
         require: []
       }
     };
+    this.started = new Promise(resolve => {
+      this.setStarted = () => {
+        resolve();
+        this.started = true;
+      };
+    });
   }
 
   async startup() {
@@ -33,6 +39,7 @@ class Container {
         };
       }
     });
+    this.setStarted();
   }
 
   async shutdown() {
@@ -56,6 +63,7 @@ class Container {
   }
 
   async get(name) {
+    await this.started;
     if (typeof this.services[name] === 'undefined') {
       throw new TypeError('Unknown service ' + name);
     }

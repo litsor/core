@@ -12,6 +12,12 @@ class Graphql {
   constructor({Http, Log}) {
     this.http = Http;
     this.log = Log;
+    this.started = new Promise(resolve => {
+      this.setStarted = () => {
+        resolve();
+        this.started = true;
+      };
+    });
   }
 
   startup() {
@@ -49,7 +55,8 @@ class Graphql {
     return result.data;
   }
 
-  handleRequest(ctx, next) {
+  async handleRequest(ctx, next) {
+    await this.started;
     return this.handler(ctx, next);
   }
 
@@ -95,6 +102,7 @@ class Graphql {
       };
       return {schema: this.schema, context};
     });
+    this.setStarted();
     this.updateTypeMap();
   }
 
