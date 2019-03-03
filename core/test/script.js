@@ -42,8 +42,14 @@ const Methods = {
     if (name === '*') {
       return (left, right) => left * right;
     }
+    if (name === '/') {
+      return (left, right) => left / right;
+    }
     if (name === '>=') {
       return (left, right) => left >= right;
+    }
+    if (name === 'pow') {
+      return (left, right) => Math.pow(left, right);
     }
     if (name === 'cache') {
       const callback = async (_, right) => await right() === 'cid' ? 'ok' : false;
@@ -210,14 +216,6 @@ describe('Script', () => {
     script.load(`/ = 1 + (2 * 3)`);
     const output = (await script.run({}));
     expect(output).to.equal(7);
-  });
-
-  it('will evaluate from left to right', async () => {
-    // The mathematical expression 2 * 2 + 2 * 2 can be expected to equal 8,
-    // but is evaluated as 2 * (2 + (2 * 2)) and equals 12.
-    script.load(`/ = 2 * 2 + 2 * 2`);
-    const output = (await script.run({}));
-    expect(output).to.equal(12);
   });
 
   it('can re-assign values', async () => {
@@ -670,6 +668,32 @@ describe('Script', () => {
     resume(state);
     await new Promise(resolve => setTimeout(resolve, 10));
     expect(Methods.testCounter).to.equal(3);
+  });
+
+  it('will execute expressions accoding to BIDMAS rules', async () => {
+    script.load(`
+      /a = 2 + 3 * 4 + 5
+      /b = 2 * 3 + 4
+      /c = 1 + (2 * 3 + 4)
+      /d = 2 * (3 + 4)
+      /e = 2 * 3 + 4 * 5
+      /f = 4 * 3 / 2
+      /g = 3 / 4 * 2
+      /h = 2 + 2 pow 2
+      /i = 2 pow 2 + 2
+    `);
+    const output = (await script.run({}));
+    expect(output).to.deep.equal({
+      a: 19,
+      b: 10,
+      c: 11,
+      d: 14,
+      e: 26,
+      f: 6,
+      g: 1.5,
+      h: 6,
+      i: 6
+    });
   });
 
 });

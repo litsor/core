@@ -94,6 +94,43 @@ class Script {
       } : {type, text, line: line(start)};
     };
     this.ast = parser.getAST(script).children.map(cleanup);
+    this.rearrangeBidmas({children: this.ast});
+  }
+
+  /**
+   * Rearrange the AST tree according to the BIDMAS rules.
+   */
+  rearrangeBidmas(element) {
+    const weights = {
+      'pow': -3,
+      '/': -2,
+      '*': -2,
+      '+': -1,
+      '-': -1
+    };
+    const b = e => e.type === 'binary_expression';
+    const w = e => weights[e.children[1].text] || (e.children[1].children && weights[e.children[1].children[0].text]) || 0;
+    const r = e => e.children[2].children[0];
+    let tmp;
+    if ((b(element) && b(r(element)) && w(r(element)) > w(element)) || (b(element) && b(r(element)) && w(element) < 0 && w(r(element)) < 0 && w(element) == w(r(element)))) {
+      // Swap l <-> r.
+      tmp = element.children[0];
+      element.children[0] = element.children[2];
+      element.children[2] = tmp;
+      // Swap lr <-> r.
+      tmp = element.children[0].children[0].children[2];
+      element.children[0].children[0].children[2] = element.children[2];
+      element.children[2] = tmp;
+      // Swap lr <-> ll.
+      tmp = element.children[0].children[0].children[2];
+      element.children[0].children[0].children[2] = element.children[0].children[0].children[0];
+      element.children[0].children[0].children[0] = tmp;
+      // Swap operator.
+      tmp = element.children[1];
+      element.children[1] = element.children[0].children[0].children[1];
+      element.children[0].children[0].children[1] = tmp;
+    }
+    (element.children || []).forEach(child => this.rearrangeBidmas(child));
   }
 
   setId(id) {
