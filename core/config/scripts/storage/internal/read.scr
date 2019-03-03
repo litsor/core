@@ -5,11 +5,17 @@
 /data = read {
   model: /model,
   id: /id,
-  selections: /selections
+  selections: /selections,
+  nullOnError: true
 }
 
-/ = expandReferences {
-  model: /model,
-  data: /data,
-  selections: /selections
-}
+/output = null
+/ = /data then {{
+  /output = expandReferences {
+    model: /model,
+    data: /data,
+    selections: /selections
+  }
+}}
+
+/ = /output
