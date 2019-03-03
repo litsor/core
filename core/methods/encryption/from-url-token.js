@@ -9,15 +9,15 @@ module.exports = {
     minLength: 43
   },
 
-  requires: ['Encrypt'],
+  requires: ['Encrypt', 'Immutable'],
 
-  unary: async (input, {Encrypt}) => {
+  unary: async (input, {Encrypt, Immutable}) => {
     const inputData = Buffer.from(input.split('-').join('+').split('_').join('/').split('.').join(''), 'base64');
     const hash = inputData.slice(0, 32);
     const data = Encrypt.decrypt(inputData.slice(32));
     if (hash.toString('base64') !== Encrypt.hmac(data)) {
       return null;
     }
-    return data;
+    return Immutable.fromJS(data);
   }
 };

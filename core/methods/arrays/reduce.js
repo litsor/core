@@ -8,9 +8,11 @@ module.exports = {
   leftSchema: {type: 'array'},
   rightSchema: {title: 'Reducer'},
 
-  binary: async (input, reducer, {}, context) => {
+  requires: ['Immutable'],
+
+  binary: async (input, reducer, {Immutable}, context) => {
     const items = await input();
-    if (!Array.isArray(items)) {
+    if (!Immutable.isIndexed(items)) {
       throw new Error('Left operand must be an array');
     }
     if (!context.methodState) {
@@ -19,11 +21,11 @@ module.exports = {
         output: null
       };
     }
-    for (let i = context.methodState.i; i < items.length; ++i) {
-      context.methodState.output = await reducer({
-        previous: context.methodState.output,
-        current: items[i]
-      }, context);
+    const base = Immutable.isKeyed(context.data) ? context.data : Immutable.fromJS({});
+    for (let i = context.methodState.i; i < items.size; ++i) {
+      context.methodState.output = await reducer(base
+        .setIn(['previous'], context.methodState.output)
+        .setIn(['current'], items.get(i)), context);
     }
     return context.methodState.output;
   }

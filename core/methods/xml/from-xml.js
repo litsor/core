@@ -11,7 +11,9 @@ module.exports = {
     type: 'string'
   },
 
-  unary: async input => {
+  requires: ['Immutable'],
+
+  unary: async (input, {Immutable}) => {
     if (input.startsWith('<?xml')) {
       input = input.replace(/<\?xml[^>]+>/, '');
     }
@@ -56,6 +58,6 @@ module.exports = {
       throw new Error('Parse error in XML');
     }
 
-    return base.children[0];
+    return Immutable.fromJS(base.children[0]);
   }
 };

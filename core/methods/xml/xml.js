@@ -42,6 +42,7 @@ module.exports = {
   },
 
   unary: async input => {
+    input = input.toJS();
     const escape = string => (string || '').split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;');
     const convert = element => {
       const {tagName, namespace, attributes, children, content} = {

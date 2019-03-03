@@ -13,9 +13,9 @@ module.exports = {
     type: 'string'
   },
 
-  requires: ['ScriptsManager'],
+  requires: ['ScriptsManager', 'Immutable'],
 
-  binary: async (input, script, {ScriptsManager}) => {
-    return ScriptsManager.get(script).run(input);
+  binary: async (input, script, {ScriptsManager, Immutable}) => {
+    return Immutable.fromJS(await ScriptsManager.get(script).run(input));
   }
 };

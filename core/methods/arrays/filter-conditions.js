@@ -17,5 +17,11 @@ module.exports = {
     type: 'object'
   },
 
-  binary: (input, filters) => input.filter(item => Object.keys(filters).reduce((keep, field) => keep && item[field] === filters[field], true))
+  binary: (input, filters) => {
+    filters = filters.toJS();
+    return input.filter(item => {
+      item = item.toJS();
+      return Object.keys(filters).reduce((keep, field) => keep && item[field] === filters[field], true)
+    });
+  }
 };

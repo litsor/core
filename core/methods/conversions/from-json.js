@@ -6,5 +6,7 @@ module.exports = {
 
   inputSchema: {type: 'string'},
 
-  unary: operand => JSON.parse(operand)
+  requires: ['Immutable'],
+
+  unary: (operand, {Immutable}) => Immutable.fromJS(JSON.parse(operand))
 };

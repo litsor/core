@@ -44,6 +44,7 @@
     "graphql-type-json": "^0.2.1",
     "handlebars": "^4.1.0",
     "http-errors": "^1.7.1",
+    "immutable": "^4.0.0-rc.12",
     "is-my-json-valid": "^2.19.0",
     "js-yaml": "^3.12.0",
     "jsonpointer": "^4.0.1",

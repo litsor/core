@@ -1,23 +1,30 @@
 /* eslint-disable no-await-in-loop */
 'use strict';
 
+const {isIndexed, isKeyed, isImmutable, fromJS} = require('immutable');
 const {cloneDeep, isEqual} = require('lodash');
 const validator = require('is-my-json-valid');
 const reload = require('require-reload')(require);
 
 class MethodTester {
-  constructor({JsonSchema}) {
+  constructor({JsonSchema, Immutable}) {
     this.jsonSchema = JsonSchema;
+    this.immutable = Immutable;
   }
 
   async runTest(method, {startupTest, shutdownTest, mockups}, test) {
     const type = typeof test.input === 'undefined' ? 'binary' : 'unary';
 
+    mockups = {
+      ...(mockups || {}),
+      Immutable: this.immutable
+    };
+
     const inputs = type === 'unary' ? ['input'] : ['left', 'right'];
     const inputData = {};
     for (let i = 0; i < inputs.length; ++i) {
       const input = inputs[i];
-      inputData[input] = method.lazy ? test[input] : cloneDeep(test[input]);
+      inputData[input] = method.lazy ? test[input] : fromJS(test[input]);
       const inputSchema = method[`${input}Schema`];
       if (inputSchema) {
         inputSchema.title = inputSchema.title || input;
@@ -37,7 +44,7 @@ class MethodTester {
     }
 
     const context = {
-      data: {},
+      data: fromJS({}),
       methodState: null
     };
 
@@ -46,12 +53,16 @@ class MethodTester {
     try {
       await (startupTest || (async () => {})).bind(method)();
       if (type === 'unary') {
-        output = await method.unary(inputData.input, mockups || {}, context);
+        output = await method.unary(fromJS(inputData.input), mockups, context);
       } else {
-        const left = method.lazy && typeof inputData.left !== 'function' ? () => inputData.left : inputData.left;
-        const right = method.lazy && typeof inputData.right !== 'function' ? () => inputData.right : inputData.right;
-        output = await method.binary(left, right, mockups || {}, context);
+        const left = method.lazy && typeof inputData.left !== 'function' ? () => fromJS(inputData.left) : fromJS(inputData.left);
+        const right = method.lazy && typeof inputData.right !== 'function' ? () => fromJS(inputData.right) : fromJS(inputData.right);
+        output = await method.binary(left, right, mockups, context);
       }
+      if (!isImmutable(output) && (output !== null && typeof output === 'object')) {
+        throw new Error('Output must be provided as immutable');
+      }
+      output = isImmutable(output) ? output.toJS() : output;
       await (shutdownTest || (async () => {})).bind(method)();
     } catch (err) {
       await (shutdownTest || (async () => {})).bind(method)();
@@ -76,13 +87,6 @@ class MethodTester {
         }
       } else if (!isEqual(output, test.output)) {
         console.log('Output does not match output given in test: ', output);
-        return false;
-      }
-    }
-
-    for (let i = 0; i < inputs.length; ++i) {
-      if (!isEqual(inputData[inputs[i]], test[inputs[i]])) {
-        console.log('Input object was changed, clone object before modifying');
         return false;
       }
     }
@@ -129,6 +133,6 @@ class MethodTester {
 }
 
 MethodTester.singleton = true;
-MethodTester.require = ['JsonSchema'];
+MethodTester.require = ['JsonSchema', 'Immutable'];
 
 module.exports = MethodTester;

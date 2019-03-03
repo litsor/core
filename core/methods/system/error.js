@@ -69,7 +69,8 @@ module.exports = {
     _output: null
   },
 
-  unary: ({type, message}) => {
+  unary: input => {
+    const {type, message} = input.toJS();
     throw new createError[type](message);
   }
 };

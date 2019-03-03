@@ -58,9 +58,10 @@ module.exports = {
     additionalProperties: false
   },
 
-  requires: ['Database', 'Models', 'ScriptsManager'],
+  requires: ['Database', 'Models', 'Immutable'],
 
-  unary: async ({filters, model, offset, limit, order, selections}, {Database, Models, ScriptsManager}) => {
+  unary: async (left, {Database, Models, Immutable}) => {
+    const {filters, model, offset, limit, order, selections} = left.toJS();
     const where = Object.keys(filters || {}).reduce((prev, name) => {
       const match = name.match(/^(.+)_(ne|gt|gte|lt|lte|like|notLike|in|notIn)$/);
       let field = name;
@@ -120,6 +121,6 @@ module.exports = {
       });
     });
 
-    return output;
+    return Immutable.fromJS(output);
   }
 };

@@ -1,8 +1,7 @@
 /* eslint-disable no-await-in-loop */
 'use strict';
 
-const {clone, cloneDeep, union, difference} = require('lodash');
-const {get, set} = require('jsonpointer');
+const {isImmutable, fromJS, isKeyed, isIndexed} = require('immutable');
 const {Grammars} = require('ebnf');
 const grammar = require('../assets/grammar');
 
@@ -10,8 +9,11 @@ const parser = new Grammars.Custom.Parser(grammar);
 
 class Context {
   constructor(data, correlationId = '') {
-    const cloned = cloneDeep(data);
-    this.data = cloned;
+    if (isImmutable(data)) {
+      this.data = data;
+    } else {
+      this.data = fromJS(data);
+    }
     this.unassignedValue = undefined;
     this.correlationId = correlationId;
     this.line = 1;
@@ -114,8 +116,7 @@ class Script {
   }
 
   async getJson({type, children, text}, context) {
-    const array = [];
-    let object = {};
+    let object = fromJS({});
     switch (type) {
       case 'object':
         // Serial execution matters for rest operator.
@@ -123,40 +124,45 @@ class Script {
           const child = this.unpackAst(children[i]);
           if (child.rest_operator) {
             const addProperties = await this.runExpression(child.rest_operator[0], context);
-            if (typeof addProperties !== 'object' || addProperties === null) {
+            if (!isKeyed(addProperties)) {
               throw new TypeError('Expression for rest operator in objects must result in an object');
             }
-            object = {
-              ...object,
-              ...addProperties
-            };
+            object = object.merge(addProperties);
           } else {
             const memberName = child.member_name[0];
             const name = memberName.type === 'name' ? child.member_name[0].text : await this.runExpression(memberName, context);
             if (typeof name !== 'string') {
               throw new TypeError('Expression for object member name does not return a string');
             }
-            object[name] = await this.runExpression(child.expression[0], context);
+            object = object.setIn([name], await this.runExpression(child.expression[0], context));
           }
         }
         return object;
       case 'array':
+        let array = fromJS([]);
         for (let i = 0; i < (children || []).length; ++i) {
           const child = children[i];
           if (child.type === 'rest_operator') {
             const addItems = await this.runExpression(child.children[0], context);
-            if (!Array.isArray(addItems)) {
+            if (!isIndexed(addItems)) {
               throw new TypeError('Expression for rest operator in arrays must result in an array');
             }
-            addItems.forEach(item => array.push(item));
+            array = array.concat(addItems);
           } else {
-            array.push(await this.runExpression(child.children[0], context));
+            array = array.push(fromJS(await this.runExpression(child.children[0], context)));
           }
         }
         return array;
       default:
-        return JSON.parse(text);
+        return fromJS(JSON.parse(text));
     }
+  }
+
+  pathFromPointer(pointer) {
+    if (pointer === '/') {
+      return [];
+    }
+    return pointer.substring(1).split('/');
   }
 
   async getValue({type, text, children}, context) {
@@ -165,14 +171,14 @@ class Script {
       case 'jsonpointer':
         pointer = text || '/' + JSON.parse(children[0].text);
         if (pointer === '/') {
-          return clone(context.data);
+          return context.data;
         }
-        try {
-          const output = clone(get(typeof context.data === 'object' && context !== null ? context.data : {}, pointer));
-          return typeof output === 'undefined' ? null : output;
-        } catch (err) {
+        if (!isImmutable(context.data)) {
+          // The root is a scalar value. We cannot call "getIn" on it.
           return null;
         }
+        const output = context.data.getIn(this.pathFromPointer(pointer));
+        return typeof output === 'undefined' ? null : output;
       case 'json':
       default:
         return this.getJson(children[0], context);
@@ -183,7 +189,7 @@ class Script {
     const methodName = method.text || method.children[0].text;
     const callback = this.methods.getUnaryMethod(methodName);
     const operand = await this.runExpression(expression.children[0], context);
-    const output = callback(operand, context);
+    const output = await callback(operand, context);
     context.methodState = null;
     return output;
   }
@@ -201,8 +207,7 @@ class Script {
           context.child = expressionContext;
           importContext = null;
         }
-        const output = this.runExpression(source.children[0], expressionContext);
-        return output;
+        return this.runExpression(source.children[0], expressionContext);
       };
       const output = await callback(operand(left), operand(right), context);
       context.child = null;
@@ -211,7 +216,8 @@ class Script {
     }
     const leftOperand = await this.runExpression(left.children[0], context);
     const rightOperand = await this.runExpression(right.children[0], context);
-    return callback(leftOperand, rightOperand, context);
+    const output = await callback(leftOperand, rightOperand, context);
+    return output;
   }
 
   async getParamDefinitons(field, graphqlType, variables, params, context) {
@@ -223,6 +229,9 @@ class Script {
         const num = Object.keys(variables).length + 1;
         params.push(`$var${num}:${paramType}`);
         variables['var' + num] = await this.getValue(expression.value[0], context);
+        if (isImmutable(variables['var' + num])) {
+          variables['var' + num] = variables['var' + num].toJS();
+        }
         paramDefs.push(`${name}:$var${num}`);
       } else {
         // The expression can only contains a JSON scalar type,
@@ -311,8 +320,18 @@ class Script {
         // Throw HttpErrors as-is.
         throw e;
       }
-      throw new Error(this.id + ' line ' + this.context.line + ': ' + e.message);
+      throw new Error(this.id + ' line ' + context.line + ': ' + e.message);
     }
+  }
+
+  getIn(data, pointer) {
+    if (pointer === '/') {
+      return data;
+    }
+    if (!isImmutable(data)) {
+      return null;
+    }
+    return data.getIn(pointer.substring(1).split('/'));
   }
 
   async runCommand(command, context) {
@@ -325,29 +344,45 @@ class Script {
       return context;
     }
     const [pointer, operator] = config.assignment.map(item => item.text || '/' + JSON.parse(item.children[0].text));
-    const current = pointer === '/' ? context.data : get(context.data, pointer);
+
+    const current = this.getIn(context.data, pointer);
     const setData = pointer === '/' ? data => {
-      context.data = data;
-    } : data => set(context.data, pointer, data);
+      context.data = fromJS(data);
+    } : data => {
+      if (!isImmutable(context.data)) {
+        context.data = {};
+      }
+      context.data = context.data.setIn(this.pathFromPointer(pointer), data);
+    };
     let list;
     switch (operator) {
       case '[]=':
-        list = Array.isArray(current) ? cloneDeep(current) : [];
-        list.push(value);
-        setData(list);
+        if (isIndexed(current)) {
+          setData(current.push(value));
+        } else {
+          setData(fromJS([]).push(value));
+        }
         break;
       case '=[]':
-        list = Array.isArray(current) ? cloneDeep(current) : [];
-        list.unshift(value);
-        setData(list);
+        if (isIndexed(current)) {
+          setData(current.unshift(value));
+        } else {
+          setData(fromJS([]).push(value));
+        }
         break;
       case '+[]':
-        list = Array.isArray(current) ? cloneDeep(current) : [];
-        setData(union(list, [value]));
+        if (isIndexed(current)) {
+          setData(current.toSet().add(value).toList());
+        } else {
+          setData(fromJS([]).push(value));
+        }
         break;
       case '-[]':
-        list = Array.isArray(current) ? cloneDeep(current) : [];
-        setData(difference(list, [value]));
+        if (isIndexed(current)) {
+          setData(current.toSet().delete(value).toList());
+        } else {
+          setData(fromJS([]));
+        }
         break;
       case '+=':
         setData(current + value);
@@ -432,7 +467,9 @@ class Script {
     const time = (new Date() - start) / 1e3;
     this.statistic && this.statistic.add(time, {script: this.id});
 
-    return returnContext ? context : context.data;
+    return returnContext ? context : (
+      isImmutable(context.data) ? context.data.toJS() : context.data
+    );
   }
 }
 

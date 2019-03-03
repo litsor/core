@@ -31,9 +31,10 @@ module.exports = {
     additionalProperties: false
   },
 
-  requires: ['Database', 'Models', 'ScriptsManager'],
+  requires: ['Database', 'Models', 'Immutable'],
 
-  unary: async ({id, model, selections, nullOnError}, {Database, Models, ScriptsManager}) => {
+  unary: async (left, {Database, Models, Immutable}) => {
+    const {id, model, selections, nullOnError} = left.toJS();
     const modelInstance = await Models.get(model);
     const db = Database.get(model);
 
@@ -61,6 +62,6 @@ module.exports = {
     }), {});
     data.id = id;
 
-    return data;
+    return Immutable.fromJS(data);
   }
 };

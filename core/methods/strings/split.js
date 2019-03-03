@@ -13,7 +13,9 @@ module.exports = {
     type: 'string'
   },
 
-  binary: (input, separator) => {
-    return input.split(separator);
+  requires: ['Immutable'],
+
+  binary: (input, separator, {Immutable}) => {
+    return Immutable.fromJS(input.split(separator));
   }
 };

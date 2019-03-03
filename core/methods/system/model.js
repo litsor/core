@@ -2,9 +2,7 @@
 
 module.exports = {
   name: 'Model',
-  requires: ['Models'],
+  requires: ['Models', 'Immutable'],
   tests: [],
-  unary: (name, {Models}) => {
-    return Models.get(name);
-  }
+  unary: async (name, {Models, Immutable}) => Immutable.fromJS(await Models.get(name))
 };

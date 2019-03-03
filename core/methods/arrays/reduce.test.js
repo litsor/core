@@ -4,7 +4,9 @@ module.exports = {
   tests: [{
     can: 'reduce list',
     left: [1, 2, 3],
-    right: ({previous, current}) => (previous || 0) + current,
+    right: data => {
+      return (data.getIn(['previous']) || 0) + data.getIn(['current']);
+    },
     output: 6
   }]
 };

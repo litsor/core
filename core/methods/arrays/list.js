@@ -51,7 +51,11 @@ module.exports = {
       // }
     }
   },
-  binary: (items, {filters = {}, order = [], offset = 0, limit = Infinity}) => {
+  requires: ['Immutable'],
+  binary: (items, options, {Immutable}) => {
+    items = items.toJS();
+    const {filters = {}, order = [], offset = 0, limit = Infinity} = options.toJS();
+
     items = items.filter(item => Object.keys(filters).reduce((keep, field) => keep && item[field] === filters[field], true));
 
     order.forEach(({field, direction}) => {
@@ -77,6 +81,6 @@ module.exports = {
 
     items = items.slice(offset, offset + limit);
 
-    return {count, items};
+    return Immutable.fromJS({count, items});
   }
 };

@@ -17,10 +17,10 @@ module.exports = {
     parameters: {}
   },
 
-  requires: ['Database'],
+  requires: ['Database', 'Immutable'],
 
-  binary: async (parameters, query, {Database}) => {
-    const result = await Database.query(query, parameters);
-    return JSON.parse(JSON.stringify(result[0]));
+  binary: async (parameters, query, {Database, Immutable}) => {
+    const result = await Database.query(query, parameters.toJS());
+    return Immutable.fromJS(JSON.parse(JSON.stringify(result[0])));
   }
 };

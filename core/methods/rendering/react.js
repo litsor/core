@@ -12,9 +12,10 @@ let clientCachedDate;
 
 module.exports = {
   name: 'React',
-  requires: ['Graphql'],
+  requires: ['Graphql', 'Immutable'],
   tests: [],
-  binary: async ({properties, cache, prerender, extract, hydrate}, filename, {Graphql}) => {
+  binary: async (left, filename, {Graphql, Immutable}) => {
+    const {properties, cache, prerender, extract, hydrate} = left.toJS();
     const component = require(filename).default;
 
     let client;
@@ -51,6 +52,6 @@ module.exports = {
       output.store = client.extract();
     }
 
-    return output;
+    return Immutable.fromJS(output);
   }
 };

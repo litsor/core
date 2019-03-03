@@ -22,6 +22,6 @@ module.exports = {
 
   binary: (variables, template) => {
     const render = Handlebars.compile(template);
-    return render(variables);
+    return render(variables.toJS());
   }
 };

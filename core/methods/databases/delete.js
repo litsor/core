@@ -20,9 +20,10 @@ module.exports = {
     additionalProperties: false
   },
 
-  requires: ['Database'],
+  requires: ['Database', 'Immutable'],
 
-  unary: async ({id, model}, {Database}) => {
+  unary: async (data, {Database, Immutable}) => {
+    const {id, model} = data.toJS();
     const db = Database.get(model);
     const item = await db.findByPk(id);
     if (item === null) {
@@ -30,6 +31,6 @@ module.exports = {
     }
     const output = {...item.dataValues};
     await item.destroy();
-    return output;
+    return Immutable.fromJS(output);
   }
 };

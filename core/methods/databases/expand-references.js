@@ -23,9 +23,10 @@ module.exports = {
     }
   },
 
-  requires: ['Models', 'ScriptsManager'],
+  requires: ['Models', 'ScriptsManager', 'Immutable'],
 
-  unary: async ({data: input, model, selections}, {Models, ScriptsManager}) => {
+  unary: async (left, {Models, ScriptsManager, Immutable}) => {
+    const {data: input, model, selections} = left.toJS();
     const data = {...input};
     const modelInstance = Models.get(model);
 
@@ -62,6 +63,6 @@ module.exports = {
     });
     await Promise.all(promises);
 
-    return data;
+    return Immutable.fromJS(data);
   }
 };

@@ -26,7 +26,8 @@ module.exports = {
 
   requires: ['Log'],
 
-  unary: ({severity, message}, {Log}, context) => {
+  unary: (input, {Log}, context) => {
+    const {severity, message} = input.toJS();
     Log.log({severity, message, correlationId: context.correlationId});
   }
 };

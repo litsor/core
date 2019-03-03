@@ -31,6 +31,7 @@ module.exports = {
   defaults: {},
 
   unary: async input => {
+    input = typeof input === 'object' ? input.toJS() : input;
     const date = moment.tz(input.date, input.format, true, input.timezone || 'UTC');
     if (date.isValid()) {
       return date.toISOString();

@@ -2,11 +2,11 @@
 
 module.exports = {
   name: 'Processlist',
-  requires: ['ScriptsManager'],
+  requires: ['ScriptsManager', 'Immutable'],
   inputSchema: {
     type: 'string'
   },
-  unary: (name, {ScriptsManager}) => {
-    return ScriptsManager.get(name).getProcessList();
+  unary: (name, {ScriptsManager, Immutable}) => {
+    return Immutable.fromJS(ScriptsManager.get(name).getProcessList());
   }
 };

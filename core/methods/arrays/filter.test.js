@@ -4,7 +4,7 @@ module.exports = {
   tests: [{
     can: 'filter list',
     left: ['a', 'b', 'c'],
-    right: ({item}) => item !== 'b',
+    right: input => input.getIn(['item']) !== 'b',
     output: ['a', 'c']
   }]
 };

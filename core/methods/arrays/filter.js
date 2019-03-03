@@ -8,28 +8,21 @@ module.exports = {
   leftSchema: {type: 'array'},
   rightSchema: {title: 'Filter function'},
 
-  binary: async (input, filter, {}, context) => {
-    let output = [];
+  requires: ['Immutable'],
+
+  binary: async (input, filter, {Immutable}, context) => {
     const items = await input();
-    if (!Array.isArray(items)) {
-      throw new Error('Left operand must be an array');
-    }
     if (!context.methodState) {
       context.methodState = {
         i: 0,
-        output: []
+        output: Immutable.fromJS([])
       };
     }
-    for (let i = context.methodState.i; i < items.length; ++i) {
-      if (typeof items[i] === 'undefined') {
-        continue;
-      }
-      const keep = await filter({
-        ...context.data,
-        item: items[i]
-      });
+    const base = Immutable.isKeyed(context.data) ? context.data : Immutable.fromJS({});
+    for (let i = context.methodState.i; i < items.size; ++i) {
+      const keep = await filter(base.setIn(['item'], items.get(i)));
       if (keep) {
-        context.methodState.output.push(items[i]);
+        context.methodState.output = context.methodState.output.push(items.get(i));
       }
     }
     return context.methodState.output;

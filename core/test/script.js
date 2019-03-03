@@ -3,6 +3,7 @@
 
 const {randomBytes} = require('crypto');
 const {expect} = require('chai');
+const {isKeyed, fromJS} = require('immutable');
 const Script = require('./../classes/script');
 
 const Log = {
@@ -55,20 +56,18 @@ const Methods = {
         if (!context.methodState) {
           context.methodState = {
             i: 0,
-            output: []
+            output: fromJS([])
           };
         }
-        for (let i = context.methodState.i; i < items.length; ++i) {
+        const base = isKeyed(context.data) ? context.data : fromJS({});
+        for (let i = context.methodState.i; i < items.size; ++i) {
           context.methodState.i = i;
-          if (typeof items[i] === 'undefined') {
+          if (typeof items.get(i) === 'undefined') {
             continue;
           }
-          const keep = await filter({
-            ...context.data,
-            item: items[i]
-          });
+          const keep = await filter(base.setIn(['item'], items.get(i)));
           if (keep) {
-            context.methodState.output.push(items[i]);
+            context.methodState.output = context.methodState.output.push(items.get(i));
           }
         }
         return context.methodState.output;
@@ -291,6 +290,13 @@ describe('Script', () => {
     script.load(`/a = 2\n/b = {{/a = 3\n/ = 4}}`);
     const output = (await script.run({}));
     expect(output).to.deep.equal({a: 2, b: 4});
+  });
+
+  it('creates a new scope for a code block (deep set)', async () => {
+    // The second /a is written in the block scope and may not override the main scope.
+    script.load(`/a = {c: 2}\n/b = {{/a/c = 3\n/ = 4}}`);
+    const output = (await script.run({}));
+    expect(output).to.deep.equal({a: {c: 2}, b: 4});
   });
 
   it('copies scope data in new block scope', async () => {

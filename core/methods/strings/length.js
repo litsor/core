@@ -8,7 +8,12 @@ module.exports = {
     title: 'Input'
   },
 
-  unary: input => {
+  requires: ['Immutable'],
+
+  unary: (input, {Immutable}) => {
+    if (Immutable.isImmutable(input)) {
+      input = input.toJS();
+    }
     if (typeof input === 'string' || Array.isArray(input)) {
       return input.length;
     }

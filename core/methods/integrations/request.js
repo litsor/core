@@ -63,9 +63,10 @@ module.exports = {
     cookies: {}
   },
 
-  requires: ['Statistics'],
+  requires: ['Statistics', 'Immutable'],
 
-  unary: async ({url, headers = {}, method = 'GET', body, format = 'auto', cookies = {}}, {Statistics}) => {
+  unary: async (input, {Statistics, Immutable}) => {
+    const {url, headers = {}, method = 'GET', body, format = 'auto', cookies = {}} = input.toJS();
     const getCookies = (res, initialCookies) => {
       const cookies = clone(initialCookies || {});
       // @todo: Does not work for multiple cookies.
@@ -128,7 +129,7 @@ module.exports = {
         throw new Error('Retrieved error code from remote server: ' + response.status);
       }
       if (format === 'json' || (format === 'auto' && response.headers.get('content-type').match(/^application\/json/))) {
-        return response.json();
+        return Immutable.fromJS(response.json());
       }
       if (format === 'xml' || (format === 'auto' && response.headers.get('content-type').match(/^text\/xml/))) {
         // @todo: Convert to XML.
@@ -140,11 +141,11 @@ module.exports = {
       }
       return response.text();
     }).then(body => {
-      return {
+      return Immutable.fromJS({
         body,
         headers: response.headers.raw(),
         cookies: getCookies(response, cookies)
-      };
+      });
     }).catch(err => {
       recordStats(0);
       throw new Error(`Unable to connect to "${url}": ${err.message}`);

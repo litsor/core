@@ -7,5 +7,5 @@ module.exports = {
   leftSchema: {type: 'array'},
   rightSchema: {type: 'array'},
 
-  binary: async (left, right) => ([...left, ...right].filter((item, index, array) => array.indexOf(item) === index))
+  binary: async (left, right) => left.toSet().union(right.toSet()).toList()
 };
