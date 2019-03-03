@@ -10,7 +10,7 @@ class Http {
   constructor({Config, Log}) {
     this.log = Log;
 
-    this.port = Config.get('/port', 80);
+    this.port = parseInt(Config.get('/port', 80), 10);
     this.app = new Koa();
 
     this.app.use(async (ctx, next) => {
@@ -110,7 +110,9 @@ class Http {
   async startup() {
     this.server = createServer(this.app.callback());
     this.server.listen = promisify(this.server.listen);
-    await this.server.listen(this.port);
+    if (this.port) {
+      await this.server.listen(this.port);
+    }
     destroyable(this.server);
   }
 
