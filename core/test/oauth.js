@@ -290,9 +290,6 @@ describe('OAuth', () => {
     const url = parse(result.headers.get('location'), true);
     expect(url.query).to.have.property('code');
 
-    // The authorization code should be deleted. We should get a new code.
-    expect(url.query.code).to.not.equal(temporary.code);
-
     const body = {
       grant_type: 'authorization_code',
       client_id: temporary.untrustedPublicClient,

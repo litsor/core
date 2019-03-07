@@ -21,33 +21,23 @@
 /data/status = 400
 
 / = (/grant_type == "authorization_code") then {{
-  /codes = query {
-    codes: listOauthAuthorizationCode(filters: {
-      code: /code,
-      client: /client/id,
-      expires_gte: /now
-    }) {
-      items {
-        id
-        code
-        scope
-        user { id }
-        client { id }
-      }
-    }
-  } pick /codes/items
+  /code = /code split "."
+  /valid = /code/2 == base64urlFromBase64 signature /code/0 + "." + /code/1
+  / = /valid then {{
+    /payload = fromJson fromBase64url /code/1
+    debug /payload
+    /valid = (/payload/exp > int date "X") and (/payload/aud == /client/id)
+  }}
 
-  / = /codes/0 then {{
-    # Immediately delete code, as this is a one-time token.
-    mutation { deleteOauthAuthorizationCode(id: /codes/0/id) { id } }
+  / = /valid then {{
 
     # Check if an access token already exists.
     # Only remember login when token is still valid for at least 15 minutes.
     /tokens = query {
       tokens: listOauthAccessToken(filters: {
-        client: /codes/0/client/id,
-        user: /codes/0/user/id,
-        scope: /codes/0/scope,
+        client: /payload/aud,
+        user: /payload/sub,
+        scope: /payload/scope,
         expires_gt: (/now + 900)
       }) {
         items {
@@ -71,9 +61,9 @@
       / = (/tokens/0/client/type == "confidential") then {{
         /data/body/refresh_token = query {
           tokens: listOauthRefreshToken(filters: {
-            client: /codes/0/client/id,
-            user: /codes/0/user/id,
-            scope: /codes/0/scope,
+            client: /payload/aud,
+            user: /payload/sub,
+            scope: /payload/scope,
             expires_gt: /now + 900
           }) { items { token } }
         } pick /tokens/items/0/token
@@ -84,8 +74,8 @@
       # Create a new access token.
       /token = {
         client: /client,
-        user: /codes/0/user,
-        scope: /codes/0/scope
+        user: {id: /payload/sub},
+        scope: /payload/scope
       } script "OauthCreateToken"
 
       /data/body = {

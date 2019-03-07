@@ -113,17 +113,23 @@
 
   / = (/allow == "true") then {{
     / = (/response_type == "code") then {{
-      /authorizationCode = mutation {
-        code: createOauthAuthorizationCode(input: {
-          client: /client/id,
-          user: /user/id,
-          scope: /scope,
-          created: /now,
-          expires: /now + 60,
-          code: secureToken 256
-        }) { id code }
-      } pick /code
-      /redirect_uri = /redirect_uri + "?code=" + (urlencoded /authorizationCode/code) + "&state=" + (urlencoded /state)
+      /payload = {
+        aud: /client/id,
+        sub: /user/id,
+        scope: /scope,
+        exp: (int date "X") + 60
+      }
+      /code = [
+        json {
+          alg: "HS256",
+          typ: "JWT"
+        },
+        json /payload
+      ]
+      /code = (/code map base64url /item) join "."
+      /code = /code + "." + base64urlFromBase64 signature /code
+
+      /redirect_uri = /redirect_uri + "?code=" + /code + "&state=" + (urlencoded /state)
     }}
     / = (/response_type == "token") then {{
       /token = / script "OauthCreateToken"
