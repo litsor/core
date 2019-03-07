@@ -133,6 +133,11 @@ class Website {
       return request.headers;
     });
 
+    this.api.process('GET /unknown-page', request => {
+      request.status = 404;
+      return {};
+    });
+
     return this.api.listen(8372);
   }
 

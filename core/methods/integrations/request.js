@@ -50,6 +50,10 @@ module.exports = {
           title: 'JSON object',
           type: 'object'
         }]
+      },
+      returnError: {
+        title: 'Return error',
+        type: 'boolean'
       }
     },
     required: ['url'],
@@ -60,13 +64,14 @@ module.exports = {
     method: 'GET',
     headers: {},
     format: 'auto',
-    cookies: {}
+    cookies: {},
+    returnError: false
   },
 
   requires: ['Statistics', 'Immutable'],
 
   unary: async (input, {Statistics, Immutable}) => {
-    const {url, headers = {}, method = 'GET', body, format = 'auto', cookies = {}} = input.toJS();
+    const {url, headers = {}, method = 'GET', body, format = 'auto', cookies = {}, returnError = false} = input.toJS();
     const getCookies = (res, initialCookies) => {
       const cookies = clone(initialCookies || {});
       // @todo: Does not work for multiple cookies.
@@ -126,7 +131,9 @@ module.exports = {
       response = _response;
       recordStats(response.status);
       if (response.status >= 300) {
-        throw new Error('Retrieved error code from remote server: ' + response.status);
+        if (!returnError) {
+          throw new Error('Retrieved error code from remote server: ' + response.status);
+        }
       }
       if (format === 'json' || (format === 'auto' && response.headers.get('content-type').match(/^application\/json/))) {
         return Immutable.fromJS(response.json());
@@ -144,7 +151,8 @@ module.exports = {
       return Immutable.fromJS({
         body,
         headers: response.headers.raw(),
-        cookies: getCookies(response, cookies)
+        cookies: getCookies(response, cookies),
+        code: response.status
       });
     }).catch(err => {
       recordStats(0);

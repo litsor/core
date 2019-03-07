@@ -91,5 +91,15 @@ module.exports = {
       expect(output.body).to.equal('Lorem ipsum');
       return true;
     }
+  }, {
+    can: 'return error',
+    input: {
+      url: 'http://localhost:8372/unknown-page',
+      returnError: true
+    },
+    output: output => {
+      expect(output.code).to.equal(404);
+      return true;
+    }
   }]
 };
