@@ -9,18 +9,19 @@ module.exports = {
       date: '2018',
       format: 'YYYY'
     },
-    output: value => value === moment.tz('2018', 'YYYY').toISOString()
+    output: value => value === moment.tz('2018', 'YYYY', 'UTC').toISOString()
   }, {
     can: 'get date with format YYYY-MM-DD in Amsterdam',
     input: {
       date: '2018-02-12',
       format: 'YYYY-MM-DD'
     },
-    output: value => value === moment.tz('2018-02-12', 'YYYY-MM-DD').toISOString()
+    output: value => value === moment.tz('2018-02-12', 'YYYY-MM-DD', 'UTC').toISOString()
   }, {
     can: 'get false when input is incorrect',
     input: {
-      format: 'YYYY-MM-DD'
+      format: 'YYYY-MM-DD',
+      date: 'test'
     },
     output: false
   }]

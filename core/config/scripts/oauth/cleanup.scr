@@ -1,7 +1,7 @@
 # OauthCleanup
 # cron="0 30 5 * * *"
 
-/now = int date "X"
+/now = timestamp date {}
 
 / = ("Internal" == (model "OauthRevokedToken") pick /storage) then {{
   {now: /now} sql "DELETE FROM oauth_revoked_tokens WHERE expires < :now"

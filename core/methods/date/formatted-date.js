@@ -3,8 +3,8 @@
 const moment = require('moment-timezone');
 
 module.exports = {
-  title: 'Date',
-  description: 'Get current date',
+  title: 'Formatted date',
+  description: 'Format date',
 
   inputSchema: {
     type: 'object',
@@ -24,23 +24,17 @@ module.exports = {
         type: 'string'
       }
     },
-    required: [],
+    required: ['format'],
     additionalProperties: false
   },
 
   unary: async input => {
     if (typeof input !== 'object') {
-      throw new Error('Input for date must be an object');
+      throw new Error('Input for formattedDate must be an object');
     }
     input = input.toJS();
-    if (input.date && !input.format) {
-      throw new Error('Format is required when converting date');
-    }
-    input.date = input.date || moment();
-    const date = moment.tz(input.date, input.format, input.timezone || 'UTC');
-    if (date.isValid()) {
-      return date.toISOString();
-    }
-    return false;
+    input.date = input.date ? moment(input.date) : moment();
+    input.timezone = input.timezone || 'UTC';
+    return input.date.tz(input.timezone).format(input.format);
   }
 };

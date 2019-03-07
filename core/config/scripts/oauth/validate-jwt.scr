@@ -7,7 +7,7 @@
   /signature = base64urlFromBase64 signature /token/1 + "." + /token/2
   / = (/signature == /token/3) then {{
     /payload = fromJson fromBase64url /token/2
-    / = (/payload/exp < int date "X") then {{
+    / = (/payload/exp < timestamp date {}) then {{
       /payload = null
     }}
   }}

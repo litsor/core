@@ -10,7 +10,7 @@
 # /token/refresh_token
 
 /config = {} script "OauthConfig"
-/now = int date "X"
+/now = timestamp date {}
 
 /expires = /now + 43200
 

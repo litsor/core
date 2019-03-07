@@ -1,6 +1,6 @@
 # OauthToken
 
-/now = int date "X"
+/now = timestamp date {}
 
 /client = query {
   item: OauthClient(id: /client_id) {
@@ -25,7 +25,7 @@
   /valid = /code and /code/3 == base64urlFromBase64 signature /code/1 + "." + /code/2
   / = /valid then {{
     /payload = fromJson fromBase64url /code/2
-    /valid = (/payload/exp > int date "X") and (/payload/aud == /client/id)
+    /valid = (/payload/exp > /now) and (/payload/aud == /client/id)
   }}
 
   / = /valid then {{
@@ -56,7 +56,7 @@
   /valid = /parts and /parts/3 == base64urlFromBase64 signature /parts/1 + "." + /parts/2
   / = /valid then {{
     /payload = fromJson fromBase64url /parts/2
-    /valid = (/payload/exp > int date "X") and (/payload/aud == /client/id)
+    /valid = (/payload/exp > timestamp date {}) and (/payload/aud == /client/id)
   }}
 
   /revoked = query {
