@@ -98,6 +98,7 @@ class Database {
         this.startup();
       }, this.retryIn * 1e3);
     });
+    return this.connected;
   }
 
   async shutdown() {
