@@ -4,15 +4,18 @@ storage: Internal
 properties:
   name:
     type: string
+    maxLength: 255
   type:
     $ref: '#/definitions/OauthClientType'
   trusted:
     type: boolean
   redirectUri:
     type: string
+    maxLength: 255
   # Secret is required for confidential clients and used to refresh the access token.
   secret:
     type: string
+    maxLength: 255
   created:
     type: integer
 required:

@@ -22,6 +22,9 @@ class Database {
       return Sequelize.STRING(schema.maxLength);
     }
     if (schema.type === 'string') {
+      if (Array.isArray(schema.enum)) {
+        return Sequelize.STRING(255);
+      }
       return Sequelize.TEXT;
     }
     if (schema.type === 'integer') {
@@ -45,10 +48,13 @@ class Database {
     await this.connected;
     Object.keys(definition.properties).forEach(field => {
       let propertySchema = definition.properties[field];
+      let type;
       if (propertySchema.$ref) {
         propertySchema = models.get(propertySchema.$ref.substring(14));
+        type = Sequelize.STRING(255);
+      } else {
+        type = this.getType(propertySchema);
       }
-      const type = this.getType(propertySchema);
       fields[field] = {
         type,
         allowNull: (definition.required || []).indexOf(field) < 0,
