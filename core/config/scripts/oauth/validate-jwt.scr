@@ -1,0 +1,16 @@
+# ValidateJWT
+
+/token = /token regexp "^([^.]+)\\.([^.]+)\\.([^.]+)$"
+
+/payload = null
+/ = /token then {{
+  /signature = base64urlFromBase64 signature /token/1 + "." + /token/2
+  / = (/signature == /token/3) then {{
+    /payload = fromJson fromBase64url /token/2
+    / = (/payload/exp < int date "X") then {{
+      /payload = null
+    }}
+  }}
+}}
+
+/ = /payload

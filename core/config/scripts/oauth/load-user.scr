@@ -2,39 +2,38 @@
 
 /authorization ~ /"headers/x-authorization"
 /authorization ~ /headers/authorization
+/authorization ~ ""
 
-/ = /authorization then {{
-  /tokens = query {
-    tokens: listOauthAccessToken(filters: {
-      token: /authorization from 7,
-      expires_gt: round int date "X"
-    }, limit: 1) {
-      items {
-        id
-        client { id }
-        expires
-        user { id }
-        scope
-      }
-    }
-  } pick /tokens/items
+/token = /authorization regexp "^Bearer ([^.]+)\\.([^.]+)\\.([^.]+)$"
 
-  / = /tokens/0 then {{
-    /userStorage = (model "User") pick /storage
-    /user = {
-      id: /tokens/0/user/id,
-      model: "User"
-    } script "Storage" + /userStorage + "Read"
-    /data = {
-      .../user,
-      client: /tokens/0/client,
-      token: {
-        id: /tokens/0/id,
-        expires: /tokens/0/expires,
-        scope: /tokens/0/scope scopeIntersection /user/scope
-      }
-    }
+/user = null
+/ = /token then {{
+  /signature = base64urlFromBase64 signature /token/1 + "." + /token/2
+  / = (/signature == /token/3) then {{
+    /payload = fromJson fromBase64url /token/2
+    / = (/payload/exp > int date "X") then {{
+
+      /revoked = query {
+        list: listOauthRevokedToken(filters: {
+          tokenHash: (/token/1 + "." + /token/2 + "." + /signature) hash "sha1"
+        }) {
+          count
+        }
+      } pick /list/count
+      / = (!/revoked) then {{
+        /user = {
+          id: /payload/sub,
+          client: {
+            id: /payload/aud
+          },
+          token: {
+            expires: /payload/exp,
+            scope: /payload/scope
+          }
+        }
+      }}
+    }}
   }}
 }}
 
-/ = /data
+/ = /user

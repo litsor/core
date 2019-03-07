@@ -3,7 +3,6 @@
 
 /now = int date "X"
 
-{now: /now} sql "DELETE FROM oauth_access_token WHERE expires < :now"
-{now: /now} sql "DELETE FROM oauth_authorization_code WHERE expires < :now"
-{now: /now} sql "DELETE FROM oauth_refresh_token WHERE expires < :now"
-{now: /now} sql "DELETE FROM user_session WHERE expires < :now"
+/ = ("Internal" == (model "OauthRevokedToken") pick /storage) then {{
+  {now: /now} sql "DELETE FROM oauth_revoked_tokens WHERE expires < :now"
+}}

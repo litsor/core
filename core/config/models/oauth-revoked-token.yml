@@ -1,0 +1,12 @@
+id: OauthRevokedToken
+description: OAuth2 revoked tokens
+storage: Internal
+properties:
+  tokenHash:
+    type: string
+    maxLength: 40
+  expires:
+    type: integer
+required:
+  - tokenHash
+  - expires

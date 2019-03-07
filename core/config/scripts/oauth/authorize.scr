@@ -26,17 +26,11 @@
 }}
 
 / = /cookies/session then {{
-  /sessions = query {
-    sessions: listUserSession (filters: {token: /cookies/session}, limit: 1) {
-      items {
-        user { id name }
-      }
-    }
-  } pick /sessions/items
-  / = /sessions/0 then {{
+  /payload = {token: /cookies/session} script "ValidateJWT"
+  / = /payload then {{
     /user = {
-      id: /sessions/0/user/id,
-      name: /sessions/0/user/name
+      id: /payload/sub,
+      scope: /payload/scope
     }
   }}
 }}
@@ -49,7 +43,7 @@
       blocked: false
     }) {
       items {
-        id name password
+        id name scope password
       }
     }
   } pick /users/items
@@ -57,27 +51,24 @@
   / = /validPassword then {{
     /user = {
       id: /users/0/id,
-      name: /users/0/name
+      name: /users/0/name,
+      scope: /scope scopeIntersection /users/0/scope
     }
-    /session = {
-      user: /user/id,
-      created: /now,
-      token: secureToken 256,
-      expires: /now + {{
+    /session_token = {
+      aud: /client/id,
+      sub: /user/id,
+      scope: /user/scope,
+      exp: /now + {{
         /expires = /config/accessTokenExpire
         / = /remember then {{
           /expires = /config/rememberExpire
         }}
         / = /expires
       }}
-    }
-
-    /session = mutation {
-      session: createUserSession(input: /session) { id token }
-    } pick /session
+    } script "CreateJWT"
 
     /data/cookies/session = {
-      value: /session/token,
+      value: /session_token,
       path: "/oauth"
     }
     / = /remember then {{
@@ -94,22 +85,28 @@
   / = /client/trusted then {{
     /allow = "true"
   }}
-  / = (!/client/trusted) then {{
-    # Check if authorization was already given by checking the existence of an access token.
-    /tokens = query {
-      tokens: listOauthAccessToken(filters: {
-        client: /client/id,
-        user: /user/id,
-        scope: /scope,
-        expires_gt: /now + 900
-      }) {
-        items { id }
-      }
-    } pick /tokens/items
-    / = /tokens/0/id then {{
+
+  / = ((/allow != "true") and /cookies/trustedClients) then {{
+    # Check if user already gave access to this client.
+    /fingerprint = (/client/id + ":" + /scope) hash "sha1"
+    / = (((/cookies/trustedClients split ".") indexOf /fingerprint) >= 0) then {{
       /allow = "true"
     }}
   }}
+
+  / = (!/client/trusted and /allow == "true") then {{
+    # User gave access to an untrusted client. Remember this choice in a cookie.
+    /fingerprint = (/client/id + ":" + /scope) hash "sha1"
+    /cookies/trustedClients ~ ""
+    /cookies/trustedClients += /fingerprint + "."
+    /data/cookies/trustedClients = {
+      value: /cookies/trustedClients,
+      path: "/oauth",
+      maxAge: 86400 * 30
+    }
+  }}
+
+  /scope = /scope scopeIntersection /user/scope
 
   / = (/allow == "true") then {{
     / = (/response_type == "code") then {{

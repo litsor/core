@@ -21,110 +21,71 @@
 /data/status = 400
 
 / = (/grant_type == "authorization_code") then {{
-  /code = /code split "."
-  /valid = /code/2 == base64urlFromBase64 signature /code/0 + "." + /code/1
+  /code = /code regexp "^([^.]+)\\.([^.]+)\\.([^.]+)$"
+  /valid = /code and /code/3 == base64urlFromBase64 signature /code/1 + "." + /code/2
   / = /valid then {{
-    /payload = fromJson fromBase64url /code/1
-    debug /payload
+    /payload = fromJson fromBase64url /code/2
     /valid = (/payload/exp > int date "X") and (/payload/aud == /client/id)
   }}
 
   / = /valid then {{
-
-    # Check if an access token already exists.
-    # Only remember login when token is still valid for at least 15 minutes.
-    /tokens = query {
-      tokens: listOauthAccessToken(filters: {
-        client: /payload/aud,
-        user: /payload/sub,
-        scope: /payload/scope,
-        expires_gt: (/now + 900)
-      }) {
-        items {
-          id
-          token
-          expires
-          user { id }
-          client { id }
-        }
-      }
-    } pick /tokens/items
-
-    / = /tokens/0/id then {{
-      /data/body = {
-        access_token: /tokens/0/token,
-        token_type: "bearer",
-        user_id: /tokens/0/user/id,
-        expires_in: /tokens/0/expires - /now
-      }
-      # Also re-use the refresh token for confidential clients.
-      / = (/tokens/0/client/type == "confidential") then {{
-        /data/body/refresh_token = query {
-          tokens: listOauthRefreshToken(filters: {
-            client: /payload/aud,
-            user: /payload/sub,
-            scope: /payload/scope,
-            expires_gt: /now + 900
-          }) { items { token } }
-        } pick /tokens/items/0/token
-      }}
-    }}
-
-    / = (!/tokens/0/id) then {{
-      # Create a new access token.
-      /token = {
-        client: /client,
-        user: {id: /payload/sub},
-        scope: /payload/scope
-      } script "OauthCreateToken"
-
-      /data/body = {
-        access_token: /token/token,
-        token_type: "bearer",
-        user_id: /token/user,
-        expires_in: /token/expires - /now
-      }
-      / = /token/refresh_token then {{
-        /data/body/refresh_token = /token/refresh_token
-      }}
-    }}
-
-    /data/status = 200
-  }}
-
-}}
-
-/ = (/grant_type == "refresh_token") then {{
-  /refresh_tokens = query {
-    tokens: listOauthRefreshToken(filters: {
-      token: /refresh_token,
-      client: /client/id,
-      expires_gte: /now
-    }) {
-      items {
-        id
-        scope
-        user { id }
-        client { id type }
-      }
-    }
-  } pick /tokens/items
-
-  / = /refresh_tokens/0 then {{
-    # Delete old refresh token.
-    mutation { deleteOauthRefreshToken(id: /refresh_tokens/0/id) { id } }
-
     # Create a new access token.
     /token = {
       client: /client,
-      user: /refresh_tokens/0/user,
-      scope: /refresh_tokens/0/scope,
-      forceRecreate: true
+      user: {id: /payload/sub},
+      scope: /payload/scope
+    } script "OauthCreateToken"
+
+    /data/body = {
+      access_token: /token/token,
+      token_type: "bearer",
+      user_id: /payload/sub,
+      expires_in: /token/expires - /now
+    }
+    / = /token/refresh_token then {{
+      /data/body/refresh_token = /token/refresh_token
+    }}
+  }}
+
+  /data/status = 200
+}}
+
+/ = (/grant_type == "refresh_token") then {{
+
+  /parts = /refresh_token regexp "^([^.]+)\\.([^.]+)\\.([^.]+)$"
+  /valid = /parts and /parts/3 == base64urlFromBase64 signature /parts/1 + "." + /parts/2
+  / = /valid then {{
+    /payload = fromJson fromBase64url /parts/2
+    /valid = (/payload/exp > int date "X") and (/payload/aud == /client/id)
+  }}
+
+  /revoked = query {
+    list: listOauthRevokedToken(filters: {
+      tokenHash: /refresh_token hash "sha1"
+    }) {
+      count
+    }
+  } pick /list/count
+  /valid = /valid and (!/revoked)
+
+  / = /valid then {{
+    # Revoke refresh token.
+    mutation {
+      createOauthRevokedToken(input: {
+        tokenHash: /refresh_token hash "sha1",
+        expires: /payload/exp
+      }) { id }
+    }
+    # Create a new access token.
+    /token = {
+      client: /client,
+      user: /payload/sub,
+      scope: /payload/scope
     } script "OauthCreateToken"
     /data/body = {
       access_token: /token/token,
       token_type: "bearer",
-      user_id: /token/user,
+      user_id: /payload/sub,
       expires_in: /token/expires - /now
     }
     /data/body/refresh_token = /token/refresh_token

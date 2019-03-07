@@ -18,6 +18,7 @@ describe('OAuth', () => {
   let testUrl;
   let scriptsManager;
   let db;
+  let encrypt;
 
   before(async () => {
     container = new Container();
@@ -36,6 +37,7 @@ describe('OAuth', () => {
     await container.get('GraphqlLinks');
 
     db = await container.get('Database');
+    encrypt = await container.get('Encrypt');
 
     scriptsManager = await container.get('ScriptsManager');
     const create = scriptsManager.get('StorageInternalCreate');
@@ -201,6 +203,10 @@ describe('OAuth', () => {
     expect(result.headers.get('content-type')).to.equal('text/html; charset=utf-8');
     expect(result.headers.has('location')).to.equal(true);
 
+    // @todo: This could use a neater way to add the new cookie to the cookie jar.
+    const cookieHeaders = (result.headers.get('set-cookie') || '').split(/,[\s]*/).filter(str => str);
+    temporary.cookies += ',' + cookieHeaders.reduce((prev, curr) => prev + curr.split(';')[0] + ';', '')
+
     // @see https://tools.ietf.org/html/rfc6749#section-5.1
     expect(result.headers.get('cache-control')).to.equal('no-store');
     expect(result.headers.get('pragma')).to.equal('no-cache');
@@ -302,9 +308,6 @@ describe('OAuth', () => {
     });
     expect(tokenResult.status).to.equal(200);
     const tokenResponse = await tokenResult.json();
-
-    // The access token is still valid and should be reused.
-    expect(tokenResponse).to.have.property('access_token', temporary.access_token);
 
     expect(tokenResponse).to.have.property('user_id', '1');
     expect(tokenResponse).to.have.property('token_type', 'bearer');
@@ -552,10 +555,12 @@ describe('OAuth', () => {
 
   it('can remember login', async () => {
     const result = await login({remember: false});
-    expect(result.headers.get('set-cookie')).to.not.contain('expires');
+    const cookies = result.headers.get('set-cookie').split(',').filter(item => item.match(/^session=/)).join();
+    expect(cookies).to.not.contain('expires');
 
     const result2 = await login({remember: true});
-    expect(result2.headers.get('set-cookie')).to.contain('expires');
+    const cookies2 = result2.headers.get('set-cookie').split(',').filter(item => item.match(/^session=/)).join();
+    expect(cookies2).to.contain('expires');
   });
 
   it('rejects wrong username', async () => {
@@ -582,26 +587,27 @@ describe('OAuth', () => {
       });
       expect(resourceResult.status).to.equal(access ? 200 : 401);
     };
+    const ageToken = interval => {
+      let [header, payload] = temporary.access_token.split('.');
+      payload = Buffer.from(payload.split('-').join('+').split('_').join('/').split('.').join(''), 'base64').toString();
+      payload = JSON.parse(payload);
+      payload.exp -= interval;
+      payload = JSON.stringify(payload);
+      payload = Buffer.from(payload).toString('base64').split('+').join('-').split('/').join('_').split('=').join('');
+      temporary.access_token = [
+        header,
+        payload,
+        encrypt.hmac(header + '.' + payload).split('+').join('-').split('/').join('_').split('=').join('')
+      ].join('.');
+    };
     // We should have access now.
     await checkAccess(true);
     // We should still have access after 11 hours, since the token is valid for 12 hours.
-    await db.query('UPDATE oauth_access_token SET expires = expires - 39600');
+    ageToken(39600);
     await checkAccess(true);
     // We should should not have access after another 2 hours.
-    await db.query('UPDATE oauth_access_token SET expires = expires - 7200');
+    ageToken(7200);
     await checkAccess(false);
-  });
-
-  it('will cleanup old tokens', async () => {
-    const checkExists = async exists => {
-      const records = await db.query('SELECT * FROM oauth_access_token WHERE token = :token', {
-        token: temporary.access_token
-      });
-      expect(records[0].length > 0).to.equal(exists);
-    };
-    await checkExists(true);
-    await scriptsManager.get('OauthCleanup').run({});
-    await checkExists(false);
   });
 
   it('can destroy the token by calling /oauth/logout with session cookie', async () => {

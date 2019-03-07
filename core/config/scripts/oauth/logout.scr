@@ -1,28 +1,15 @@
 # OauthLogout
 
+/config = {} script "OauthConfig"
+
 / = /cookies/session then {{
-  /sessionId = query {
-    listUserSession(filters: {
-      token: /cookies/session
-    }) {
-      items {
-        id
-      }
-    }
-  } pick /listUserSession/items/0/id
-  / = /sessionId then {{
-    /tokens = query {
-      listOauthAccessToken(filters: {
-        session: /sessionId
-      }) {
-        items { id }
-      }
-    } pick /listOauthAccessToken/items
-    /tokens map mutation {
-      deleteOauthAccessToken(id: /item/id) { id }
-    }
+  /payload = {token: /cookies/session} script "ValidateJWT"
+  / = /payload then {{
     mutation {
-      deleteUserSession(id: /sessionId) { id }
+      createOauthRevokedToken(input: {
+        tokenHash: /cookies/session hash "sha1",
+        expires: /payload/exp
+      }) { id }
     }
   }}
 }}
@@ -30,18 +17,17 @@
 /user = / script "LoadUser"
 
 / = /user then {{
-  /tokens = query {
-    tokens: listOauthAccessToken(filters: {
-      client: /user/client/id,
-      user: /user/id
-    }) {
-      items {
-        id
-      }
-    }
-  } pick /tokens/items
-  /tokens map mutation {
-    deleteOauthAccessToken (id: /item/id) { id }
+  # Get used token from headers.
+  /authorization ~ /"headers/x-authorization"
+  /authorization ~ /headers/authorization
+  /token = /authorization regexp "^Bearer ([^.]+\\.[^.]+\\.[^.]+)$"
+  /token = /token/1
+
+  mutation {
+    createOauthRevokedToken(input: {
+      tokenHash: /token hash "sha1",
+      expires: /user/token/expires
+    }) { id }
   }
 }}
 

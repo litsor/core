@@ -1,0 +1,12 @@
+# CreateJWT
+
+/payload = /
+/token = [
+  json {
+    alg: "HS256",
+    typ: "JWT"
+  },
+  json /payload
+]
+/token = (/token map base64url /item) join "."
+/ = /token + "." + base64urlFromBase64 signature /token
