@@ -28,7 +28,7 @@ module.exports = {
     additionalProperties: false
   },
 
-  unary: async input => {
+  unary: input => {
     if (typeof input !== 'object') {
       throw new Error('Input for date must be an object');
     }
