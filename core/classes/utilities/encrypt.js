@@ -13,13 +13,9 @@ class Encrypt {
         this.key = readFileSync(`${configDir}/secret.key`);
       } catch (err) {
         this.key = randomBytes(32).toString('base64');
-        setTimeout(() => {
-          const token = this.adminToken();
-          console.log(`A new secret key was generated and stored in ${configDir}/secret.key`);
-          console.log(`Admin token: ${token}`);
-        }, 100);
         try {
           writeFileSync(`${configDir}/secret.key`, this.key);
+          console.log(`A new secret key was generated and stored in ${configDir}/secret.key`);
         } catch (err) {
           this.log.error('No secret key found and unable to write new key');
         }
@@ -28,17 +24,6 @@ class Encrypt {
     if (this.key) {
       this.key = createHash('sha256').update(this.key).digest();
     }
-  }
-
-  adminToken() {
-    // Do not re-use the encrypt function here, and use cleartext that is not
-    // valid JSON. This ensures that the admin token cannot be discovered by
-    // encrypting the cleartext from a script.
-    const cipher = createCipheriv('aes256', this.key, null);
-    return Buffer.concat([
-      cipher.update('.'.repeat(32)),
-      cipher.final()
-    ]).toString('base64');
   }
 
   encrypt(data) {

@@ -57,51 +57,6 @@ class Methods {
       Watch.watchTree('core/methods', callback);
       Watch.watchTree('methods', callback);
     }
-
-    const schema = `
-    type _method {
-      id: ID!
-      title: String!
-      description: String
-      inputSchema: JSON!
-      outputSchema(inputSchema: JSON!, options: JSON!): JSON!
-      defaults: JSON!
-      examples: [JSON!]!
-    }
-    extend type Query {
-      _method(id: ID!): _method
-      _methods: [_method]
-    }
-    `;
-    const requireAdmin = callback => (value, args, context) => {
-      const {headers} = context;
-      const header = headers.authorization || headers['x-authorization'];
-      if (!header) {
-        throw new Unauthorized();
-      }
-      if (header !== 'Bearer ' + this.encrypt.adminToken()) {
-        throw new Forbidden();
-      }
-      return callback(value, args, context);
-    };
-    const toMethod = id => ({
-      id,
-      title: this.methods[id].title,
-      decription: this.methods[id].description,
-      inputSchema: this.methods[id].inputSchema,
-      defaults: this.methods[id].defaults || {},
-      examples: this.methods[id].tests || []
-    });
-    const resolvers = {
-      Query: {
-        _methods: requireAdmin(() => Object.keys(this.methods).map(toMethod)),
-        _method: requireAdmin((_, {id}) => toMethod(id))
-      },
-      _method: {
-        outputSchema: requireAdmin(({id}, {inputSchema, options}) => this.methods[id].outputSchema(inputSchema, options))
-      }
-    };
-    await this.graphql.publish(schema, resolvers, `ConfigFiles:${this.configName}`);
   }
 
   async shutdown() {
