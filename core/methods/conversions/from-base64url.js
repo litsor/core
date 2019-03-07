@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = {
+  id: 'fromBase64url',
   title: 'From base64url',
   description: 'Parse base64url encoded string',
 

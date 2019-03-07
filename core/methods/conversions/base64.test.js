@@ -1,5 +1,8 @@
 'use strict';
 
 module.exports = {
-  tests: []
+  tests: [{
+    input: 'test',
+    output: 'dGVzdA=='
+  }]
 };
