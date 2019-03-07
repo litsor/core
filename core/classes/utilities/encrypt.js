@@ -1,7 +1,7 @@
 'use strict';
 
 const {readFileSync, writeFileSync} = require('fs');
-const {createHash, createCipher, createDecipher, createHmac, randomBytes} = require('crypto');
+const {createHash, createCipheriv, createDecipheriv, createHmac, randomBytes} = require('crypto');
 
 class Encrypt {
   constructor({Config, Log}) {
@@ -34,7 +34,7 @@ class Encrypt {
     // Do not re-use the encrypt function here, and use cleartext that is not
     // valid JSON. This ensures that the admin token cannot be discovered by
     // encrypting the cleartext from a script.
-    const cipher = createCipher('aes256', this.key);
+    const cipher = createCipheriv('aes256', this.key, null);
     return Buffer.concat([
       cipher.update('.'.repeat(32)),
       cipher.final()
@@ -43,7 +43,7 @@ class Encrypt {
 
   encrypt(data) {
     try {
-      const cipher = createCipher('aes256', this.key);
+      const cipher = createCipheriv('aes256', this.key, null);
       return Buffer.concat([
         cipher.update(JSON.stringify(data)),
         cipher.final()
@@ -55,7 +55,7 @@ class Encrypt {
 
   decrypt(data) {
     try {
-      const decipher = createDecipher('aes256', this.key);
+      const decipher = createDecipheriv('aes256', this.key, null);
       return JSON.parse(Buffer.concat([
         decipher.update(data instanceof Buffer ? data : Buffer.from(data, 'base64')),
         decipher.final()
