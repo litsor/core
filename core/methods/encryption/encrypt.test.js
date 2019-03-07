@@ -10,7 +10,7 @@ module.exports = {
   },
 
   tests: [{
-    can: 'Can encrypt data',
+    can: 'encrypt data',
     input: 'test',
     output: 'cipher'
   }],
