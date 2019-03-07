@@ -40,22 +40,9 @@ describe('Methods', () => {
     return !filename.endsWith('.test.js');
   }).forEach(filename => {
     const name = filename.match(/\/([^/]+)\.js$/)[1];
+    const id = require(__dirname + '/../../' + filename).id || camelCase(name);
     it(name, async () => {
-      const operators = {
-        not: '!',
-        equal: '==',
-        notEqual: '!=',
-        greaterThan: '>',
-        greaterThanEqual: '>=',
-        lessThan: '<',
-        lessThanEqual: '<=',
-        divide: '/',
-        multiply: '*',
-        plus: '+',
-        minus: '-'
-      };
-      const methodName = camelCase(name);
-      const method = await Methods.get(operators[methodName] || methodName);
+      const method = await Methods.get(id);
       const passed = await MethodTester.test(method, resolve(filename), true);
       expect(passed).to.equal(true);
     });
