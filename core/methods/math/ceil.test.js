@@ -2,7 +2,7 @@
 
 module.exports = {
   tests: [{
-    can: 'round number',
+    can: 'calculate ceil',
     input: 3.5,
     output: 4
   }]
