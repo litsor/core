@@ -5,14 +5,22 @@ const {createHash, createCipheriv, createDecipheriv, createHmac, randomBytes} = 
 
 class Encrypt {
   constructor({Config, Log}) {
-    this.key = Config.get('/secret-key', null);
+    this.key = null;
+    const configKey = Config.get('/secret-key', null);
+    if (configKey) {
+      this.key = createHash('sha256').update(configKey).digest();
+    }
     this.log = Log;
     const configDir = Config.get('/configDir', 'data');
     if (!this.key) {
       try {
         this.key = readFileSync(`${configDir}/secret.key`);
+        this.key = Buffer.from(this.key, 'base64');
+        if (this.key.byteLength !== 32) {
+          this.key = createHash('sha256').update(this.key).digest();
+        }
       } catch (err) {
-        this.key = randomBytes(32).toString('base64');
+        this.key = randomBytes(32);
         try {
           writeFileSync(`${configDir}/secret.key`, this.key);
           console.log(`A new secret key was generated and stored in ${configDir}/secret.key`);
@@ -21,15 +29,14 @@ class Encrypt {
         }
       }
     }
-    if (this.key) {
-      this.key = createHash('sha256').update(this.key).digest();
-    }
   }
 
   encrypt(data) {
     try {
-      const cipher = createCipheriv('aes256', this.key, null);
+      const iv = randomBytes(16);
+      const cipher = createCipheriv('aes-256-cbc', this.key, iv);
       return Buffer.concat([
+        iv,
         cipher.update(JSON.stringify(data)),
         cipher.final()
       ]).toString('base64');
@@ -40,9 +47,12 @@ class Encrypt {
 
   decrypt(data) {
     try {
-      const decipher = createDecipheriv('aes256', this.key, null);
+      data = data instanceof Buffer ? data : Buffer.from(data, 'base64');
+      const iv = data.slice(0, 16);
+      const cipher = data.slice(16);
+      const decipher = createDecipheriv('aes-256-cbc', this.key, iv);
       return JSON.parse(Buffer.concat([
-        decipher.update(data instanceof Buffer ? data : Buffer.from(data, 'base64')),
+        decipher.update(cipher),
         decipher.final()
       ]).toString());
     } catch (err) {
