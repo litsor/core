@@ -20,7 +20,11 @@ class Http {
 
     this.app.use((ctx, next) => this.logRequest(ctx, next));
 
-    this.app.use(bodyParser());
+    this.app.use(bodyParser({
+      jsonLimit: Config.get('/bodyParser_jsonLimit', '1mb'),
+      textLimit: Config.get('/bodyParser_textLimit', '1mb'),
+      formLimit: Config.get('/bodyParser_formLimit', '56kb')
+    }));
     this.app.use((ctx, next) => {
       if (ctx.request.headers.origin) {
         ctx.response.set({
