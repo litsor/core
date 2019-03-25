@@ -93,6 +93,40 @@
   }}
 }}
 
+/ = ((/grant_type == "password") and /client/trusted) then {{
+  /user = query {
+    listUser(filters: {
+      name: /username,
+      blocked: false
+    }) {
+      items {
+        id
+        password
+        scope
+      }
+    }
+  } pick /listUser/items/0
+  /data/status = 401
+  /validPassword = /user/password validatePassword /password
+  / = /validPassword then {{
+    /scope ~ "*"
+    /scope = /scope scopeIntersection /user/scope
+    /token = {
+      client: /client,
+      user: /user,
+      scope: /scope
+    } script "OauthCreateToken"
+    /data/body = {
+      access_token: /token/token,
+      token_type: "bearer",
+      user_id: /token/user,
+      expires_in: /token/expires - /now,
+      refresh_token: /token/refresh_token
+    }
+    /data/status = 200
+  }}
+}}
+
 # Set security related headers.
 /"data/headers/Cache-Control" = "no-store"
 /data/headers/Pragma = "no-cache"

@@ -660,4 +660,23 @@ describe('OAuth', () => {
     expect(result.headers.has('location')).to.equal(true);
     expect(result.headers.get('location')).to.equal('http://127.0.0.1:1234/oauth/logout');
   });
+
+  it('can use password flow', async () => {
+    const body = {
+      grant_type: 'password',
+      client_id: temporary.trustedConfidentialClient,
+      username: 'alice',
+      password: 'Welcome01!!',
+      client_secret: 'topsecret'
+    };
+    const tokenResult = await fetch('http://127.0.0.1:1234/oauth/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: stringify(body)
+    });
+    expect(tokenResult.status).to.equal(200);
+    const tokenResponse = await tokenResult.json();
+    expect(tokenResponse).to.have.property('refresh_token');
+    temporary.refresh_token = tokenResponse.refresh_token;
+  });
 });

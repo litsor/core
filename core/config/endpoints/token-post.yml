@@ -10,6 +10,7 @@ params:
       type: string
       enum:
         - authorization_code
+        - token
   client_id:
     name: Client id
     in: body
@@ -32,6 +33,16 @@ params:
       type: string
   client_secret:
     name: Client secret
+    in: body
+    schema:
+      type: string
+  username:
+    name: Username
+    in: body
+    schema:
+      type: string
+  password:
+    name: Password
     in: body
     schema:
       type: string
