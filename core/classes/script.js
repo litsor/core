@@ -313,7 +313,7 @@ class Script {
     const graphqlType = type === 'query' ? 'Query' : 'Mutation';
     const {fields, params, variables} = await this.getSelections(selections, [], {}, graphqlType, context);
     const query = `${type}${params.length > 0 ? ' (' + params.join(',') + ')' : ''} ${fields}`;
-    return this.graphql.query({query, variables});
+    return fromJS(this.graphql.query({query, variables}));
   }
 
   async runExpression({type, children}, context) {
@@ -389,7 +389,7 @@ class Script {
       if (!isImmutable(context.data)) {
         context.data = {};
       }
-      context.data = context.data.setIn(this.pathFromPointer(pointer), data);
+      context.data = context.data.setIn(this.pathFromPointer(pointer), fromJS(data));
     };
     let list;
     switch (operator) {
