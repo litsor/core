@@ -51,7 +51,7 @@ module.exports = {
               const script = ScriptsManager.get(`Storage${storage}Read`);
               data[field] = await script.run({
                 model: refmodel,
-                id: data[field],
+                id,
                 selections: subselections
               });
             } catch (err) {
