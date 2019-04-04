@@ -32,11 +32,19 @@ module.exports = {
 
     const isComplete = (data, selections) => Object.keys(selections).reduce((complete, key) => {
       if (typeof (data || {})[key] === 'undefined') {
+        // Check if we're dealing with an array of items and process them individually.
+        if (Array.isArray(data)) {
+          return complete && data.reduce((subComplete, item) => {
+            return subComplete && isComplete(item, selections);
+          }, true);
+        }
+
         return false;
       }
       if (Object.keys(selections[key]).length > 0) {
         return complete && isComplete(data[key], selections[key]);
       }
+
       return complete;
     }, true);
 
