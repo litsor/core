@@ -44,7 +44,6 @@ module.exports = {
       if (Object.keys(selections[key]).length > 0) {
         return complete && isComplete(data[key], selections[key]);
       }
-
       return complete;
     }, true);
 
