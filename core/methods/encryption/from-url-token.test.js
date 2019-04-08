@@ -1,12 +1,14 @@
 'use strict';
 
-const {createDecipher, createHmac} = require('crypto');
+const {createDecipheriv, createHmac, createHash} = require('crypto');
 
 module.exports = {
   mockups: {
     Encrypt: {
       decrypt(data) {
-        const decipher = createDecipher('aes256', 'secret key');
+        const key = createHash('sha256').update('secret key').digest();
+        const iv = Buffer.alloc(16);
+        const decipher = createDecipheriv('aes256', key, iv);
         return JSON.parse(Buffer.concat([
           decipher.update(data instanceof Buffer ? data : Buffer.from(data, 'base64')),
           decipher.final()
@@ -20,7 +22,7 @@ module.exports = {
 
   tests: [{
     can: 'Can decrypt token',
-    input: 'kxLpAXLdF1hXVASjpoaD1PNNmdPD2x63F2MLKqgOIXvQATwDW7qBhytBTGMgO4VN',
+    input: 'kxLpAXLdF1hXVASjpoaD1PNNmdPD2x63F2MLKqgOIXvFZYzU3iv-TEe4Td5cVYoT',
     output: {id: '34'}
   }],
 };

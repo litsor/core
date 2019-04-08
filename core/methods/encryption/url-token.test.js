@@ -1,12 +1,14 @@
 'use strict';
 
-const {createCipher, createHmac} = require('crypto');
+const {createCipheriv, createHmac, createHash} = require('crypto');
 
 module.exports = {
   mockups: {
     Encrypt: {
       encrypt(data) {
-        const cipher = createCipher('aes256', 'secret key');
+        const key = createHash('sha256').update('secret key').digest();
+        const iv = Buffer.alloc(16);
+        const cipher = createCipheriv('aes256', key, iv);
         return Buffer.concat([
           cipher.update(JSON.stringify(data)),
           cipher.final()
@@ -21,6 +23,6 @@ module.exports = {
   tests: [{
     can: 'Can construct token',
     input: {id: '34'},
-    output: 'kxLpAXLdF1hXVASjpoaD1PNNmdPD2x63F2MLKqgOIXvQATwDW7qBhytBTGMgO4VN'
+    output: 'kxLpAXLdF1hXVASjpoaD1PNNmdPD2x63F2MLKqgOIXvFZYzU3iv-TEe4Td5cVYoT'
   }],
 };
