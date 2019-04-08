@@ -30,7 +30,7 @@ module.exports = {
     const data = {...input};
     const modelInstance = Models.get(model);
 
-    const isComplete = (data, selections) => Object.keys(selections).reduce((complete, key) => {
+    const isComplete = (data, selections) => Object.keys(selections || {}).reduce((complete, key) => {
       if (typeof (data || {})[key] === 'undefined') {
         return false;
       }
