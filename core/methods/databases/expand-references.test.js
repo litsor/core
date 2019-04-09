@@ -79,7 +79,8 @@ module.exports = {
     },
     output: {
       author: {
-        id: '2'
+        id: '2',
+        __typename: 'UserObject'
       }
     }
   }]

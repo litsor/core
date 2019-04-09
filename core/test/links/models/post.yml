@@ -1,0 +1,16 @@
+id: Post
+description: Post
+storage: Internal
+properties:
+  title:
+    type: string
+    maxLength: 128
+  body:
+    type: string
+  author:
+    $ref: '#/definitions/Author'
+    reverse: posts
+required:
+  - title
+  - body
+  - created

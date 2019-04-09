@@ -1,0 +1,9 @@
+id: LastPost
+context: Author
+field: lastPost
+script: LastPost
+params: {}
+variables: {}
+outputSchema:
+  $ref: '#/definitions/PostObject'
+outputMultiple: false

@@ -1,0 +1,10 @@
+# FullAuthor
+
+/ = {
+  id: /id,
+  name: "John",
+  lastPost: {
+    title: "First post",
+    body: "Test"
+  }
+}

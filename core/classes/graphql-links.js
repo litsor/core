@@ -88,11 +88,12 @@ class GraphqlLinks extends ConfigFiles {
       additionalProperties: false
     };
 
-    const {Graphql, ScriptsManager, Models} = dependencies;
+    const {Graphql, ScriptsManager, Models, Selections} = dependencies;
 
     this.graphql = Graphql;
     this.scriptsManager = ScriptsManager;
     this.models = Models;
+    this.selections = Selections;
   }
 
   async resolve(scriptName, object, args, context) {
@@ -299,6 +300,13 @@ class GraphqlLinks extends ConfigFiles {
       }
 
       resolvers[context][field] = (object, args, context, ast) => {
+        const selections = this.astToSelectionTree(ast.fieldNodes[0]);
+
+        // Check if field is already resolved.
+        if (object && this.selections.isComplete(object[ast.fieldName], selections)) {
+          return object[ast.fieldName];
+        }
+
         let parent = {model: null, id: null};
         if (typeof object !== 'undefined' && object.id && ast.parentType) {
           parent = {
@@ -306,7 +314,6 @@ class GraphqlLinks extends ConfigFiles {
             id: String(object.id)
           };
         }
-        const selections = this.astToSelectionTree(ast.fieldNodes[0]);
         return this.resolve(script, object, {selections, parent, ...args, ...variables}, context);
       };
 
@@ -323,6 +330,6 @@ class GraphqlLinks extends ConfigFiles {
   }
 }
 
-GraphqlLinks.require = ['Graphql', 'ScriptsManager', 'Models', ...ConfigFiles.require];
+GraphqlLinks.require = ['Graphql', 'ScriptsManager', 'Models', 'Selections', ...ConfigFiles.require];
 
 module.exports = GraphqlLinks;

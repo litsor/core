@@ -1,0 +1,14 @@
+id: FullAuthor
+context: Query
+field: fullAuthor
+script: FullAuthor
+params:
+  id:
+    schema:
+      type: string
+    required: true
+    multiple: false
+variables: {}
+outputSchema:
+  $ref: '#/definitions/AuthorObject'
+outputMultiple: false
