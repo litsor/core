@@ -7,9 +7,10 @@ const validator = require('is-my-json-valid');
 const reload = require('require-reload')(require);
 
 class MethodTester {
-  constructor({JsonSchema, Immutable}) {
+  constructor({JsonSchema, Immutable, Container}) {
     this.jsonSchema = JsonSchema;
     this.immutable = Immutable;
+    this.container = Container;
   }
 
   async runTest(method, {startupTest, shutdownTest, mockups}, test) {
@@ -19,6 +20,13 @@ class MethodTester {
       ...(mockups || {}),
       Immutable: this.immutable
     };
+
+    for (let i = 0; i < (method.requires || []).length; ++i) {
+      const name = method.requires[i];
+      if (!mockups[name]) {
+        mockups[name] = await this.container.get(name);
+      }
+    }
 
     const inputs = type === 'unary' ? ['input'] : ['left', 'right'];
     const inputData = {};
@@ -133,6 +141,6 @@ class MethodTester {
 }
 
 MethodTester.singleton = true;
-MethodTester.require = ['JsonSchema', 'Immutable'];
+MethodTester.require = ['JsonSchema', 'Immutable', 'Container'];
 
 module.exports = MethodTester;
