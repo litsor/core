@@ -4,7 +4,8 @@ module.exports = {
   title: 'Truncate',
   description: 'Truncate string to length',
 
-  inputSchema: {},
+  leftSchema: {type: 'string'},
+  rightSchema: {type: 'integer', minimum: 1},
 
   binary: (string, length) => string.substring(0, length)
 };

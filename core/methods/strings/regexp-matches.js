@@ -5,14 +5,13 @@ module.exports = {
   title: 'Regular expression matches',
   description: 'Get captures from regular expression',
 
-  requires: [],
+  requires: ['Immutable'],
 
-  mockups: {},
+  leftSchema: {type: 'string'},
+  rightSchema: {type: 'string'},
 
-  tests: [],
-
-  binary: async (input, pattern) => {
+  binary: async (input, pattern, {Immutable}) => {
     const regexp = new RegExp(pattern, 'g');
-    return input.match(regexp);
+    return Immutable.fromJS(input.match(regexp));
   }
 };

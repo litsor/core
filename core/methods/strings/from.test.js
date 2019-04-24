@@ -1,5 +1,10 @@
 'use strict';
 
 module.exports = {
-  tests: []
+  tests: [{
+    can: 'get substring',
+    left: 'test',
+    right: 2,
+    output: 'st'
+  }]
 };

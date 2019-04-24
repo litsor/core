@@ -46,7 +46,7 @@ module.exports = {
         const __typename = refmodel ? `${refmodel}Object` : undefined;
 
         // Get the subselections and make sure that it includes the "id" field.
-        const subselections = {id: {}, __typename, ...selections[field]} || {id: {}, __typename};
+        const subselections = {id: {}, __typename: {}, ...selections[field]} || {id: {}, __typename: {}};
 
         // Remove fields from the selection that were already provided on the input, but keep the "id" field.
         // Also, if the field has subselections we need to check if this field is complete.

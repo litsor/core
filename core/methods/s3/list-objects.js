@@ -8,7 +8,8 @@ module.exports = {
   name: 'List objects in S3 storage',
   requires: [],
   tests: [],
-  unary: async ({server, bucket, limit, token}) => {
+  unary: async input => {
+    const {server, bucket, limit, token} = input;
     server = server || {
       accessKeyId: '722AE4F7',
       secretAccessKey: 'DF52DD548DD84E86BE3106BD7012F99D',

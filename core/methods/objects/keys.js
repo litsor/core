@@ -6,10 +6,12 @@ module.exports = {
 
   inputSchema: {type: 'object'},
 
-  unary: input => {
+  requires: ['Immutable'],
+
+  unary: (input, {Immutable}) => {
     if (typeof input !== 'object' || input === null) {
       return [];
     }
-    return Object.keys(input);
+    return Immutable.fromJS(Object.keys(input.toJS()));
   }
 };

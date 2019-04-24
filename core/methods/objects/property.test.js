@@ -1,5 +1,10 @@
 'use strict';
 
 module.exports = {
-  tests: []
+  tests: [{
+    can: 'get property',
+    left: {foo: 1},
+    right: 'foo',
+    output: 1
+  }]
 };

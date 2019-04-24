@@ -23,7 +23,7 @@ module.exports = {
   requires: [],
   tests: [],
   binary: (html, allowedTags) => {
-    return striptags(html, allowedTags);
+    return striptags(html, allowedTags.toJS());
   },
   unary: html => striptags(html)
 };

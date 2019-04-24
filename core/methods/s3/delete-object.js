@@ -8,7 +8,8 @@ module.exports = {
   name: 'Delete object from S3 storage',
   requires: [],
   tests: [],
-  unary: async ({server, bucket, key}) => {
+  unary: async input => {
+    const {server, bucket, key} = input.toJS();
     server = server || {
       accessKeyId: '722AE4F7',
       secretAccessKey: 'DF52DD548DD84E86BE3106BD7012F99D',

@@ -6,7 +6,10 @@ module.exports = {
 
   inputSchema: {},
 
-  unary: input => {
+  requires: ['Immutable'],
+
+  unary: (input, {Immutable}) => {
+    input = Immutable.isImmutable(input) ? input.toJS() : input;
     if (input === null || typeof input === 'undefined') {
       return 'null';
     }

@@ -8,6 +8,7 @@ module.exports = {
   rightSchema: {type: 'string'},
 
   binary: async (left, right) => {
+    left = left.toJS();
     return typeof left[right] === 'undefined' ? null : left[right];
   }
 };

@@ -8,7 +8,8 @@ module.exports = {
   name: 'Put object in S3 storage',
   requires: [],
   tests: [],
-  unary: async ({server, bucket, key, body}) => {
+  unary: async input => {
+    const {server, bucket, key, body} = input.toJS();
     server = server || {
       accessKeyId: '722AE4F7',
       secretAccessKey: 'DF52DD548DD84E86BE3106BD7012F99D',

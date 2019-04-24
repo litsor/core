@@ -10,7 +10,10 @@ module.exports = {
   leftSchema: {},
   rightSchema: {type: 'string'},
 
-  binary: (input, command) => {
+  requires: ['Immutable'],
+
+  binary: (input, command, {Immutable}) => {
+    input = Immutable.isImmutable(input) ? input.toJS() : input;
     if (!client) {
       client = Redis.createClient('redis://redis');
       client.on('error', console.error);

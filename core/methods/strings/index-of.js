@@ -2,7 +2,7 @@
 
 module.exports = {
   name: 'Index of',
-  requires: [],
-  tests: [],
+  leftSchema: {type: 'string'},
+  rightSchema: {type: 'string'},
   binary: (left, right) => left.indexOf(right)
 };

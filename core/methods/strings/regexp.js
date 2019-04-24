@@ -4,14 +4,13 @@ module.exports = {
   title: 'Regular expression',
   description: 'Check if input string matches regular expresion',
 
-  requires: [],
+  requires: ['Immutable'],
 
-  mockups: {},
+  leftSchema: {type: 'string'},
+  rightSchema: {type: 'string'},
 
-  tests: [],
-
-  binary: async (input, pattern) => {
+  binary: async (input, pattern, {Immutable}) => {
     const regexp = new RegExp(pattern);
-    return input.match(regexp);
+    return Immutable.fromJS(input.match(regexp));
   }
 };

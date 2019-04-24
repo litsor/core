@@ -1,5 +1,8 @@
 'use strict';
 
 module.exports = {
-  tests: []
+  tests: [{
+    input: {foo: 'bar'},
+    output: '{\n  "foo": "bar"\n}'
+  }]
 };

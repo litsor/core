@@ -1,5 +1,9 @@
 'use strict';
 
 module.exports = {
-  tests: []
+  tests: [{
+    can: 'get keys',
+    input: {foo: 1},
+    output: ['foo']
+  }]
 };

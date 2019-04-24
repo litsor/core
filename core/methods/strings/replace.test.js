@@ -1,5 +1,10 @@
 'use strict';
 
 module.exports = {
-  tests: []
+  tests: [{
+    can: 'replace strings',
+    left: 'test',
+    right: {e: 'a', st: 'ste'},
+    output: 'taste'
+  }]
 };

@@ -3,10 +3,17 @@
 module.exports = {
   title: 'Join',
   description: 'Join string with separator',
-  cache: Infinity,
-  requires: [],
-  tests: [],
+  leftSchema: {
+    type: 'array',
+    items: {
+      title: 'Item',
+      type: 'string'
+    }
+  },
+  rightSchema: {
+    type: 'string'
+  },
   binary: (input, separator) => {
-    return input.join(separator);
+    return input.toJS().join(separator);
   }
 };

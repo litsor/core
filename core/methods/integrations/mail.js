@@ -12,6 +12,7 @@ module.exports = {
   },
 
   unary: async options => {
+    options = options.toJS();
     options = defaults(options, {
       from: 'info@localhost',
       to: 'info@localhost',
