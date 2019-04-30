@@ -16,10 +16,10 @@ class MethodTester {
   async runTest(method, {startupTest, shutdownTest, mockups}, test) {
     const type = typeof test.input === 'undefined' ? 'binary' : 'unary';
 
-    mockups = {
-      ...(mockups || {}),
-      Immutable: this.immutable
-    };
+    mockups = mockups || {};
+    if ((method.requires || []).indexOf('Immutable') >= 0) {
+      mockups.Immutable = this.immutable;
+    }
 
     for (let i = 0; i < (method.requires || []).length; ++i) {
       const name = method.requires[i];
