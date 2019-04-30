@@ -56,6 +56,14 @@ describe('Endpoints', () => {
     expect(body).to.have.property('id', '123');
   });
 
+  it('decodes path arguments', async () => {
+    const result = await fetch('http://localhost:1234/item/Does%20it+work%3f', {
+      headers: {Accept: 'application/json'}
+    });
+    const body = await result.json();
+    expect(body).to.have.property('id', 'Does it work?');
+  });
+
   it('accepts query arguments', async () => {
     const result = await fetch('http://localhost:1234/item?title=Test&limit=10&unpublished=true', {
       headers: {Accept: 'application/json'}
@@ -64,6 +72,14 @@ describe('Endpoints', () => {
     expect(body).to.have.property('title', 'Test');
     expect(body).to.have.property('limit', 10);
     expect(body).to.have.property('unpublished', true);
+  });
+
+  it('decodes query arguments', async () => {
+    const result = await fetch('http://localhost:1234/item?title=Does%20it+work%3f&limit=10&unpublished=true', {
+      headers: {Accept: 'application/json'}
+    });
+    const body = await result.json();
+    expect(body).to.have.property('title', 'Does it work?');
   });
 
   it('accepts body arguments from formdata', async () => {

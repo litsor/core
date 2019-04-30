@@ -118,7 +118,7 @@ class Endpoints extends ConfigFiles {
             const names = path.match(pattern);
             for (let i = 1; i < names.length; ++i) {
               if (name === names[i].substring(1, names[i].length - 1)) {
-                return parts[i];
+                return decodeURIComponent(parts[i].replace(/\+/g, ' '));
               }
             }
           }
