@@ -7,6 +7,8 @@ module.exports = {
   leftSchema: {},
   rightSchema: {},
 
+  requires: ['Immutable'],
+
   binary: async (left, right, {Immutable}) => {
     if (!Immutable.isImmutable(left)) {
       return null;
