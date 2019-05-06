@@ -1,0 +1,6 @@
+# IncompleteAuthor
+
+/ = {
+  id: /id,
+  name: "John"
+}

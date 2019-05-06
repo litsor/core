@@ -137,4 +137,24 @@ describe('Links', () => {
     expect(after - before).to.equal(0);
   });
 
+  it('will execute read when data is incomplete', async () => {
+    const before = executionCount('LastPost');
+    const result = await graphql.query({
+      query: `query ($author: String!) {
+        incompleteAuthor(id: $author) {
+          id
+          name
+          lastPost {
+            title
+          }
+        }
+      }`,
+      variables
+    });
+    const after = executionCount('LastPost');
+
+    expect(result.incompleteAuthor.lastPost).to.have.property('title', 'First post');
+    expect(after - before).to.equal(1);
+  });
+
 });

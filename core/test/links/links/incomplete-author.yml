@@ -1,0 +1,14 @@
+id: IncompleteAuthor
+context: Query
+field: incompleteAuthor
+script: IncompleteAuthor
+params:
+  id:
+    schema:
+      type: string
+    required: true
+    multiple: false
+variables: {}
+outputSchema:
+  $ref: '#/definitions/AuthorObject'
+outputMultiple: false
