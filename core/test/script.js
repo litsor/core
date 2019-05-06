@@ -81,6 +81,21 @@ const Methods = {
       callback.lazy = true;
       return callback;
     }
+    if (name === 'and') {
+      const callback = async (left, right, context) => {
+        if (context.methodState === null) {
+          context.methodState = Boolean(await left());
+        } else {
+          console.log('state reused');
+        }
+        if (context.methodState) {
+          return right();
+        }
+        return null;
+      };
+      callback.lazy = true;
+      return callback;
+    }
   }
 };
 
@@ -725,4 +740,19 @@ describe('Script', () => {
     expect(output).to.equal(null);
   });
 
+  it('can evaluate conditions', async () => {
+    script.load(`
+      / = (false) and (true) and (false) and (false)
+    `);
+    const output = (await script.run({}));
+    expect(Boolean(output)).to.equal(false);
+  });
+
+  it('can evaluate conditions', async () => {
+    script.load(`
+      / = (true) and (false) and (true) and (true)
+    `);
+    const output = (await script.run({}));
+    expect(Boolean(output)).to.equal(false);
+  });
 });

@@ -236,8 +236,9 @@ class Script {
     const callback = this.methods.getBinaryMethod(methodName);
     let importContext = context.child;
     if (callback.lazy) {
+      const clonedContext = new Context(context.data, context.correlationId);
       const operand = source => async data => {
-        let expressionContext = context;
+        let expressionContext = clonedContext;
         if (typeof data !== 'undefined') {
           expressionContext = importContext || new Context(data, context.correlationId);
           expressionContext.parent = context;
