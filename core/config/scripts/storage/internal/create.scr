@@ -2,7 +2,13 @@
 
 / = / script "StorageCreate"
 
-/ = create {
+/data = create {
   data: /input,
   model: /model
+}
+
+/ = expandReferences {
+  data: /data,
+  model: /model,
+  selections: /selections
 }
