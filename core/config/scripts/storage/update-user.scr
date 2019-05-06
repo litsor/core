@@ -1,0 +1,5 @@
+# StorageUpdateUser
+
+/ = /input/password then {{
+  /input/password = hashPassword /input/password
+}}
