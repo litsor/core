@@ -7,7 +7,6 @@ module.exports = {
     title: 'Value'
   },
   rightSchema: {type: 'array'},
-  requires: [],
-  tests: [],
+
   binary: async (value, list) => list.indexOf(value) >= 0
 };

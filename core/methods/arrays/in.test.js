@@ -2,12 +2,12 @@
 
 module.exports = {
   tests: [{
-    can: 'detect that item is in list',
-    left: 'b',
+    can: 'detect that a is in [a,b,c]',
+    left: 'a',
     right: ['a', 'b', 'c'],
     output: true
   }, {
-    can: 'detect that item is not in list',
+    can: 'detect that d is not in [a,b,c]',
     left: 'd',
     right: ['a', 'b', 'c'],
     output: false
