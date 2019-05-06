@@ -12,10 +12,11 @@
   / = (/signature == /token/3) then {{
     /payload = fromJson fromBase64url /token/2
     / = (/payload/exp > timestamp date {}) then {{
-
       /revoked = query {
-        list: listOauthRevokedToken(filters: {
-          tokenHash: (/token/1 + "." + /token/2 + "." + /signature) hash "sha1"
+        list: listOauthLogout(filters: {
+          aud: /payload/aud,
+          sub: /payload/sub,
+          date_lte: /payload/iat
         }) {
           count
         }

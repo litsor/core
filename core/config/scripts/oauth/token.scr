@@ -57,16 +57,25 @@
   / = /valid then {{
     /payload = fromJson fromBase64url /parts/2
     /valid = (/payload/exp > timestamp date {}) and (/payload/aud == /client/id)
+    /revoked = query {
+      list: listOauthRevokedToken(filters: {
+        tokenHash: /refresh_token hash "sha1"
+      }) {
+        count
+      }
+    } pick /list/count
+    /valid = /valid and (!/revoked)
+    /loggedout = query {
+      list: listOauthLogout(filters: {
+        aud: /payload/aud,
+        sub: /payload/sub,
+        date_lte: /payload/iat
+      }) {
+        count
+      }
+    } pick /list/count
+    /valid = /valid and (!/loggedout)
   }}
-
-  /revoked = query {
-    list: listOauthRevokedToken(filters: {
-      tokenHash: /refresh_token hash "sha1"
-    }) {
-      count
-    }
-  } pick /list/count
-  /valid = /valid and (!/revoked)
 
   / = /valid then {{
     # Revoke refresh token.
@@ -79,7 +88,7 @@
     # Create a new access token.
     /token = {
       client: /client,
-      user: /payload/sub,
+      user: {id: /payload/sub},
       scope: /payload/scope
     } script "OauthCreateToken"
     /data/body = {

@@ -1,0 +1,14 @@
+id: OauthLogout
+description: OAuth2 logout action
+storage: Internal
+properties:
+  aud:
+    $ref: '#/definitions/OauthClient'
+  sub:
+    $ref: '#/definitions/User'
+  date:
+    type: integer
+required:
+  - aud
+  - sub
+  - date

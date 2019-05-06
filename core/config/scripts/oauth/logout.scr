@@ -6,9 +6,10 @@
   /payload = {token: /cookies/session} script "ValidateJWT"
   / = /payload then {{
     mutation {
-      createOauthRevokedToken(input: {
-        tokenHash: /cookies/session hash "sha1",
-        expires: /payload/exp
+      createOauthLogout(input: {
+        aud: /payload/aud,
+        sub: /payload/sub,
+        date: timestamp date {}
       }) { id }
     }
   }}
@@ -22,11 +23,12 @@
   /authorization ~ /headers/authorization
   /token = /authorization regexp "^Bearer ([^.]+\\.[^.]+\\.[^.]+)$"
   /token = /token/1
-
+  /payload = fromJson fromBase64url (/token split ".") pick /1
   mutation {
-    createOauthRevokedToken(input: {
-      tokenHash: /token hash "sha1",
-      expires: /user/token/expires
+    createOauthLogout(input: {
+      aud: /payload/aud,
+      sub: /payload/sub,
+      date: timestamp date {}
     }) { id }
   }
 }}

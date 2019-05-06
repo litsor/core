@@ -18,7 +18,9 @@
   aud: /client/id,
   sub: /user/id,
   scope: /scope,
-  exp: /expires
+  exp: /expires,
+  jti: secureToken 8,
+  iat: timestamp date {}
 }
 /token = [
   json {

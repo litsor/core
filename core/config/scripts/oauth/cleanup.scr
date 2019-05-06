@@ -2,7 +2,20 @@
 # cron="0 30 5 * * *"
 
 /now = timestamp date {}
+/config = {} script "OauthConfig"
 
-/ = ("Internal" == (model "OauthRevokedToken") pick /storage) then {{
-  {now: /now} sql "DELETE FROM oauth_revoked_tokens WHERE expires < :now"
-}}
+/before = /now - /config/refreshTokenExpire
+
+/tokens = query {
+  listOauthLogout(filters: {
+    date_lt: /before
+  }, limit: 100000) {
+    items {
+      id
+    }
+  }
+} pick /listOauthLogout/items
+
+/tokens map mutation {
+  deleteOauthLogout(id: /item/id) { id }
+}

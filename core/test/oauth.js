@@ -493,6 +493,10 @@ describe('OAuth', () => {
     expect(response).to.have.property('token_type', 'bearer');
     // Expires is not required by OAuth2, but we will follow the recommendation to always use it.
     expect(response.expires_in >= 43199 && response.expires_in <= 43201).to.equal(true);
+    // We should get a new access token.
+    expect(response).to.have.property('access_token');
+    expect(response.access_token).to.not.equal(temporary.access_token);
+    temporary.access_token = response.access_token;
     // We should get a new refresh token.
     expect(response).to.have.property('refresh_token');
     expect(response.refresh_token).to.not.equal(temporary.refresh_token);
@@ -508,6 +512,13 @@ describe('OAuth', () => {
       body: stringify(body)
     });
     expect(result2.status).to.equal(400);
+  });
+
+  it('can use the refreshed access token to authorize requests', async () => {
+    const result = await fetch('http://127.0.0.1:1234/protected-resource', {
+      headers: {Authorization: 'Bearer ' + temporary.access_token}
+    });
+    expect(result.status).to.equal(200);
   });
 
   it('cannot refresh token without client authentication', async () => {
