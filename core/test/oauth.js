@@ -558,6 +558,8 @@ describe('OAuth', () => {
       redirect: 'manual'
     });
     expect(result.status).to.equal(302);
+    // Allow a short delay.
+    await new Promise(resolve => setTimeout(resolve, 100));
     const resourceResult = await fetch('http://127.0.0.1:1234/protected-resource', {
       headers: {Authorization: 'Bearer ' + temporary.access_token}
     });
