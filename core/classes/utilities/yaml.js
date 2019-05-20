@@ -24,7 +24,7 @@ class Yaml {
       try {
         output[file] = JsYaml.safeLoad(contents);
       } catch (err) {
-        this.log.error(`Unable to parse file ${file}: ${err.message}`);
+        console.error(`Unable to parse file ${file}: ${err.message}`);
       }
     });
     return output;
