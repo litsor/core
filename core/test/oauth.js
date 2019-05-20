@@ -692,4 +692,15 @@ describe('OAuth', () => {
     expect(tokenResponse).to.have.property('refresh_token');
     temporary.refresh_token = tokenResponse.refresh_token;
   });
+
+  it('returns refresh token that is valid for 30 days', async () => {
+    let [, payload] = temporary.refresh_token.split('.');
+    const fromBase64url = operand => {
+      operand = operand.split('-').join('+').split('_').join('/').split('.').join('');
+      return Buffer.from(operand, 'base64').toString();
+    };
+    payload = JSON.parse(fromBase64url(payload));
+    const now = ~~(new Date() / 1e3);
+    expect(payload.exp > now + 2592000 - 10).to.equal(true);
+  });
 });

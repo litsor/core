@@ -35,7 +35,14 @@
 /token/exp = /now + /config/rememberExpire
 # Confidential clients (often API integrations) must use the refresh token within 30 days.
 / = (/client/type == "confidential") then {{
-  /token/exp = /now + /config/refreshTokenExpire
+  /payload/exp = /now + /config/refreshTokenExpire
+  /token = [
+    json {
+      alg: "HS256",
+      typ: "JWT"
+    },
+    json /payload
+  ]
 }}
 /refresh_token = (/token map base64url /item) join "."
 /refresh_token = /refresh_token + "." + base64urlFromBase64 signature /refresh_token
