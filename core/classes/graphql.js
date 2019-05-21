@@ -1,7 +1,7 @@
 'use strict';
 
 const Router = require('koa-router');
-const {graphqlKoa} = require('apollo-server-koa');
+const {ApolloServer} = require('apollo-server-koa');
 const {makeExecutableSchema} = require('graphql-tools');
 const {graphql, GraphQLScalarType} = require('graphql');
 const GraphQLJson = require('graphql-type-json');
@@ -28,8 +28,6 @@ class Graphql {
 
     router.post('/graphql', this.handleRequest.bind(this));
     router.get('/graphql', this.handleRequest.bind(this));
-
-    this.http.use('graphql', 2, router.routes());
 
     this.logCallback = data => this.query(data);
     this.log.on('logModel', this.logCallback);
@@ -98,14 +96,36 @@ class Graphql {
       typeDefs: [emptySchema, ...map(values(this.published), 'schema')],
       resolvers: [resolvers, ...map(values(this.published), 'resolvers')]
     });
-    this.handler = graphqlKoa(ctx => {
-      const context = {
+
+    // Create a mockup for the Koa app to catch the middleware added by Apollo.
+    // Save this to a local array to be able to replace it on reload.
+    let middlewares = [];
+    const proxy = {
+      use: middleware => middlewares.push(middleware)
+    };
+    const server = new ApolloServer({
+      schema: this.schema,
+      context: ctx => ({
         ip: ctx.request.ip,
         headers: ctx.request.headers,
         correlationId: ctx.correlationId
-      };
-      return {schema: this.schema, context};
+      })
     });
+    server.applyMiddleware({app: proxy});
+
+    this.http.use('graphql', 2, async (ctx, next) => {
+      for (let i = 0; i < middlewares.length; ++i) {
+        let calledNext = false;
+        const result = await middlewares[i](ctx, () => {
+          calledNext = true;
+        });
+        if (!calledNext) {
+          return result;
+        }
+      }
+      return next();
+    });
+
     this.setStarted();
     this.updateTypeMap();
   }
