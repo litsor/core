@@ -1,0 +1,14 @@
+id: SingleUpload
+context: Mutation
+field: singleUpload
+script: SingleUpload
+params:
+  file:
+    schema:
+      $ref: '#/definitions/Upload'
+    required: true
+    multiple: false
+variables: {}
+outputSchema:
+  type: string
+outputMultiple: false

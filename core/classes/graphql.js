@@ -4,6 +4,7 @@ const Router = require('koa-router');
 const {ApolloServer} = require('apollo-server-koa');
 const {makeExecutableSchema} = require('graphql-tools');
 const {graphql, GraphQLScalarType} = require('graphql');
+const {GraphQLUpload} = require('graphql-upload');
 const GraphQLJson = require('graphql-type-json');
 const {map, values} = require('lodash');
 const validator = require('is-my-json-valid');
@@ -76,7 +77,8 @@ class Graphql {
         __resolveType() {
           return null;
         }
-      }
+      },
+      Upload: GraphQLUpload
     };
     const emptySchema = `
       "Any known object type"
@@ -89,6 +91,8 @@ class Graphql {
       }
       "JSON value"
       scalar JSON
+      "File upload"
+      scalar Upload
       type Query {a: Int}
       type Mutation {a: Int}
     `;
@@ -105,11 +109,14 @@ class Graphql {
     };
     const server = new ApolloServer({
       schema: this.schema,
-      context: ctx => ({
-        ip: ctx.request.ip,
-        headers: ctx.request.headers,
-        correlationId: ctx.correlationId
-      })
+      context: ctx => {
+        ctx = ctx.ctx || ctx;
+        return {
+          ip: ctx.request.ip,
+          headers: ctx.request.headers,
+          correlationId: ctx.correlationId
+        };
+      }
     });
     server.applyMiddleware({app: proxy});
 

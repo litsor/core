@@ -77,6 +77,7 @@
   "devDependencies": {
     "bluegate": "^1.1.18",
     "faker": "^4.1.0",
+    "form-data": "^2.3.3",
     "form-parse": "^0.1.0",
     "jsdom": "^12.1.0",
     "mocha": "^5.2.0",

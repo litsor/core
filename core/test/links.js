@@ -1,7 +1,10 @@
 /* eslint-env node, mocha */
 'use strict';
 
+const {randomBytes} = require('crypto');
 const chai = require('chai');
+const FormData = require('form-data');
+const fetch = require('node-fetch');
 
 const Container = require('../classes/container');
 
@@ -155,6 +158,38 @@ describe('Links', () => {
 
     expect(result.incompleteAuthor.lastPost).to.have.property('title', 'First post');
     expect(after - before).to.equal(1);
+  });
+
+  it('can upload a single file', async () => {
+    // @see https://github.com/jaydenseric/graphql-multipart-request-spec
+    const query = 'mutation ($file: Upload!) { singleUpload(file: $file) }';
+    const operations = {query, variables: {file: null}};
+    const uploadData = randomBytes(10);
+    const form = new FormData();
+    form.append('operations', JSON.stringify(operations));
+    form.append('map', JSON.stringify({'0': ['variables.file']}));
+    form.append('0', uploadData);
+
+    const result = await fetch('http://localhost:1234/graphql', {method: 'POST', body: form}).then(res => res.json());
+    expect(result.data.singleUpload).to.equal(uploadData.toString('base64'));
+  });
+
+  it('can upload multiple files', async () => {
+    const query = 'mutation ($files: [Upload]!) { multipleUpload(files: $files) }';
+    const operations = {query, variables: {files: [null, null]}};
+    const uploadData1 = randomBytes(10);
+    const uploadData2 = randomBytes(10);
+    const form = new FormData();
+    form.append('operations', JSON.stringify(operations));
+    form.append('map', JSON.stringify({'0': ['variables.files.0'], '1': ['variables.files.1']}));
+    form.append('0', uploadData1);
+    form.append('1', uploadData2);
+
+    const result = await fetch('http://localhost:1234/graphql', {method: 'POST', body: form}).then(res => res.json());
+    expect(result.data.multipleUpload).to.deep.equal([
+      uploadData1.toString('base64'),
+      uploadData2.toString('base64')
+    ]);
   });
 
 });

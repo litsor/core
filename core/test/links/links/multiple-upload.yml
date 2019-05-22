@@ -1,0 +1,14 @@
+id: MultipleUpload
+context: Mutation
+field: multipleUpload
+script: MultipleUpload
+params:
+  files:
+    schema:
+      $ref: '#/definitions/Upload'
+    required: true
+    multiple: true
+variables: {}
+outputSchema:
+  type: string
+outputMultiple: true

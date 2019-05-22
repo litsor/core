@@ -88,12 +88,13 @@ class GraphqlLinks extends ConfigFiles {
       additionalProperties: false
     };
 
-    const {Graphql, ScriptsManager, Models, Selections} = dependencies;
+    const {Graphql, ScriptsManager, Models, Selections, Streams} = dependencies;
 
     this.graphql = Graphql;
     this.scriptsManager = ScriptsManager;
     this.models = Models;
     this.selections = Selections;
+    this.streams = Streams;
   }
 
   async resolve(scriptName, object, args, context) {
@@ -280,6 +281,37 @@ class GraphqlLinks extends ConfigFiles {
     return links;
   }
 
+  async prepareArgument(arg, context) {
+    if (Array.isArray(arg)) {
+      const output = [];
+      for (let i = 0; i < arg.length; ++i) {
+        output.push(await this.prepareArgument(arg[i], context));
+      }
+      return output;
+    }
+
+    if (typeof arg === 'object' && typeof arg.then === 'function') {
+      // Argument is a promise, which is only used for file uploads.
+      const {createReadStream, filename, mimetype} = await arg;
+      arg = {
+        stream: this.streams.registerStream(createReadStream()),
+        filename,
+        mimetype
+      };
+      context.streamIds.push(arg.stream);
+    }
+
+    return arg;
+  }
+
+  async prepareArguments(args, context) {
+    const promises = Object.keys(args).map(async key => {
+      args[key] = await this.prepareArgument(args[key], context)
+    });
+    await Promise.all(promises);
+    return args;
+  }
+
   async publish() {
     const defaultLinks = this.getDefaultLinks();
     const resolvers = {
@@ -299,22 +331,35 @@ class GraphqlLinks extends ConfigFiles {
         resolvers[context] = {};
       }
 
-      resolvers[context][field] = (object, args, context, ast) => {
-        const selections = this.astToSelectionTree(ast.fieldNodes[0]);
+      resolvers[context][field] = async (object, args, context, ast) => {
+        const argumentsContext = {
+          streamIds: []
+        };
+        try {
+          args = await this.prepareArguments(args, argumentsContext);
 
-        // Check if field is already resolved.
-        if (object && this.selections.isComplete(object[ast.fieldName], selections)) {
-          return object[ast.fieldName];
-        }
+          const selections = this.astToSelectionTree(ast.fieldNodes[0]);
 
-        let parent = {model: null, id: null};
-        if (typeof object !== 'undefined' && object.id && ast.parentType) {
-          parent = {
-            model: String(ast.parentType).replace(/Object$/, ''),
-            id: String(object.id)
-          };
+          // Check if field is already resolved.
+          if (object && this.selections.isComplete(object[ast.fieldName], selections)) {
+            return object[ast.fieldName];
+          }
+
+          let parent = {model: null, id: null};
+          if (typeof object !== 'undefined' && object.id && ast.parentType) {
+            parent = {
+              model: String(ast.parentType).replace(/Object$/, ''),
+              id: String(object.id)
+            };
+          }
+
+          const result = await this.resolve(script, object, {selections, parent, ...args, ...variables}, context);
+          argumentsContext.streamIds.map(id => this.streams.removeStream(id));
+          return result;
+        } catch (error) {
+          argumentsContext.streamIds.map(id => this.streams.removeStream(id));
+          throw error;
         }
-        return this.resolve(script, object, {selections, parent, ...args, ...variables}, context);
       };
 
       const paramSpecs = Object.keys(params).map(name => {
@@ -330,6 +375,6 @@ class GraphqlLinks extends ConfigFiles {
   }
 }
 
-GraphqlLinks.require = ['Graphql', 'ScriptsManager', 'Models', 'Selections', ...ConfigFiles.require];
+GraphqlLinks.require = ['Graphql', 'ScriptsManager', 'Models', 'Selections', 'Streams', ...ConfigFiles.require];
 
 module.exports = GraphqlLinks;
