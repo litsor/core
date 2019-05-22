@@ -73,12 +73,13 @@ class Endpoints extends ConfigFiles {
       additionalProperties: false
     };
 
-    const {Http, ScriptsManager, Models, Input} = dependencies;
+    const {Http, ScriptsManager, Models, Input, Streams} = dependencies;
 
     this.scriptsManager = ScriptsManager;
     this.models = Models;
     this.input = Input;
     this.http = Http;
+    this.streams = Streams;
 
     this.paths = {};
   }
@@ -170,6 +171,8 @@ class Endpoints extends ConfigFiles {
     const result = (await script.run(input)) || {};
     if (result.binary && typeof result.body === 'string') {
       ctx.response.body = Buffer.from(result.body, 'base64');
+    } else if (result.stream && typeof result.body === 'string') {
+      ctx.response.body = this.streams.getStream(result.body);
     } else {
       ctx.response.body = result.body || null;
     }
@@ -194,6 +197,6 @@ class Endpoints extends ConfigFiles {
 }
 
 Endpoints.singleton = true;
-Endpoints.require = ['Http', 'ScriptsManager', 'Models', 'Input', ...ConfigFiles.require];
+Endpoints.require = ['Http', 'ScriptsManager', 'Models', 'Input', 'Streams', ...ConfigFiles.require];
 
 module.exports = Endpoints;

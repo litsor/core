@@ -1,0 +1,15 @@
+id: Stream
+path:
+  - /stream/{id}
+method: GET
+script: Stream
+params:
+  id:
+    name: Stream ID
+    in: path
+    schema:
+      type: string
+output:
+  mime: application/octet-stream
+  schema:
+    type: string

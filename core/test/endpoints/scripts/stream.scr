@@ -1,0 +1,6 @@
+# Stream
+
+/ = {
+  stream: true,
+  body: /id
+}

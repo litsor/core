@@ -1,6 +1,7 @@
 /* eslint-env node, mocha */
 'use strict';
 
+const {Readable} = require('stream');
 const fetch = require('node-fetch');
 const chai = require('chai');
 
@@ -10,6 +11,7 @@ const expect = chai.expect;
 
 describe('Endpoints', () => {
   let container;
+  let streams;
 
   before(async () => {
     container = new Container();
@@ -27,6 +29,7 @@ describe('Endpoints', () => {
     await container.get('Endpoints');
     await container.get('GraphqlLinks');
     await container.get('ScriptsManager');
+    streams = await container.get('Streams');
 
     // Wait for the endpoints to load.
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -114,5 +117,18 @@ describe('Endpoints', () => {
     });
     const body = await result.buffer();
     expect(body.toString('base64')).to.equal('/dTFXaRb2H1rINhamO9cEw==');
+  });
+
+  it('can send response from stream', async () => {
+    const stream = new Readable();
+    const streamId = streams.registerStream(stream);
+
+    stream.push(Buffer.from('TG9yZW0gaXBzdW0K', 'base64'));
+    stream.push(null);
+    const result = await fetch(`http://localhost:1234/stream/${streamId}`, {
+      method: 'GET'
+    });
+    const body = await result.buffer();
+    expect(body.toString('base64')).to.equal('TG9yZW0gaXBzdW0K');
   });
 });
