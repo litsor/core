@@ -25,7 +25,7 @@ class Http {
       textLimit: Config.get('/bodyParser_textLimit', '1mb'),
       formLimit: Config.get('/bodyParser_formLimit', '56kb')
     }));
-    this.app.use((ctx, next) => {
+    this.app.use(async (ctx, next) => {
       if (ctx.request.headers.origin) {
         ctx.response.set({
           'Access-Control-Allow-Origin': ctx.request.headers.origin,
