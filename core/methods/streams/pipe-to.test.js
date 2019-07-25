@@ -5,7 +5,12 @@ module.exports = {
     Streams: {
       getStream() {
         return {
-          pipe() {}
+          pipe() {},
+          on(event, callback) {
+            if (event === 'finish') {
+              setImmediate(callback);
+            }
+          }
         };
       }
     }
