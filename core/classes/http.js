@@ -121,7 +121,7 @@ class Http {
   }
 
   async shutdown() {
-    this.server.destroy = promisify(this.server.destroy);
+    this.server.destroy = promisify(this.server.destroy || this.server.close);
     await this.server.destroy();
   }
 }
