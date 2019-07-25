@@ -87,8 +87,7 @@ class Database {
       define: {
         timestamps: false
       },
-      logging: false,
-      operatorsAliases: false
+      logging: false
     });
     this.client.authenticate().then(() => {
       this.resolveConnected();
