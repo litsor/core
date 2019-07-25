@@ -123,7 +123,7 @@ class Graphql {
     this.http.use('graphql', 2, async (ctx, next) => {
       for (let i = 0; i < middlewares.length; ++i) {
         let calledNext = false;
-        const result = await middlewares[i](ctx, () => {
+        const result = await middlewares[i](ctx, async () => {
           calledNext = true;
         });
         if (!calledNext) {
