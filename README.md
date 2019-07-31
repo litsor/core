@@ -16,4 +16,4 @@ Later, you can change the data storage and use external API’s or other data so
 Hence, applications can be developed with shorted lead times.
 
 ## Getting started
-See the [Getting started guide]([Litsor | Getting started](https://litsor.app/docs/getting-started.html)).
+See the [Getting started guide](https://litsor.app/docs/getting-started.html).
