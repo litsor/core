@@ -8,6 +8,7 @@ const {GraphQLUpload} = require('graphql-upload');
 const GraphQLJson = require('graphql-type-json');
 const {map, values} = require('lodash');
 const validator = require('is-my-json-valid');
+const {PubSub} = require('apollo-server');
 
 class Graphql {
   constructor({Http, Log}) {
@@ -95,6 +96,7 @@ class Graphql {
       scalar Upload
       type Query {a: Int}
       type Mutation {a: Int}
+      type Subscription {a: Int}
     `;
     this.schema = makeExecutableSchema({
       typeDefs: [emptySchema, ...map(values(this.published), 'schema')],
@@ -109,16 +111,24 @@ class Graphql {
     };
     const server = new ApolloServer({
       schema: this.schema,
-      context: ctx => {
-        ctx = ctx.ctx || ctx;
+      context: ({ctx, connection}) => {
+        if (connection) {
+          return connection.context;
+        }
         return {
           ip: ctx.request.ip,
           headers: ctx.request.headers,
           correlationId: ctx.correlationId
         };
+      },
+      subscriptions: {
+        onConnect: (connectionParams) => ({
+          headers: typeof connectionParams === 'object' && connectionParams !== null ? connectionParams : {}
+        })
       }
     });
-    server.applyMiddleware({app: proxy});
+
+    server.applyMiddleware({app: proxy, path: '/graphql'});
 
     this.http.use('graphql', 2, async (ctx, next) => {
       for (let i = 0; i < middlewares.length; ++i) {
@@ -132,6 +142,15 @@ class Graphql {
       }
       return next();
     });
+
+    // We have to explicitly stop the old server before we can setup the new websockets listeners.
+    // This means a short outage in handling websockets, but websocket clients are
+    // normally setup to reconnect automatically.
+    if (this.installedServer) {
+      await this.installedServer.stop();
+    }
+    server.installSubscriptionHandlers(this.http.server);
+    this.installedServer = server;
 
     this.setStarted();
     this.updateTypeMap();
@@ -315,7 +334,7 @@ class Graphql {
       },
       parseLiteral(ast) {
         if (!validate(ast.value)) {
-          throw new Error(validate.error);
+          throw new Error(validate. error);
         }
         return ast.value;
       }

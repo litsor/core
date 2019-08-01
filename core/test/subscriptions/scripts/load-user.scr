@@ -1,0 +1,13 @@
+# LoadUser
+
+/ = {
+  id: "1",
+  name: "Test",
+  client: {
+    id: "1"
+  },
+  token: {
+    expires: 3600 + timestamp date {},
+    scope: "Post:* Author:*:read Author:create"
+  }
+}

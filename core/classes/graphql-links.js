@@ -1,6 +1,8 @@
 'use strict';
 
 const ConfigFiles = require('./config-files');
+const {PubSub} = require('apollo-server');
+const SubscriptionIterator = require('./utilities/subscription-iterator');
 
 class GraphqlLinks extends ConfigFiles {
   constructor(dependencies) {
@@ -95,11 +97,31 @@ class GraphqlLinks extends ConfigFiles {
     this.models = Models;
     this.selections = Selections;
     this.streams = Streams;
+
+    this.pubsub = new PubSub();
   }
 
   async resolve(scriptName, object, args, context) {
     const script = this.scriptsManager.get(scriptName);
-    return script.run({...context, ...args});
+    const output = await script.run({...context, ...args});
+
+    if (scriptName.match(/^Storage.+(Create|Update|Delete)$/) && typeof output === 'object' && output !== null && typeof args.model === 'string') {
+      const model = this.models.get(args.model);
+
+      // Check references that have reverse fields.
+      // If so, we must publish the referenced object for subscriptions on the reverse link.
+      Object.keys(model.properties).forEach(key => {
+        if (model.properties[key].$ref && model.properties[key].reverse && output[key]) {
+          const referencedModel = model.properties[key].$ref.substring(14);
+          this.pubsub.publish(referencedModel, {id: output[key].id || output[key]});
+        }
+      });
+
+      // Publish this object for listening subscriptions.
+      this.pubsub.publish(model.id, output);
+    }
+
+    return output;
   }
 
   astToSelectionTree(ast) {
@@ -123,6 +145,7 @@ class GraphqlLinks extends ConfigFiles {
           context: 'Query',
           field: model.id,
           script: `Storage${model.storage}Read`,
+          subscriptionModels: [model.id],
           params: {
             id: {
               schema: {$ref: '#/definitions/ID'},
@@ -143,6 +166,7 @@ class GraphqlLinks extends ConfigFiles {
           context: 'Query',
           field: 'list' + model.id,
           script: `Storage${model.storage}List`,
+          subscriptionModels: [model.id],
           params: {
             filters: {
               schema: {$ref: '#/definitions/' + model.id + 'FilterSet'},
@@ -320,7 +344,7 @@ class GraphqlLinks extends ConfigFiles {
     };
     const baseSchema = `input OrderFieldInput { field: String! direction: OrderDirection} enum OrderDirection { ASC DESC }`;
     const schema = baseSchema + Object.keys({...this.items, ...defaultLinks}).map(id => {
-      const {field, script, params, variables, outputSchema, outputMultiple} = this.items[id] || defaultLinks[id];
+      const {field, script, params, variables, outputSchema, outputMultiple, subscriptionModels} = this.items[id] || defaultLinks[id];
       let {context} = this.items[id] || defaultLinks[id];
 
       if (context !== 'Query' && context !== 'Mutation') {
@@ -362,6 +386,26 @@ class GraphqlLinks extends ConfigFiles {
         }
       };
 
+      // Add subscription resolver if enabled for this field.
+      if (subscriptionModels) {
+        if (typeof resolvers.Subscription === 'undefined') {
+          resolvers.Subscription = {};
+        }
+        const iterator = this.pubsub.asyncIterator(subscriptionModels);
+        resolvers.Subscription[field] = {
+          subscribe: (_, variables, context, ast) => {
+            return new SubscriptionIterator({
+              iterator,
+              resolver: resolvers.Query[field],
+              field,
+              variables,
+              context: {...context, subscription: true},
+              ast
+            });
+          }
+        };
+      }
+
       const paramSpecs = Object.keys(params).map(name => {
         const typeSpec = params[name].multiple ? '[' + this.graphql.getGraphqlType(params[name].schema) + ']' : this.graphql.getGraphqlType(params[name].schema);
         const requiredMark = params[name].required ? '!' : '';
@@ -369,7 +413,11 @@ class GraphqlLinks extends ConfigFiles {
       });
       const paramSpec = paramSpecs.length > 0 ? ' (' + paramSpecs.join(', ') + ')' : '';
       const outputSpec = outputMultiple ? '[' + this.graphql.getGraphqlType(outputSchema) + ']' : this.graphql.getGraphqlType(outputSchema);
-      return `extend type ${context} {\n  ${field}${paramSpec}: ${outputSpec}\n}`;
+      let schemaAdditions = `extend type ${context} {\n  ${field}${paramSpec}: ${outputSpec}\n}`;
+      if (subscriptionModels) {
+        schemaAdditions += `\nextend type Subscription {\n  ${field}${paramSpec}: ${outputSpec}\n}`;
+      }
+      return schemaAdditions;
     }).join('\n');
     await this.graphql.publish(schema, resolvers, 'GraphqlLinks');
   }

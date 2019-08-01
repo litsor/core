@@ -1,0 +1,9 @@
+id: Author
+description: Author
+storage: Internal
+properties:
+  name:
+    type: string
+    maxLength: 128
+required:
+  - name
