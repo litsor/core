@@ -12,7 +12,7 @@ const Container = require('../classes/container');
 
 const expect = chai.expect;
 
-describe.only('Subscriptions', () => {
+describe('Subscriptions', () => {
   const temporary = {};
   let container;
   let client;
