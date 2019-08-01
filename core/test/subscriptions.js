@@ -12,10 +12,11 @@ const Container = require('../classes/container');
 
 const expect = chai.expect;
 
-describe('Subscriptions', () => {
+describe.only('Subscriptions', () => {
   const temporary = {};
   let container;
   let client;
+  let link;
 
   before(async () => {
     container = new Container();
@@ -32,17 +33,18 @@ describe('Subscriptions', () => {
     await container.get('Endpoints');
     await container.get('GraphqlLinks');
 
+    link = new WebSocketLink({
+      uri: `ws://localhost:1234/graphql`,
+      options: {
+        reconnect: false,
+        connectionParams: {
+          'Authorization': 'Bearer ...'
+        }
+      },
+      webSocketImpl: ws
+    });
     client = new ApolloClient({
-      link: new WebSocketLink({
-        uri: `ws://localhost:1234/graphql`,
-        options: {
-          reconnect: true,
-          connectionParams: {
-            'Authorization': 'Bearer ...'
-          }
-        },
-        webSocketImpl: ws
-      }),
+      link,
       cache: new InMemoryCache(),
       ssrMode: false
     });
@@ -52,6 +54,7 @@ describe('Subscriptions', () => {
 
   after(async () => {
     await container.shutdown();
+    link.subscriptionClient.client.close();
   });
 
   it('can execute query over websocket', async () => {
