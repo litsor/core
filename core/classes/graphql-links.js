@@ -391,9 +391,9 @@ class GraphqlLinks extends ConfigFiles {
         if (typeof resolvers.Subscription === 'undefined') {
           resolvers.Subscription = {};
         }
-        const iterator = this.pubsub.asyncIterator(subscriptionModels);
         resolvers.Subscription[field] = {
           subscribe: (_, variables, context, ast) => {
+            const iterator = this.pubsub.asyncIterator(subscriptionModels);
             return new SubscriptionIterator({
               iterator,
               resolver: resolvers.Query[field],
