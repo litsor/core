@@ -1,6 +1,7 @@
 FROM alpine:3.9
 
 ADD core/package.json /app/core/
+ADD core/package-lock.json /app/core/
 
 RUN apk update \
  && apk add nodejs-current nodejs-npm make gcc g++ python \
