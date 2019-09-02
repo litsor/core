@@ -22,7 +22,7 @@ describe('React SSR', () => {
       port: 1234,
       configDir: 'core/test/react',
       methodsDir: 'core/test/react/methods',
-      database: process.env.LITSOR_DATABASE || 'mysql:root:password@127.0.0.1/litsor',
+      database: process.env.LITSOR_DATABASE || 'mysql:username:password@127.0.0.1/litsor',
       'recreate-db': true,
       'secret-key': 'test'
     });
@@ -110,17 +110,6 @@ describe('React SSR', () => {
     expect((await render()).html).to.equal(`<h1>First</h1>`);
     await new Promise(resolve => setTimeout(resolve, 1100));
     expect((await render()).html).to.equal(`<h1>First 2</h1>`);
-  });
-
-  it('can use React prerendering', async () => {
-    const file = resolve(__dirname + '/react/dist/hello-world.js');
-    const result = await scriptsManager.get('Render').run({
-      file,
-      input: {
-        prerender: true
-      }
-    });
-    expect(result.html).to.contain('data-reactroot');
   });
 
   it('can use manual hydration of the cache', async () => {
