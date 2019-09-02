@@ -65,13 +65,13 @@
     "nodemailer-html-to-text": "^3.0.0",
     "rc": "^1.2.8",
     "react": "^16.5.2",
-    "react-apollo": "^2.2.4",
+    "react-apollo": "^2.5.8",
     "react-dom": "^16.5.2",
     "redis": "^2.8.0",
     "require-reload": "^0.2.2",
     "sequelize": "^6.0.0",
     "server-destroy": "^1.0.1",
-    "sqlite3": "^4.0.6",
+    "sqlite3": "^4.1.0",
     "striptags": "^3.1.1",
     "watch": "^1.0.2"
   },
@@ -84,7 +84,7 @@
     "form-parse": "^0.1.0",
     "jsdom": "^12.1.0",
     "mocha": "^5.2.0",
-    "nyc": "^13.2.0",
+    "nyc": "^14.1.1",
     "rimraf": "^2.6.2",
     "subscriptions-transport-ws": "^0.9.16"
   }
