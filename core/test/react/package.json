@@ -9,7 +9,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "apollo-client": "^2.3.7",
+    "apollo-client": "^2.6.3",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-plugin-react-require": "^3.0.0",
@@ -24,7 +24,7 @@
     "graphql-tag": "^2.9.2",
     "prop-types": "^15.6.2",
     "react": "^16.4.1",
-    "react-apollo": "^2.1.9",
+    "react-apollo": "^2.5.8",
     "react-dom": "^16.4.1",
     "webpack": "^4.16.2"
   }
