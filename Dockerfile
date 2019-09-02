@@ -5,7 +5,7 @@ ADD core/package.json /app/core/
 RUN apk update \
  && apk add nodejs-current nodejs-npm make gcc g++ python \
  && cd /app/core \
- && npm install --production \
+ && npm ci --production \
  && apk del nodejs-npm make gcc g++ python \
  && rm -Rf ~/.npm \
  && cd /app/core/node_modules \
