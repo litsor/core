@@ -18,10 +18,10 @@ class SubscriptionIterator {
       const {value} = await this.iterator.next();
       // Check filters.
       if (typeof value !== 'object' || value === null) {
-        break;
+        continue;
       }
       if (this.variables.id && this.variables.id !== value.id) {
-        break;
+        continue;
       }
       const output = await this.resolver({}, this.variables, this.context, this.ast);
       return {

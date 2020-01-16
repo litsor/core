@@ -286,4 +286,70 @@ describe('Subscriptions', () => {
 
     subscription.unsubscribe();
   });
+
+  it('will not break subscription when updating other items', async () => {
+    // This scenario covers the conditions inside the subscription iterator loop.
+    // @see SubscriptionIterator::next()
+    let newData = null;
+    const subscription = await client.subscribe({
+      query: gql`subscription ($id: ID!) {
+        Post (id: $id) {
+          title
+        }
+      }`,
+      variables: {
+        id: temporary.post4
+      }
+    }).subscribe({
+      next(data) {
+        newData = data.data;
+      },
+      error(error) {
+        console.log(error);
+      }
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await client.mutate({
+      mutation: gql`mutation ($id: ID!) {
+        updatePost(id: $id, input: {
+          title: "Test A"
+        }) {
+          title
+        }
+      }`,
+      variables: {
+        id: temporary.post3 // Different post.
+      }
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Check that the last update did not affect our subscription,
+    // since it is for a different post.
+    expect(newData).to.equal(null);
+
+    await client.mutate({
+      mutation: gql`mutation ($id: ID!) {
+        updatePost(id: $id, input: {
+          title: "Test B"
+        }) {
+          id
+          title
+        }
+      }`,
+      variables: {
+        id: temporary.post4 // The post we are subscribed to.
+      }
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Check that our subscription got the last update.
+    expect(newData).to.be.an('object');
+    expect(newData.Post).to.have.property('title', 'Test B');
+
+    subscription.unsubscribe();
+  });
 });
