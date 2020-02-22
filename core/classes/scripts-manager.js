@@ -11,7 +11,7 @@ class ScriptsManager extends ConfigFiles {
     this.log = dependencies.Log;
 
     this.configName = 'scripts';
-    this.extension = '.scr';
+    this.extension = '.(js|scr)';
     this.plain = true;
 
     this.validationSchema = {
@@ -50,7 +50,8 @@ class ScriptsManager extends ConfigFiles {
   }
 
   async create(definition, id) {
-    const script = await this.container.get('Script');
+    const javascript = definition[0] === '/';
+    const script = await this.container.get(javascript ? 'Javascript' : 'Script');
     script.setId(id);
     script.load(definition);
 
@@ -95,10 +96,10 @@ class ScriptsManager extends ConfigFiles {
       if (lines[i].trim().length === 0) {
         continue;
       }
-      if (lines[i].trim().substring(0, 1) !== '#') {
+      if (lines[i].trim().substring(0, 1) !== '#' && lines[i].trim().substring(0, 2) !== '//') {
         break;
       }
-      const parts = lines[i].match(/^[\s]*#[\s]*([\w]+)[\s]*=(.+)$/);
+      const parts = lines[i].match(/^[\s]*(?:#|\/\/)[\s]*([\w]+)[\s]*=(.+)$/);
       if (!parts) {
         continue;
       }

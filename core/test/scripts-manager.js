@@ -46,4 +46,9 @@ describe('Scripts manager', () => {
     const after = add1.getValue('cron');
     expect(after > before).to.equal(true);
   });
+
+  it('will run javascripts', async () => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    expect(add1.getValue('startup-js')).to.equal(1);
+  });
 });

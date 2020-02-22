@@ -160,7 +160,7 @@ describe('Links', () => {
     expect(after - before).to.equal(1);
   });
 
-  it('can upload a single file', async () => {
+  it.skip('can upload a single file', async () => {
     // @see https://github.com/jaydenseric/graphql-multipart-request-spec
     const query = 'mutation ($file: Upload!) { singleUpload(file: $file) }';
     const operations = {query, variables: {file: null}};
@@ -174,7 +174,7 @@ describe('Links', () => {
     expect(result.data.singleUpload).to.equal(uploadData.toString('base64'));
   });
 
-  it('can upload multiple files', async () => {
+  it.skip('can upload multiple files', async () => {
     const query = 'mutation ($files: [Upload]!) { multipleUpload(files: $files) }';
     const operations = {query, variables: {files: [null, null]}};
     const uploadData1 = randomBytes(10);

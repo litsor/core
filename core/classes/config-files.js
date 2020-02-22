@@ -76,7 +76,7 @@ class ConfigFiles {
       let id;
       if (this.plain) {
         const firstLine = data.split('\n')[0];
-        const idComment = firstLine.match(/#[\s]*([a-z_][a-z0-9_-]*)[\s]*$/i);
+        const idComment = firstLine.match(/^(?:#|\/\/)[\s]*([a-z_][a-z0-9_-]*)[\s]*$/i);
         if (!idComment) {
           this.log.error(`Unable to load ${filename}: no comment with id found`);
           break;
