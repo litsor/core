@@ -31,7 +31,7 @@
     "apollo-cache-inmemory": "^1.5.1",
     "apollo-client": "^2.6.3",
     "apollo-link-schema": "^1.2.2",
-    "apollo-server": "^2.7.2",
+    "apollo-server": "^2.14.2",
     "apollo-server-koa": "^2.7.2",
     "aws-sdk": "^2.329.0",
     "chai": "^4.2.0",
