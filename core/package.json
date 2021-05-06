@@ -43,7 +43,7 @@
     "graphql": "^14.3.0",
     "graphql-tools": "^4.0.4",
     "graphql-type-json": "^0.3.0",
-    "handlebars": "^4.3.0",
+    "handlebars": "^4.7.7",
     "http-errors": "^1.7.1",
     "immutable": "^4.0.0-rc.12",
     "is-my-json-valid": "^2.19.0",
