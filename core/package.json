@@ -33,7 +33,7 @@
     "apollo-link-schema": "^1.2.2",
     "apollo-server": "^2.7.2",
     "apollo-server-koa": "^2.7.2",
-    "aws-sdk": "^2.329.0",
+    "aws-sdk": "^2.814.0",
     "chai": "^4.2.0",
     "chalk": "^2.4.1",
     "cron": "^1.4.1",
