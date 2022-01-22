@@ -60,7 +60,7 @@
     "moment-timezone": "^0.5.23",
     "mysql2": "^1.6.5",
     "node-expat": "^2.3.17",
-    "node-fetch": "^2.2.0",
+    "node-fetch": "^3.1.1",
     "nodemailer": "^4.6.8",
     "nodemailer-html-to-text": "^3.0.0",
     "rc": "^1.2.8",
